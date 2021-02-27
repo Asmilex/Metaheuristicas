@@ -9,8 +9,14 @@
             "command": "cmake",
             "args": ["--build", "."],
             "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d", "/c"
+                    ],
+                },
                 "cwd": "${workspaceFolder}/build"
-            }
+            },
         },
         {
             "label": "remove build folder",
@@ -18,7 +24,13 @@
             "command": "del",
             "args": ["/s", "build",  "/q"],
             "options": {
-                "cwd": "${workspaceFolder}/build"
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d", "/c"
+                    ],
+                },
+                "cwd": "${workspaceFolder}/build",
             }
         },
         {
@@ -27,6 +39,27 @@
             "command": "cmake",
             "args": ["-DCMAKE_GENERATOR_PLATFORM=x64", ".."],
             "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d", "/c"
+                    ],
+                },
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "configure cmake",
+            "type": "shell",
+            "command": "cmake",
+            "args": ["--configure", ".."],
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d", "/c"
+                    ],
+                },
                 "cwd": "${workspaceFolder}/build"
             }
         },
@@ -36,6 +69,7 @@
             "dependsOrder": "sequence",
             "dependsOn":[
                 "remove build folder",
+                "configure cmake",
                 "regenerate makefile"
             ]
         },

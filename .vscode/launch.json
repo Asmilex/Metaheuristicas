@@ -9,7 +9,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "environment": [],
-            "console": "internalConsole",
+            "console": "externalTerminal",
         },
         {
             "name": "Compile and run",
@@ -21,10 +21,10 @@
             "cwd": "${workspaceFolder}/build",
             "environment": [],
             "preLaunchTask": "compile",
-            "console": "internalConsole",
+            "console": "externalTerminal",
         },
         {
-            "name": "(Windows) Clean, recompile and run",
+            "name": "Clean, recompile and run",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Debug/MH.exe",
@@ -33,7 +33,7 @@
             "cwd": "${workspaceFolder}/build",
             "environment": [],
             "preLaunchTask": "clean and compile",
-            "console": "internalConsole"
+            "console": "externalTerminal",
         }
     ]
 }
