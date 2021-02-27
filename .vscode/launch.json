@@ -1,0 +1,39 @@
+{
+    "configurations": [
+        {
+            "name": "Run",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/MH.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "console": "internalConsole",
+        },
+        {
+            "name": "Compile and run",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/MH.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "preLaunchTask": "compile",
+            "console": "internalConsole",
+        },
+        {
+            "name": "(Windows) Clean, recompile and run",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/MH.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "preLaunchTask": "clean and compile",
+            "console": "internalConsole"
+        }
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile",
+            "type": "shell",
+            "command": "cmake",
+            "args": ["--build", "."],
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "remove build folder",
+            "type": "shell",
+            "command": "del",
+            "args": ["/s", "build",  "/q"],
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "regenerate makefile",
+            "type": "shell",
+            "command": "cmake",
+            "args": ["-DCMAKE_GENERATOR_PLATFORM=x64", ".."],
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "dependsOrder": "sequence",
+            "dependsOn":[
+                "remove build folder",
+                "regenerate makefile"
+            ]
+        },
+        {
+            "label": "clean and compile",
+            "type": "shell",
+            "dependsOrder": "sequence",
+            "dependsOn":[
+                "clean",
+                "compile"
+            ]
+        }
+    ]
+}
