@@ -1,5 +1,5 @@
 [package]
-name = "Metaheuristicas"
+name = "metaheuristicas"
 version = "0.1.0"
 authors = ["Asmilex <andresmm@outlook.com>"]
 edition = "2018"
