@@ -10,15 +10,16 @@
     }
  */
 
-mod file_io;
-use file_io::*;
-use std::path::Path;
+
+// Declaración de la estructura de archivos
+mod cluster;
+mod utils;
+
+// Imports
+use cluster::*;
 
 fn main() {
-    let directorio: &Path = Path::new("./data/MDG/");
-    let archivos = leer_archivos_dir(directorio);
+    let mi_cluster = Clusters::new(2, 3, 10);
 
-    for elemento in archivos {
-        println!("{:?}", elemento);
-    }
+    print!("{:?}", mi_cluster);
 }
