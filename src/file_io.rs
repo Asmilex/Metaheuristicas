@@ -13,7 +13,3 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
     }
     vector_path
 }
-
-pub fn leer_MDG (archivo: &File) {
-    
-}
