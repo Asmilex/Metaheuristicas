@@ -19,7 +19,7 @@ mod utils;
 use cluster::*;
 
 fn main() {
-    let mi_cluster = Clusters::new(2, 3, 10);
+    let mi_cluster = Clusters::new(2, 3, 10, 2);
 
     print!("{:?}", mi_cluster);
 }
