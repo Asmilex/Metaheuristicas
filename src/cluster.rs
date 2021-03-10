@@ -66,6 +66,10 @@ impl Clusters {
     //
 
     pub fn indices_cluster(&self, c: u8) -> Vec<u8> {
+        /*
+            Cada posición del vector lista_clusters corresponde con la misma de espacio, salvo que
+            las entradas denotan en qué cluster están.
+        */
         assert_ne!(0, c);
 
         let mut indices = Vec::new();
@@ -100,10 +104,10 @@ impl Clusters {
 
     fn calcular_centroides(&mut self) {
         for i in 0..self.lista_clusters.len() {
-            if i != 0 {
-                self.centroides[(self.lista_clusters[i] - 1) as usize] += self.espacio[i].clone();
-                // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters -1
-                self.recuento_clusters[(self.lista_clusters[i] -1) as usize] = self.recuento_clusters[(self.lista_clusters[i] -1) as usize] + 1;
+            if self.lista_clusters[i] != 0 {
+                // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
+                self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
+                self.recuento_clusters[(self.lista_clusters[i] -1 ) as usize] = self.recuento_clusters[(self.lista_clusters[i] - 1) as usize] + 1;
             }
         }
 
