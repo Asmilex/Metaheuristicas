@@ -4,15 +4,15 @@ use nalgebra::*;
 #[derive(Debug)]
 #[allow(non_snake_case)]
 pub struct Clusters {
-    num_clusters: usize,        // NOTE: los clusters empiezan en 1. Por defecto se tiene el cluster 0
+    pub num_clusters: usize,        // NOTE: los clusters empiezan en 1. Por defecto se tiene el cluster 0
     lista_clusters: Vec<usize>,    // lista_clusters contiene índices a los vectores del espacio. .len() = num_elementos
     recuento_clusters: Vec<usize>,
 
     centroides: Vec<Punto>,
     recalcular_centroides: bool,
 
-    dim_vectores: usize,
-    num_elementos: usize,
+    pub dim_vectores: usize,
+    pub num_elementos: usize,
     espacio: Vec<Punto>,
     distancias: MatrizDinamica<f64>,
 
@@ -58,8 +58,53 @@ impl Clusters {
     }
 
     pub fn calcular_matriz_distancias(&mut self) {
-        // TODO
+        dbg!("Se empieza a calcular la diagonal superior de la matriz de distancias");
+
+        for i in 0 .. self.espacio.len() {
+            for j in i+1 .. self.espacio.len() {
+                self.distancias[(i, j)] = distancia(&self.espacio[(i)], &self.espacio[(j)]);
+            }
+        }
+
+        dbg!("Matriz de distancias calculada: {:?}", &self.distancias);
     }
+
+    /*
+        NOTE: consume el vector, dejándolo inutilizado para el resto del programa
+    */
+    pub fn asignar_vector(&mut self, vector: Punto, posicion: usize) {
+        if posicion >= self.espacio.len() {
+            panic!("La posición descrita no se encuentra en el rango del espacio");
+        }
+
+        self.espacio[(posicion)] = vector;
+    }
+
+    /*
+        NOTE: consume el vector, dejándolo inutilizado para el resto del programa
+    */
+    pub fn asignar_espacio(&mut self, nuevo_espacio: Vec<Punto>) {
+        if nuevo_espacio.len() != self.espacio.len() {
+            println!("PROBLEMA: el nuevo espacio asignado no tiene el mismo tamaño que el inicializado");
+        }
+
+        self.espacio = nuevo_espacio;
+    }
+
+    //
+    // ──────────────────────────────────────────────────────────── RESTRICCIONES ─────
+    //
+
+    pub fn asignar_matriz_restricciones(&mut self, nuevas_restricciones: MatrizDinamica<i8>) {
+        if    nuevas_restricciones.nrows() != self.restricciones.nrows()
+           || nuevas_restricciones.ncols() != self.restricciones.ncols() {
+
+            println!("PROBLEMA: la dimensión de las filas y las columnas asignadas difiere de la existente");
+        }
+
+        self.restricciones = nuevas_restricciones;
+    }
+
 
 //
 // ─── CLUSTERS ───────────────────────────────────────────────────────────────────
@@ -175,9 +220,6 @@ impl Clusters {
                 -1 => deben estar en distintos clusters.
 
                 Si alguna de ellas es violada => infeasiblity++
-
-
-                Clusters: []
         */
 
         let mut infeasibility: u8 = 0;
@@ -206,5 +248,4 @@ impl Clusters {
 
         infeasibility
     }
-
 }
