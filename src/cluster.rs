@@ -5,7 +5,7 @@ use nalgebra::*;
 #[allow(non_snake_case)]
 pub struct Clusters {
     num_clusters: usize,        // NOTE: los clusters empiezan en 1. Por defecto se tiene el cluster 0
-    lista_clusters: Vec<u8>,    // lista_clusters contiene índices a los vectores del espacio. .len() = num_elementos
+    lista_clusters: Vec<usize>,    // lista_clusters contiene índices a los vectores del espacio. .len() = num_elementos
     recuento_clusters: Vec<usize>,
 
     centroides: Vec<Punto>,
@@ -16,27 +16,31 @@ pub struct Clusters {
     espacio: Vec<Punto>,
     distancias: MatrizDinamica<f64>,
 
-    restricciones_ML: Vec<Restriccion>,
-    restricciones_CL: Vec<Restriccion>,
+    restricciones_ML: Vec<Restriccion>,     // FIXME Actualmente en desuso. Se prefiere implementación en matriz debido a la presentación de los datos
+    restricciones_CL: Vec<Restriccion>,     // FIXME ^
+
+    restricciones: MatrizDinamica<i8>
 }
 
 impl Clusters {
-    pub fn new(n_clusters: usize, dim_vectores: usize, num_elementos: usize, num_clusters: usize) -> Clusters {
+    pub fn new(num_clusters: usize, dim_vectores: usize, num_elementos: usize) -> Clusters {
         Clusters {
-            num_clusters: n_clusters,
-            lista_clusters: vec![0; num_elementos],
-            recuento_clusters: vec![0; n_clusters],
+            num_clusters,
+            lista_clusters: vec![0; num_elementos],         // Array con los índices a los vectores del espacio.
+            recuento_clusters: vec![0; num_clusters],         // Cuántos elementos tiene cada cluster.
 
-            centroides: vec![DVector::zeros(dim_vectores); num_clusters],
+            centroides: vec![DVector::zeros(dim_vectores); num_clusters],     // Tantos como clusters haya
             recalcular_centroides: true,
 
-            dim_vectores: dim_vectores,
-            num_elementos: num_elementos,
-            espacio: vec![DVector::zeros(dim_vectores); num_elementos],
-            distancias: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0.0),
+            dim_vectores,
+            num_elementos,
+            espacio: vec![DVector::zeros(dim_vectores); num_elementos],       // Vector de puntos aka matriz.
+            distancias: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0.0),  // Matriz de distancias entre puntos.
 
             restricciones_CL: Vec::new(),
-            restricciones_ML: Vec::new()
+            restricciones_ML: Vec::new(),
+
+            restricciones: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0)
         }
     }
 
@@ -65,14 +69,15 @@ impl Clusters {
     // ──────────────────────────────────────────────────────────────── ELEMENTOS ─────
     //
 
-    pub fn indices_cluster(&self, c: u8) -> Vec<u8> {
+    pub fn indices_cluster(&self, c: usize) -> Vec<usize> {
         /*
             Cada posición del vector lista_clusters corresponde con la misma de espacio, salvo que
             las entradas denotan en qué cluster están.
         */
         assert_ne!(0, c);
 
-        let mut indices = Vec::new();
+        let mut indices: Vec<usize> = Vec::new();
+
         for i in 0..self.lista_clusters.len() {
             if self.lista_clusters[i] == c {
                 indices.push(self.lista_clusters[i])
@@ -120,15 +125,15 @@ impl Clusters {
     }
 
     //
-    // ──────────────────────────────────────────────────────────── OTRAS MEDIDAS ─────
+    // ───────────────────────────────────────────── DISTANCIA MEDIA INTRACLUSTER ─────
     //
 
 
-    pub fn distancia_media_intracluster(&self) -> Vec<f64> {
+    pub fn vector_distancias_medias_intracluster(&self) -> Vec<f64> {
         let mut dm_ic = vec![0.0; self.num_clusters];
 
-        for i in 1..=self.num_clusters {
-            let indices_cluster = self.indices_cluster(i as u8);
+        for i in 1 ..= self.num_clusters {
+            let indices_cluster = self.indices_cluster(i);
             let cent = &self.centroides[i - 1];
 
          /*    let mut suma_distancias = 0.0;
@@ -148,15 +153,21 @@ impl Clusters {
         dm_ic
     }
 
+    pub fn distancia_media_intracluster(&self, c: usize) -> f64 {
+        self.vector_distancias_medias_intracluster()[c - 1]
+    }
+
+    pub fn desviacion_general_particion(&self) -> f64 {
+        self.vector_distancias_medias_intracluster().iter().sum::<f64>() * 1.0/(self.num_clusters as f64)
+    }
+
+    //
+    // ──────────────────────────────────────────────────────── MEDIDAS GENERALES ─────
+    //
+
     pub fn infeasibility(&self) -> u8 {
         assert_eq!(self.espacio.len(), self.restricciones.len());
-
-        // Sacar todos los índices de los clusters
-        let mut indices_clusters: Vec<Vec<usize>> = Vec::with_capacity(self.num_clusters);
-
-        for i in 0 .. indices_clusters.len() {
-            indices_clusters[i] = self.indices_cluster(i + 1) as Vec<usize>;
-        }
+        assert_eq!(self.espacio.len(), self.lista_clusters.len());
 
         /*
             Calcular el número de restricciones violadas; esto es, dado un elemento de restricciones
@@ -171,26 +182,21 @@ impl Clusters {
 
         let mut infeasibility: u8 = 0;
 
+        // Matriz simétrica => tomamos solo triangular superior
         for i in 0 .. self.restricciones.len() {
-            for j in 0 .. self.restricciones.len() {
+            for j in i+1 .. self.restricciones.len() {
                 match self.restricciones[(i,j)]                     // NOTE: echarle un ojo a a la eficiencia del match. Proponer if.
                 {
                     1 => {
                         // Comprobar que ambos sí están en el mismo.
-                        for k in 0 .. indices_clusters.len() {
-                            if indices_clusters[k].contains(&i) && !indices_clusters[k].contains(&j) {
-                                infeasibility = infeasibility + 1;
-                                break;
-                            }
+                        if self.lista_clusters[i] != self.lista_clusters[j] {       // Índices corresponden a los mismos que se encuetran en los clusters.
+                            infeasibility = infeasibility + 1;
                         }
                     }
                     -1 => {
                         // Comprobar que no están presentes en el mismo.
-                        for k in 0 .. indices_clusters.len() {
-                            if indices_clusters[k].contains(&i) && indices_clusters[k].contains(&j) {
-                                infeasibility = infeasibility + 1;
-                                break;
-                            }
+                        if self.lista_clusters[i] == self.lista_clusters[j] {
+                            infeasibility = infeasibility + 1;
                         }
                     }
                     _ => (),        // Otros valores; i.e. 0
