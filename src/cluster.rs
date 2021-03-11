@@ -148,9 +148,57 @@ impl Clusters {
         dm_ic
     }
 
-    pub fn desviacion_general_particion(&self) {
-        // TODO
-    }
+    pub fn infeasibility(&self) -> u8 {
+        assert_eq!(self.espacio.len(), self.restricciones.len());
 
+        // Sacar todos los índices de los clusters
+        let mut indices_clusters: Vec<Vec<usize>> = Vec::with_capacity(self.num_clusters);
+
+        for i in 0 .. indices_clusters.len() {
+            indices_clusters[i] = self.indices_cluster(i + 1) as Vec<usize>;
+        }
+
+        /*
+            Calcular el número de restricciones violadas; esto es, dado un elemento de restricciones
+                1  => deben estar en el mismo cluster.
+                -1 => deben estar en distintos clusters.
+
+                Si alguna de ellas es violada => infeasiblity++
+
+
+                Clusters: []
+        */
+
+        let mut infeasibility: u8 = 0;
+
+        for i in 0 .. self.restricciones.len() {
+            for j in 0 .. self.restricciones.len() {
+                match self.restricciones[(i,j)]                     // NOTE: echarle un ojo a a la eficiencia del match. Proponer if.
+                {
+                    1 => {
+                        // Comprobar que ambos sí están en el mismo.
+                        for k in 0 .. indices_clusters.len() {
+                            if indices_clusters[k].contains(&i) && !indices_clusters[k].contains(&j) {
+                                infeasibility = infeasibility + 1;
+                                break;
+                            }
+                        }
+                    }
+                    -1 => {
+                        // Comprobar que no están presentes en el mismo.
+                        for k in 0 .. indices_clusters.len() {
+                            if indices_clusters[k].contains(&i) && indices_clusters[k].contains(&j) {
+                                infeasibility = infeasibility + 1;
+                                break;
+                            }
+                        }
+                    }
+                    _ => (),        // Otros valores; i.e. 0
+                }
+            }
+        }
+
+        infeasibility
+    }
 
 }
