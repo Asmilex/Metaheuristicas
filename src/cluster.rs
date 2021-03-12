@@ -11,10 +11,10 @@ pub struct Clusters {
     centroides: Vec<Punto>,
     recalcular_centroides: bool,
 
-    pub dim_vectores: usize,
-    pub num_elementos: usize,
-    espacio: Vec<Punto>,
-    distancias: MatrizDinamica<f64>,
+    pub dim_vectores: usize,        // Atributos presentes en el vector
+    pub num_elementos: usize,       // Tamaño del espacio
+    pub espacio: Vec<Punto>,
+    pub distancias: MatrizDinamica<f64>,
 
     restricciones_ML: Vec<Restriccion>,     // FIXME Actualmente en desuso. Se prefiere implementación en matriz debido a la presentación de los datos
     restricciones_CL: Vec<Restriccion>,     // FIXME ^
@@ -57,17 +57,15 @@ impl Clusters {
         self.distancias = DMatrix::from_diagonal_element(self.num_elementos, self.num_elementos, 0.0);
     }
 
-    pub fn calcular_matriz_distancias(&mut self) {
-        dbg!("Se empieza a calcular la diagonal superior de la matriz de distancias");
 
+    pub fn calcular_matriz_distancias(&mut self) {
         for i in 0 .. self.espacio.len() {
             for j in i+1 .. self.espacio.len() {
                 self.distancias[(i, j)] = distancia(&self.espacio[(i)], &self.espacio[(j)]);
             }
         }
-
-        dbg!("Matriz de distancias calculada: {:?}", &self.distancias);
     }
+
 
     /*
         NOTE: consume el vector, dejándolo inutilizado para el resto del programa
@@ -79,6 +77,7 @@ impl Clusters {
 
         self.espacio[(posicion)] = vector;
     }
+
 
     /*
         NOTE: consume el vector, dejándolo inutilizado para el resto del programa
@@ -148,25 +147,41 @@ impl Clusters {
         &self.centroides[c as usize -1]
     }
 
+
     pub fn vector_centroides(&mut self) -> &Vec<Punto> {
         &self.centroides
     }
 
-    fn calcular_centroides(&mut self) {
-        for i in 0..self.lista_clusters.len() {
-            if self.lista_clusters[i] != 0 {
-                // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
-                self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
-                self.recuento_clusters[(self.lista_clusters[i] -1 ) as usize] = self.recuento_clusters[(self.lista_clusters[i] - 1) as usize] + 1;
+
+    pub fn asingar_centroides(&mut self, nuevos_centroides: Vec<Punto>) {
+        if nuevos_centroides.len() != self.centroides.len() {
+            println!("PROBLEMA: los nuevos centroides asignados tienen distinto tamaño al esperado");
+        }
+
+        self.centroides = nuevos_centroides;
+    }
+
+
+    pub fn calcular_centroides(&mut self) {
+        if self.lista_clusters.iter().any(|&x| x == 0) {
+            println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada");
+        }
+        else {
+            for i in 0..self.lista_clusters.len() {
+                if self.lista_clusters[i] != 0 {
+                    // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
+                    self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
+                    self.recuento_clusters[(self.lista_clusters[i] -1 ) as usize] = self.recuento_clusters[(self.lista_clusters[i] - 1) as usize] + 1;
+                }
             }
-        }
 
-        for i in 0..self.num_clusters {
-            self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
-        }
+            for i in 0..self.num_clusters {
+                self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
+            }
 
-        self.recalcular_centroides = false;
-        dbg!("Centroides recalculados");
+            self.recalcular_centroides = false;
+            dbg!("Centroides recalculados");
+        }
     }
 
     //
@@ -198,9 +213,11 @@ impl Clusters {
         dm_ic
     }
 
+
     pub fn distancia_media_intracluster(&self, c: usize) -> f64 {
         self.vector_distancias_medias_intracluster()[c - 1]
     }
+
 
     pub fn desviacion_general_particion(&self) -> f64 {
         self.vector_distancias_medias_intracluster().iter().sum::<f64>() * 1.0/(self.num_clusters as f64)
@@ -247,5 +264,22 @@ impl Clusters {
         }
 
         infeasibility
+    }
+
+    pub fn infeasibility_esperada (&mut self, indice: usize, c: usize) -> u8 {
+        if c > self.num_clusters {
+            panic!("Cluster mayor del que se esperaba");
+        }
+        if indice > self.num_elementos {
+            panic!("Índice mayor del que se esperaba");
+        }
+
+        let antiguo_valor = self.lista_clusters[indice];
+
+        self.lista_clusters[indice] = c;
+        let expected_infeasibility = self.infeasibility();
+        self.lista_clusters[indice] = antiguo_valor;
+
+        expected_infeasibility
     }
 }
