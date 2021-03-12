@@ -11,15 +11,30 @@
  */
 
 
-// Declaración de la estructura de archivos
-mod cluster;
-mod utils;
+//
+// ─────────────────────────────────────────────────── ESTRUCTURA DE ARCHIVOS ─────
+//
 
-// Imports
-use cluster::*;
+    mod cluster;
+    mod utils;
+    mod file_io;
+
+//
+// ────────────────────────────────────────────────────────────────── IMPORTS ─────
+//
+
+    use cluster::*;
+    use file_io::*;
+    use std::path::Path;
+
 
 fn main() {
-    let mi_cluster = Clusters::new(2, 3, 10);
 
-    print!("{:#?}", mi_cluster);
+    let directorio: &Path = Path::new("./data/PAR/");
+    let archivos = file_io::leer_archivos_dir(directorio);
+
+    let mi_cluster = leer_archivo_PAR(&archivos[0], &archivos[1]);
+
+    //println!("{:?}", mi_cluster);
+
 }
