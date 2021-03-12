@@ -14,13 +14,15 @@ use nalgebra::*;
 // ────────────────────────────────────────────────────── ENUMS Y ESTRUCTURAS ─────
 //
 
-
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
     pub enum PAR_nombres {
         Bupa,
         Glass,
         Zoo
     }
-
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
     pub struct PAR_parametros {
         pub tipo: PAR_nombres,
         pub atributos: usize,
