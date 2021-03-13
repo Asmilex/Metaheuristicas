@@ -1,9 +1,16 @@
 use std::fs::*;
 use std::path::{Path, PathBuf};
 use std::io::{BufReader, BufRead};
+
 use crate::cluster::*;
 use crate::utils::*;
+
 use nalgebra::{DVector, DMatrix};
+
+
+//
+// ───────────────────────────────────────────────────────── LECTURA DE DATOS ─────
+//
 
 
 pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {

@@ -9,7 +9,6 @@ pub struct Clusters {
     recuento_clusters: Vec<usize>,
 
     centroides: Vec<Punto>,
-    recalcular_centroides: bool,
 
     pub dim_vectores: usize,        // Atributos presentes en el vector
     pub num_elementos: usize,       // Tamaño del espacio
@@ -30,7 +29,6 @@ impl Clusters {
             recuento_clusters: vec![0; num_clusters],         // Cuántos elementos tiene cada cluster.
 
             centroides: vec![DVector::zeros(dim_vectores); num_clusters],     // Tantos como clusters haya
-            recalcular_centroides: true,
 
             dim_vectores,
             num_elementos,
@@ -137,14 +135,26 @@ impl Clusters {
     }
 
 
+    pub fn asignar_cluster_a_elemento (&mut self, i: usize, c: usize) {
+        if i > self.lista_clusters.len() {
+            panic!("El índice pasado se sale del espacio");
+        }
+        if c > self.num_clusters {
+            panic!("El cluster pasado se sale del espacio");
+        }
+
+        self.lista_clusters[i] = c;
+    }
+
+
     //
     // ─────────────────────────────────────────────────────────────── CENTROIDES ─────
     //
 
 
-    pub fn centroide_cluster(&mut self, c: u8) -> &Punto {
+    pub fn centroide_cluster(&mut self, c: usize) -> Punto {
         assert_ne!(c, 0);
-        &self.centroides[c as usize -1]
+        self.centroides[c - 1].clone()
     }
 
 
@@ -153,7 +163,7 @@ impl Clusters {
     }
 
 
-    pub fn asingar_centroides(&mut self, nuevos_centroides: Vec<Punto>) {
+    pub fn asignar_centroides(&mut self, nuevos_centroides: Vec<Punto>) {
         if nuevos_centroides.len() != self.centroides.len() {
             println!("PROBLEMA: los nuevos centroides asignados tienen distinto tamaño al esperado");
         }
@@ -164,7 +174,7 @@ impl Clusters {
 
     pub fn calcular_centroides(&mut self) {
         if self.lista_clusters.iter().any(|&x| x == 0) {
-            println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada");
+            println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada - calcular_centroides");
         }
         else {
             for i in 0..self.lista_clusters.len() {
@@ -179,7 +189,6 @@ impl Clusters {
                 self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
             }
 
-            self.recalcular_centroides = false;
             dbg!("Centroides recalculados");
         }
     }
