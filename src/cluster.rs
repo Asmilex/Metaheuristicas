@@ -1,5 +1,6 @@
 use crate::utils::*;
 use nalgebra::*;
+use std::fmt;
 
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -144,7 +145,7 @@ impl Clusters {
             panic!("El cluster pasado se sale del espacio");
         }
 
-        if self.lista_clusters[i] != 0 {
+        if self.lista_clusters[i] > 0 {
             self.recuento_clusters[self.lista_clusters[i] - 1] = self.recuento_clusters[self.lista_clusters[i] - 1] - 1;
         }
 
@@ -182,6 +183,12 @@ impl Clusters {
         if self.lista_clusters.iter().any(|&x| x == 0) {
             println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada - calcular_centroides");
             return
+        }
+
+        for centroide in self.centroides.iter_mut() {
+            for i in 0..centroide.nrows() {
+                centroide[(i)] = 0.0;
+            }
         }
 
         for i in 0..self.lista_clusters.len() {
@@ -293,5 +300,29 @@ impl Clusters {
         self.lista_clusters[indice] = antiguo_valor;
 
         expected_infeasibility
+    }
+}
+
+//
+// ──────────────────────────────────────────────────────────────── FORMATTEO ─────
+//
+
+
+impl fmt::Display for Clusters {
+    fn fmt (&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write! (
+            f,
+            "Información del cluster:
+                \n\t▸ Número de clusters: {:?}
+                \n\t▸ Lista con los clusters: {:?}
+                \n\t▸ Elementos en cada cluster: {:?}
+                \n\t▸ Centroides: {:#?}
+                \n\t▸ Elementos en el espacio: {:?}",
+            self.num_clusters,
+            self.lista_clusters,
+            self.recuento_clusters,
+            self.centroides,
+            self.num_elementos
+        )
     }
 }
