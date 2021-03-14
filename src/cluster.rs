@@ -5,7 +5,7 @@ use nalgebra::*;
 #[allow(non_snake_case)]
 pub struct Clusters {
     pub num_clusters: usize,        // NOTE: los clusters empiezan en 1. Por defecto se tiene el cluster 0
-    lista_clusters: Vec<usize>,    // lista_clusters contiene índices a los vectores del espacio. .len() = num_elementos
+    lista_clusters: Vec<usize>,     // lista_clusters contiene índices a los vectores del espacio. .len() = num_elementos
     recuento_clusters: Vec<usize>,
 
     centroides: Vec<Punto>,
@@ -25,7 +25,7 @@ impl Clusters {
     pub fn new(num_clusters: usize, dim_vectores: usize, num_elementos: usize) -> Clusters {
         Clusters {
             num_clusters,
-            lista_clusters: vec![0; num_elementos],         // Array con los índices a los vectores del espacio.
+            lista_clusters: vec![0; num_elementos],           // Array con los índices a los vectores del espacio.
             recuento_clusters: vec![0; num_clusters],         // Cuántos elementos tiene cada cluster.
 
             centroides: vec![DVector::zeros(dim_vectores); num_clusters],     // Tantos como clusters haya
@@ -92,6 +92,9 @@ impl Clusters {
     // ──────────────────────────────────────────────────────────── RESTRICCIONES ─────
     //
 
+    /*
+        NOTE: consume el vector, dejándolo inutilizado para el resto del programa
+    */
     pub fn asignar_matriz_restricciones(&mut self, nuevas_restricciones: MatrizDinamica<i8>) {
         if    nuevas_restricciones.nrows() != self.restricciones.nrows()
            || nuevas_restricciones.ncols() != self.restricciones.ncols() {
@@ -118,15 +121,7 @@ impl Clusters {
         */
         assert_ne!(0, c);
 
-        let mut indices: Vec<usize> = Vec::new();
-
-        for i in 0..self.lista_clusters.len() {
-            if self.lista_clusters[i] == c {
-                indices.push(self.lista_clusters[i])
-            }
-        }
-
-        indices
+        self.lista_clusters.iter().filter(|&valor| *valor == c).copied().collect()
     }
 
 
@@ -144,6 +139,7 @@ impl Clusters {
         }
 
         self.lista_clusters[i] = c;
+        self.recuento_clusters[c-1] = self.recuento_clusters[c-1] + 1;
     }
 
 
@@ -175,22 +171,21 @@ impl Clusters {
     pub fn calcular_centroides(&mut self) {
         if self.lista_clusters.iter().any(|&x| x == 0) {
             println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada - calcular_centroides");
+            return
         }
-        else {
-            for i in 0..self.lista_clusters.len() {
-                if self.lista_clusters[i] != 0 {
-                    // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
-                    self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
-                    self.recuento_clusters[(self.lista_clusters[i] -1 ) as usize] = self.recuento_clusters[(self.lista_clusters[i] - 1) as usize] + 1;
-                }
-            }
 
-            for i in 0..self.num_clusters {
-                self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
-            }
-
-            dbg!("Centroides recalculados");
+        for i in 0..self.lista_clusters.len() {
+            // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
+            // NOTE: condición de que no sea 0 asegurada arriba.
+            self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
         }
+
+        for i in 0..self.num_clusters {
+            self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
+        }
+
+        dbg!("Centroides recalculados");
+
     }
 
     //
