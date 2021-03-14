@@ -18,7 +18,8 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ───────────────────────────────────────────────── 1. CENTROIDES ALEATORIOS ─────
 
-    println!("▸ Calculando centroides aleatorios iniciales");
+    println!("Ejecutando greedy_COPKM para el cálculo de los clusters");
+    println!("\t▸ Calculando centroides aleatorios iniciales");
 
     let mut rng = thread_rng();     // Criptográficamente seguro; distribución estándar https://rust-random.github.io/book/guide-rngs.html
 
@@ -34,7 +35,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ─────────────────────────────────────────────────────── 2. BARAJAR INDICES ─────
 
-    println!("▸ Barajando índices");
+    println!("\t▸ Barajando índices");
 
     let mut indices_barajados: Vec<i32> = vec![-1; cluster.num_elementos];
     let mut recuento_indices: usize = 0;
@@ -56,7 +57,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ─────────────────────────────────────────────────── 3. COMPUTO DEL CLUSTER ─────
 
-    println!("▸ Computando cluster");
+    println!("\t▸ Computando cluster");
 
     let mut cambios_en_cluster = true;
 
@@ -66,43 +67,35 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
         // ─── 3.1 ─────────────────────────────────────────────────────────
 
         for index in indices_barajados.iter() {
-            //println!("\t▸ Calculando índice {}", index);
-            // FIXME hay que comprobar el incremento, no la esperada!
-            // FIXME Andrés de mañana, corrígelo fiera.
 
-            let mut min_infeasibility: u32 = u32::MAX;
-            let mut best_clusters: Vec<usize> = Vec::new();
+            // Calcular el incremento en infeasibility que produce la asignación de xi a cada cluster cj
 
-            for cluster_temp in 1 ..= cluster.num_clusters {
-                let expected_infeasibility = cluster.infeasibility_esperada(*index as usize, cluster_temp);
+            let mut expected_infeasibility: Vec<u32> = Vec::new();
 
-                if expected_infeasibility < min_infeasibility {
-                    // Si es menor, limpiar todo y seguir. Si son iguales, tenemos un nuevo candidato
-
-                    if expected_infeasibility != min_infeasibility {
-                        min_infeasibility = expected_infeasibility;
-                        best_clusters.clear();
-                    }
-
-                    best_clusters.push(cluster_temp);
-                    cambios_en_cluster = true;
-                }
+            for c in 1 ..= cluster.num_clusters {
+                expected_infeasibility.push(cluster.infeasibility_esperada(*index as usize, c));
             }
 
-            // Una vez tenemos los mejores clusters para un cierto índice, seleccionar aquel cuyo centroide sea el menor
+            let minima_infeasibility = expected_infeasibility.iter().min().unwrap();    // Al ser la infeasibily actual una constante, aquella que produzca la menor es la que tiene una delta menor con respecto al total.
+
             let mut distancia_min = f64::MAX;
             let mut best_cluster: usize = 0;
 
-            for c in best_clusters.iter() {
-                let distancia_temp = distancia(&cluster.centroide_cluster(*c), &cluster.espacio[(*index as usize)]);
-                if distancia_temp < distancia_min {
-                    distancia_min = distancia_temp;
-                    best_cluster = *c;
+            // De entre las asignaciones que producen menos incremento en infeasiblity, seleccionar la asociada con el centroide mu_j más cercano a xi
+            for c in 1 ..= cluster.num_clusters {
+                if expected_infeasibility[c-1] == *minima_infeasibility {
+                    let distancia_temp = distancia(&cluster.centroide_cluster(c), &cluster.espacio[(*index as usize)]);
+                    if distancia_temp < distancia_min {
+                        distancia_min = distancia_temp;
+                        best_cluster = c;
+                    }
                 }
             }
 
-            // Asignar el nuevo centroide
-            cluster.asignar_cluster_a_elemento(*index as usize, best_cluster);
+            if cluster.clusters()[*index as usize] != best_cluster {
+                cluster.asignar_cluster_a_elemento(*index as usize, best_cluster);
+                cambios_en_cluster = true;
+            }
         }
 
 
@@ -111,5 +104,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
         cluster.calcular_centroides();
     }
 
+    println!("Cálculo del cluster finalizado ✓");
     cluster
 }
