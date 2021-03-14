@@ -33,7 +33,8 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
     3. Cargar las restricciones (se encuentran en los .const)
     */
 
-    println!("Se deciden los parámetros del cluster");
+    println!("Comienza la lectura de los archivos");
+    println!("\t▸ Se deciden los parámetros del cluster");
 
     // ──────────────────────────────────────────────────── DETERMINAR PARAMETROS ─────
 
@@ -58,7 +59,7 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
     let f = File::open(ruta_archivo_vectores).unwrap();
     let reader = BufReader::new(f);
 
-    println!("Se empieza a leer el archivo {:?}", &ruta_archivo_vectores);
+    println!("\t▸ Se empieza a leer el archivo {:?}", &ruta_archivo_vectores);
 
     for linea in reader.lines() {
         let mut punto: Punto = DVector::zeros(cluster.dim_vectores);
@@ -76,7 +77,6 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
         }
     }
 
-    println!("Finalizada lectura del espacio");
     cluster.asignar_espacio(espacio);
 
 
@@ -89,7 +89,7 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
     let f = File::open(ruta_archivo_restric).unwrap();
     let reader = BufReader::new(f);
 
-    println!("Se empiezan a leer las restricciones {:?}", &ruta_archivo_restric);
+    println!("\t▸ Se empiezan a leer las restricciones {:?}", &ruta_archivo_restric);
 
     for linea in reader.lines() {
         let entradas_como_vector = linea.unwrap();
@@ -107,7 +107,7 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
 
     cluster.asignar_matriz_restricciones(restricciones);
 
-    println!("Finalizada la lectura del cluster");
+    println!("Finalizada la lectura del cluster ✓\n");
 
     cluster
 }
