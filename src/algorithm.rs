@@ -81,6 +81,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
             let mut distancia_min = f64::MAX;
             let mut best_cluster: usize = 0;
 
+
             // De entre las asignaciones que producen menos incremento en infeasiblity, seleccionar la asociada con el centroide mu_j más cercano a xi
             for c in 1 ..= cluster.num_clusters {
                 if expected_infeasibility[c-1] == *minima_infeasibility {
@@ -92,7 +93,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
                 }
             }
 
-            if cluster.clusters()[*index as usize] != best_cluster {
+            if best_cluster != 0 && cluster.clusters()[*index as usize] != best_cluster {
                 cluster.asignar_cluster_a_elemento(*index as usize, best_cluster);
                 cambios_en_cluster = true;
             }
