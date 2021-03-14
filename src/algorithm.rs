@@ -18,12 +18,14 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ───────────────────────────────────────────────── 1. CENTROIDES ALEATORIOS ─────
 
+    println!("▸ Calculando centroides aleatorios iniciales");
+
     let mut rng = thread_rng();     // Criptográficamente seguro; distribución estándar https://rust-random.github.io/book/guide-rngs.html
 
     let mut centroides_aleatorios: Vec<Punto> = vec![DVector::zeros(cluster.dim_vectores); cluster.num_clusters];
 
     for i in 0 .. centroides_aleatorios.len() {
-        for j in 0 .. centroides_aleatorios[i].ncols() {
+        for j in 0 .. centroides_aleatorios[i].nrows() {
             centroides_aleatorios[i][(j)] = rng.gen();  // Distribución en 0 .. 1
         }
     }
@@ -31,6 +33,8 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
     cluster.asignar_centroides(centroides_aleatorios);
 
     // ─────────────────────────────────────────────────────── 2. BARAJAR INDICES ─────
+
+    println!("▸ Barajando índices");
 
     let mut indices_barajados: Vec<i32> = vec![-1; cluster.num_elementos];
     let mut recuento_indices: usize = 0;
@@ -52,20 +56,27 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ─────────────────────────────────────────────────── 3. COMPUTO DEL CLUSTER ─────
 
+    println!("▸ Computando cluster");
+
     let mut cambios_en_cluster = true;
 
     while cambios_en_cluster {
+        cambios_en_cluster = false;
 
         // ─── 3.1 ─────────────────────────────────────────────────────────
 
         for index in indices_barajados.iter() {
-            let mut min_infeasibility: u8 = u8::MAX;
+            //println!("\t▸ Calculando índice {}", index);
+            // FIXME hay que comprobar el incremento, no la esperada!
+            // FIXME Andrés de mañana, corrígelo fiera.
+
+            let mut min_infeasibility: u32 = u32::MAX;
             let mut best_clusters: Vec<usize> = Vec::new();
 
             for cluster_temp in 1 ..= cluster.num_clusters {
                 let expected_infeasibility = cluster.infeasibility_esperada(*index as usize, cluster_temp);
 
-                if expected_infeasibility <= min_infeasibility {
+                if expected_infeasibility < min_infeasibility {
                     // Si es menor, limpiar todo y seguir. Si son iguales, tenemos un nuevo candidato
 
                     if expected_infeasibility != min_infeasibility {
@@ -87,7 +98,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
                 if distancia_temp < distancia_min {
                     distancia_min = distancia_temp;
                     best_cluster = *c;
-                    cambios_en_cluster = true;
                 }
             }
 
