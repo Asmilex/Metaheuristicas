@@ -110,6 +110,12 @@ impl Clusters {
 // ─── CLUSTERS ───────────────────────────────────────────────────────────────────
 //
 
+
+    pub fn clusters(&self) -> &Vec<usize> {
+        &self.lista_clusters
+    }
+
+
     //
     // ──────────────────────────────────────────────────────────────── ELEMENTOS ─────
     //
@@ -136,6 +142,10 @@ impl Clusters {
         }
         if c > self.num_clusters {
             panic!("El cluster pasado se sale del espacio");
+        }
+
+        if self.lista_clusters[i] != 0 {
+            self.recuento_clusters[self.lista_clusters[i] - 1] = self.recuento_clusters[self.lista_clusters[i] - 1] - 1;
         }
 
         self.lista_clusters[i] = c;
@@ -183,9 +193,6 @@ impl Clusters {
         for i in 0..self.num_clusters {
             self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
         }
-
-        dbg!("Centroides recalculados");
-
     }
 
     //
@@ -231,8 +238,9 @@ impl Clusters {
     // ──────────────────────────────────────────────────────── MEDIDAS GENERALES ─────
     //
 
-    pub fn infeasibility(&self) -> u8 {
-        assert_eq!(self.espacio.len(), self.restricciones.len());
+    pub fn infeasibility(&self) -> u32 {
+        assert_eq!(self.espacio.len(), self.restricciones.nrows());
+        assert_eq!(self.restricciones.nrows(), self.restricciones.ncols());
         assert_eq!(self.espacio.len(), self.lista_clusters.len());
 
         /*
@@ -243,12 +251,12 @@ impl Clusters {
                 Si alguna de ellas es violada => infeasiblity++
         */
 
-        let mut infeasibility: u8 = 0;
+        let mut infeasibility: u32 = 0;
 
         // Matriz simétrica => tomamos solo triangular superior
-        for i in 0 .. self.restricciones.len() {
-            for j in i+1 .. self.restricciones.len() {
-                match self.restricciones[(i,j)]                     // NOTE: echarle un ojo a a la eficiencia del match. Proponer if.
+        for i in 0 .. self.restricciones.nrows() {
+            for j in i+1 .. self.restricciones.ncols() {
+                match self.restricciones[(i,j)]
                 {
                     1 => {
                         // Comprobar que ambos sí están en el mismo.
@@ -270,7 +278,7 @@ impl Clusters {
         infeasibility
     }
 
-    pub fn infeasibility_esperada (&mut self, indice: usize, c: usize) -> u8 {
+    pub fn infeasibility_esperada (&mut self, indice: usize, c: usize) -> u32 {
         if c > self.num_clusters {
             panic!("Cluster mayor del que se esperaba");
         }

@@ -27,9 +27,12 @@ fn main() {
     mi_cluster.calcular_matriz_distancias();
     println!("Distancias calculadas en {:?} ", now.elapsed());
 
+    println!("\nEjecutando greedy");
+
     now = Instant::now();
-    mi_cluster.calcular_centroides();
-    println!("Centroides: {:?}", &mi_cluster.vector_centroides());
+    let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster);
+    println!("Clusters: {:?}", &mi_cluster.clusters());
+
     println!("Centroides calculados en {:?} ", now.elapsed());
 
 }
