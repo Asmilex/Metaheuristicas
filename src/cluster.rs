@@ -1,8 +1,9 @@
 use crate::utils::*;
+
 use nalgebra::*;
 use multimap::MultiMap;
+
 use std::fmt;
-use std::collections::HashMap;
 
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -18,10 +19,12 @@ pub struct Clusters {
     pub espacio: Vec<Punto>,
     pub distancias: MatrizDinamica<f64>,
 
+    restricciones: MatrizDinamica<i8>,
+
     restricciones_ML: MultiMap<usize, usize>,
     restricciones_CL: MultiMap<usize, usize>,
 
-    restricciones: MatrizDinamica<i8>
+    pub num_restricciones: usize
 }
 
 impl Clusters {
@@ -38,10 +41,12 @@ impl Clusters {
             espacio: vec![DVector::zeros(dim_vectores); num_elementos],       // Vector de puntos aka matriz.
             distancias: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0.0),  // Matriz de distancias entre puntos.
 
-            restricciones_CL: MultiMap::new(),
-            restricciones_ML: MultiMap::new(),
+            restricciones: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0),
 
-            restricciones: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0)
+            restricciones_ML: MultiMap::new(),
+            restricciones_CL: MultiMap::new(),
+
+            num_restricciones: 0
         }
     }
 
@@ -230,12 +235,12 @@ impl Clusters {
             let indices_cluster = self.indices_cluster(i);
             let cent = &self.centroides[i - 1];
 
-         /*    let mut suma_distancias = 0.0;
+        /*  let mut suma_distancias = 0.0;
             for i in 0..indices_cluster.len() {
                 suma_distancias = suma_distancias + distancia(&self.espacio[(indices_cluster[i] as usize)].clone(), &cent);
             }
             dm_ic[i - 1] = suma_distancias * 1.0/self.elementos_en_cluster(i) as f64;
-            */
+        */
 
             dm_ic[i-1] = indices_cluster.iter()
                 .map(
@@ -348,14 +353,16 @@ impl fmt::Display for Clusters {
         write! (
             f,
             "Información del cluster:
-                \n\t▸ Número de clusters: {:?}
-                \n\t▸ Lista con los clusters: {:?}
-                \n\t▸ Elementos en cada cluster: {:?}
-                \n\t▸ Centroides: {:#?}
-                \n\t▸ Elementos en el espacio: {:?}",
+            ▸ Número de clusters: {}
+            ▸ Lista con los clusters: {:?}
+            ▸ Elementos en cada cluster: {:?}
+            ▸ Número de restricciones: {}
+            ▸ Centroides: {:?}
+            ▸ Elementos en el espacio: {:?}",
             self.num_clusters,
             self.lista_clusters,
             self.recuento_clusters,
+            self.num_restricciones,
             self.centroides,
             self.num_elementos
         )
