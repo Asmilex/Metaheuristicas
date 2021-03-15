@@ -7,7 +7,6 @@ use nalgebra::*;
 
     pub type Punto = DVector<f64>;
     pub type MatrizDinamica<Tipo> = MatrixMN<Tipo, Dynamic, Dynamic>;
-    pub type Restriccion = (Punto, Punto);
 
 
 //
