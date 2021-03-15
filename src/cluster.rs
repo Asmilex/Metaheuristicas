@@ -313,15 +313,26 @@ impl Clusters {
         // El incremento que se produce en la infeasibility es independiente del estado del resto del sistema (¿Creo?)
         // Por tanto, es suficiente comprobar cuáles se violan al colocar el índice en un cierto cluster.
 
-        let expected_infeasibility: u32 =
-               self.restricciones_ML.get_vec(&indice).unwrap()      // Lista de restricciones correspondientes al índice
-                .iter()
-                .filter(|&restriccion| c != self.lista_clusters[*restriccion])
-                .count() as u32                                               // Contamos aquellas que no se cumplen si ponemos que su cluster es el c
-            +  self.restricciones_CL.get_vec(&indice).unwrap()     // Sumamos tanto las CL como las ML
-                .iter()
-                .filter(|&restriccion| c == self.lista_clusters[*restriccion])
-                .count() as u32;
+        let mut expected_infeasibility: u32 = 0;
+
+        // Calcular cuántas se violan, y sumarlas.
+        match self.restricciones_ML.get_vec(&indice) {
+            Some(restricciones) =>
+                expected_infeasibility =
+                    restricciones.iter()
+                    .filter(|&restriccion| c != self.lista_clusters[*restriccion])
+                    .count() as u32,
+            None => ()
+        }
+
+        match self.restricciones_CL.get_vec(&indice) {
+            Some(restricciones) =>
+                expected_infeasibility = expected_infeasibility +
+                    restricciones.iter()
+                    .filter(|&restriccion| c == self.lista_clusters[*restriccion])
+                    .count() as u32,
+            None => ()
+        }
 
         expected_infeasibility
     }
