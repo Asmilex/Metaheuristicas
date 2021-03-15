@@ -204,20 +204,17 @@ impl Clusters {
             return
         }
 
-        for centroide in self.centroides.iter_mut() {
-            for i in 0..centroide.nrows() {
-                centroide[(i)] = 0.0;
+        for i_centroide in 0 .. self.num_clusters {
+            if self.recuento_clusters[i_centroide] != 0 {
+                let mut vect: Punto = DVector::zeros(self.dim_vectores);
+                // Si hay alguien en ese cluster, sumar los elementos del espacio y dividirlos por la cantidad de elementos que hay
+
+                for indice_elemento in self.indices_cluster(i_centroide+1).iter() {
+                    vect = vect + self.espacio[*indice_elemento].clone();
+                }
+
+                self.centroides[i_centroide] = vect.scale(1.0/(self.recuento_clusters[i_centroide] as f64));
             }
-        }
-
-        for i in 0..self.lista_clusters.len() {
-            // Clusters 1, .., num_clusters => i - 1 va desde 0 hasta num_clusters - 1. Memoria reservada previamente.
-            // NOTE: condición de que no sea 0 asegurada arriba.
-            self.centroides[(self.lista_clusters[i] - 1) as usize] += &self.espacio[i];
-        }
-
-        for i in 0..self.num_clusters {
-            self.centroides[(i)] = &self.centroides[(i)] * (1.0/(self.recuento_clusters[i]) as f64);
         }
     }
 
