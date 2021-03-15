@@ -1,6 +1,8 @@
 use crate::utils::*;
 use nalgebra::*;
+use multimap::MultiMap;
 use std::fmt;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -16,8 +18,8 @@ pub struct Clusters {
     pub espacio: Vec<Punto>,
     pub distancias: MatrizDinamica<f64>,
 
-    restricciones_ML: Vec<Restriccion>,     // FIXME Actualmente en desuso. Se prefiere implementación en matriz debido a la presentación de los datos
-    restricciones_CL: Vec<Restriccion>,     // FIXME ^
+    restricciones_ML: MultiMap<usize, usize>,
+    restricciones_CL: MultiMap<usize, usize>,
 
     restricciones: MatrizDinamica<i8>
 }
@@ -36,8 +38,8 @@ impl Clusters {
             espacio: vec![DVector::zeros(dim_vectores); num_elementos],       // Vector de puntos aka matriz.
             distancias: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0.0),  // Matriz de distancias entre puntos.
 
-            restricciones_CL: Vec::new(),
-            restricciones_ML: Vec::new(),
+            restricciones_CL: MultiMap::new(),
+            restricciones_ML: MultiMap::new(),
 
             restricciones: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0)
         }
@@ -48,14 +50,14 @@ impl Clusters {
 //
 
 
-    pub fn resize_espacio(&mut self, nuevo_tam: usize) {
+/*     pub fn resize_espacio(&mut self, nuevo_tam: usize) {
         self.num_elementos = nuevo_tam;
 
         // Cambiar el resto de componentes
         self.espacio = vec![DVector::zeros(self.dim_vectores); self.num_elementos];
         self.distancias = DMatrix::from_diagonal_element(self.num_elementos, self.num_elementos, 0.0);
     }
-
+ */
 
     pub fn calcular_matriz_distancias(&mut self) {
         for i in 0 .. self.espacio.len() {
@@ -104,6 +106,23 @@ impl Clusters {
         }
 
         self.restricciones = nuevas_restricciones;
+
+        for i in 0..self.restricciones.nrows() {
+            for j in 0..self.restricciones.ncols() {
+                match self.restricciones[(i, j)]
+                {
+                    1 => {
+                        self.restricciones_ML.insert(i, j);
+                    }
+                    -1 => {
+                        self.restricciones_CL.insert(i, j);
+                    }
+                    _ => ()
+                }
+            }
+        }
+
+        println!("Hashmap ML del primero vector: {:?}", self.restricciones_ML.get_vec(&0));
     }
 
 
@@ -285,7 +304,7 @@ impl Clusters {
         infeasibility
     }
 
-    pub fn infeasibility_esperada (&mut self, indice: usize, c: usize) -> u32 {
+    pub fn infeasibility_delta_esperada (&mut self, indice: usize, c: usize) -> u32 {
         if c > self.num_clusters {
             panic!("Cluster mayor del que se esperaba");
         }
@@ -293,11 +312,19 @@ impl Clusters {
             panic!("Índice mayor del que se esperaba");
         }
 
-        let antiguo_valor = self.lista_clusters[indice];
+        // NOTE
+        // El incremento que se produce en la infeasibility es independiente del estado del resto del sistema (¿Creo?)
+        // Por tanto, es suficiente comprobar cuáles se violan al colocar el índice en un cierto cluster.
 
-        self.lista_clusters[indice] = c;
-        let expected_infeasibility = self.infeasibility();
-        self.lista_clusters[indice] = antiguo_valor;
+        let expected_infeasibility: u32 =
+               self.restricciones_ML.get_vec(&indice).unwrap()      // Lista de restricciones correspondientes al índice
+                .iter()
+                .filter(|&restriccion| c != self.lista_clusters[*restriccion])
+                .count() as u32                                               // Contamos aquellas que no se cumplen si ponemos que su cluster es el c
+            +  self.restricciones_CL.get_vec(&indice).unwrap()     // Sumamos tanto las CL como las ML
+                .iter()
+                .filter(|&restriccion| c == self.lista_clusters[*restriccion])
+                .count() as u32;
 
         expected_infeasibility
     }

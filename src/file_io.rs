@@ -27,10 +27,10 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
 #[allow(non_snake_case)]
 pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: &PathBuf) -> Clusters {
     /*
-    Pasos a seguir:
-    1. Determinar si el archivo es de tipo Bupa, Glass o Zoo.
-    2. Cargar todos los puntos (se encuentran en los .dat)
-    3. Cargar las restricciones (se encuentran en los .const)
+        Pasos a seguir:
+        1. Determinar si el archivo es de tipo Bupa, Glass o Zoo.
+        2. Cargar todos los puntos (se encuentran en los .dat)
+        3. Cargar las restricciones (se encuentran en los .const)
     */
 
     println!("Comienza la lectura de los archivos");

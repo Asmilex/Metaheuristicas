@@ -73,7 +73,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
             let mut expected_infeasibility: Vec<u32> = Vec::new();
 
             for c in 1 ..= cluster.num_clusters {
-                expected_infeasibility.push(cluster.infeasibility_esperada(*index as usize, c));
+                expected_infeasibility.push(cluster.infeasibility_delta_esperada(*index as usize, c));
             }
 
             let minima_infeasibility = expected_infeasibility.iter().min().unwrap();    // Al ser la infeasibily actual una constante, aquella que produzca la menor es la que tiene una delta menor con respecto al total.
