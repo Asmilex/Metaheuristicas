@@ -113,21 +113,21 @@ impl Clusters {
         self.restricciones = nuevas_restricciones;
 
         for i in 0..self.restricciones.nrows() {
-            for j in 0..self.restricciones.ncols() {
+            for j in i+1..self.restricciones.ncols() {
                 match self.restricciones[(i, j)]
                 {
                     1 => {
                         self.restricciones_ML.insert(i, j);
+                        self.num_restricciones = self.num_restricciones + 1;
                     }
                     -1 => {
                         self.restricciones_CL.insert(i, j);
+                        self.num_restricciones = self.num_restricciones + 1;
                     }
                     _ => ()
                 }
             }
         }
-
-        println!("Hashmap ML del primero vector: {:?}", self.restricciones_ML.get_vec(&0));
     }
 
 
