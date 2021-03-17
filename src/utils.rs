@@ -80,11 +80,13 @@ use std::path::{PathBuf};
     pub struct Algoritmos {
         pub greedy: bool,
         pub BL: bool,
+
+        pub benchmark: bool,
     }
 
     impl Algoritmos {
         pub fn new() -> Algoritmos {
-            Algoritmos {greedy: false, BL: false}
+            Algoritmos {greedy: false, BL: false, benchmark: false}
         }
     }
 
