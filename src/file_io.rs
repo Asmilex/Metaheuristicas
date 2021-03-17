@@ -25,27 +25,14 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
 }
 
 #[allow(non_snake_case)]
-pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: &PathBuf) -> Clusters {
+pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: usize) -> Clusters {
     /*
         Pasos a seguir:
-        1. Determinar si el archivo es de tipo Bupa, Glass o Zoo.
-        2. Cargar todos los puntos (se encuentran en los .dat)
-        3. Cargar las restricciones (se encuentran en los .const)
+        1. Cargar todos los puntos (se encuentran en los .dat)
+        2. Cargar las restricciones (se encuentran en los .const)
     */
 
     println!("Comienza la lectura de los archivos");
-    println!("\t▸ Se deciden los parámetros del cluster");
-
-    // ──────────────────────────────────────────────────── DETERMINAR PARAMETROS ─────
-
-
-    let parametros: PAR_parametros = if ruta_archivo_vectores.as_os_str().to_str().unwrap().contains("bupa") {
-        PAR_parametros::new(PAR_nombres::Bupa)
-    } else if ruta_archivo_vectores.as_os_str().to_str().unwrap().contains("glass"){
-        PAR_parametros::new(PAR_nombres::Glass)
-    } else {
-        PAR_parametros::new(PAR_nombres::Zoo)
-    };
 
     let mut cluster = Clusters::new(parametros.clusters , parametros.atributos, parametros.instancias);
 
@@ -55,11 +42,10 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
 
     // ────────────────────────────────────────────────────── LECTURA DEL ARCHIVO ─────
 
+    println!("\t▸ Se empieza a leer el archivo {:?}", &parametros.archivo_datos);
 
-    let f = File::open(ruta_archivo_vectores).unwrap();
+    let f = File::open(parametros.archivo_datos).unwrap();
     let reader = BufReader::new(f);
-
-    println!("\t▸ Se empieza a leer el archivo {:?}", &ruta_archivo_vectores);
 
     for linea in reader.lines() {
         let mut punto: Punto = DVector::zeros(cluster.dim_vectores);
@@ -82,14 +68,23 @@ pub fn leer_archivo_PAR (ruta_archivo_vectores: &PathBuf, ruta_archivo_restric: 
 
     // ───────────────────────────────────────────── LECTURA DE LAS RESTRICCIONES ─────
 
+    let ruta_archivo_restric = match restricciones_a_usar {
+        10 => parametros.archivo_restricciones_10,
+        20 => parametros.archivo_restricciones_20,
+        _ => {
+            panic!("Se ha introducido incorrectamente el tipo de archivo de restricciones a usar");
+        }
+    };
+
+    println!("\t▸ Se empiezan a leer las restricciones {:?}", &ruta_archivo_restric);
 
     let mut restricciones: MatrizDinamica<i8> = DMatrix::from_element(parametros.instancias, parametros.instancias, 0);
     let mut fila: usize = 0;
 
+
     let f = File::open(ruta_archivo_restric).unwrap();
     let reader = BufReader::new(f);
 
-    println!("\t▸ Se empiezan a leer las restricciones {:?}", &ruta_archivo_restric);
 
     for linea in reader.lines() {
         let entradas_como_vector = linea.unwrap();
