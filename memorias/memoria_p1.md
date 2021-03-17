@@ -11,6 +11,8 @@
 
 - [Tabla de contenidos](#tabla-de-contenidos)
 - [Sobre esta memoria](#sobre-esta-memoria)
+    - [Benchmark de uno o más algoritmos](#benchmark-de-uno-o-más-algoritmos)
+    - [Ejecutar uno o varios algoritmos para un data set en particular](#ejecutar-uno-o-varios-algoritmos-para-un-data-set-en-particular)
 - [Descripción del problema](#descripción-del-problema)
 - [Algoritmos considerados](#algoritmos-considerados)
   - [Greedy](#greedy)
@@ -32,13 +34,22 @@
 
 En esta memoria se recoge toda la información relevante al desarrollo de la práctica 1, así como los conceptos necesarios para resolver el problema que estamos tratando.
 
-Todo el código está subido en el repositorio de Github https://github.com/Asmilex/Metaheuristicas. Para ejecutarlo, es necesario [tener instalado Rust](https://www.rust-lang.org/tools/install)
+Todo el código está subido en el repositorio de Github https://github.com/Asmilex/Metaheuristicas. Para ejecutarlo, es necesario [tener instalado Rust](https://www.rust-lang.org/tools/install). El comprimido de la entrega contendrá los mismos archivos que se encuentran en el repositorio, pero con la estructura cambiada para que la memoria se encuentre en la raíz.
 
-Para usar el programa, se debe clonar el repositorio y ejecutar `cargo run --release all`. Automáticamente, se ejecutará el algoritmo, y los datos se exportarán a .csv para que puedan ser visualizados.
+Se puede compilar el proyecto con `cargo build --release`. Sin embargo, es necesario especificar qué se quiere hacer para usarlo. Estas son las posibilidades:
 
-Los parámetros de entrada pueden ser visualizados con `cargo run --release help`.
+#### Benchmark de uno o más algoritmos
 
-El comprimido de la entrega contendrá los mismos archivos que se encuentran en el repositorio, pero con la estructura cambiada para que la memoria se encuentre en la raíz.
+Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. donde `[algoritmos]` son uno o más elementos de la siguiente lista:
+- `greedy`.
+- `bl`.
+
+Si no se especifican, se usarán todos. Cada algoritmo se ejecuta 5 veces por data set (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `TODO.csv`, el cual contendrá las medidas necesarias para el análisis de la práctica.
+
+#### Ejecutar uno o varios algoritmos para un data set en particular
+
+En la línea de comandos, `cargo run --release [dataset] {10, 20} [algoritmos]`, donde `[dataset]` puede valer `bupa`, `glass` o `zoo`, eligiendo qué conjunto de restricciones usar (`10` o `20`). La lista de algoritmos funciona de la misma manera que en apartado anterior.
+
 
   * * *
 
