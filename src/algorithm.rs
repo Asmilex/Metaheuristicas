@@ -60,8 +60,11 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
     println!("\t▸ Computando cluster");
 
     let mut cambios_en_cluster = true;
-
+    let mut iters: usize = 0;
     while cambios_en_cluster {
+        println!("Iteración {}", iters);
+        iters = iters + 1;
+
         cambios_en_cluster = false;
 
         // ─── 3.1 ─────────────────────────────────────────────────────────
@@ -80,7 +83,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
             let mut distancia_min = f64::MAX;
             let mut best_cluster: usize = 0;
-
 
             // De entre las asignaciones que producen menos incremento en infeasiblity, seleccionar la asociada con el centroide mu_j más cercano a xi
             for c in 1 ..= cluster.num_clusters {

@@ -3,7 +3,7 @@ use crate::utils::*;
 use nalgebra::*;
 use multimap::MultiMap;
 
-use std::fmt;
+use std::{fmt, ops::AddAssign};
 
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -152,7 +152,12 @@ impl Clusters {
         */
         assert_ne!(0, c);
 
-        self.lista_clusters.iter().filter(|&valor| *valor == c).copied().collect()
+        self.lista_clusters
+            .iter()
+            .enumerate()                               // Pares (índice, valor)
+            .filter(|&(_indice, valor)| *valor == c)  // Filtrar por aquellos que están en el cluster
+            .map(|(indice, _)| indice)                   // Quedarnos con los índices
+            .collect()                                                                 // Recogerlos y devolver el valor
     }
 
 
@@ -215,7 +220,7 @@ impl Clusters {
                 // Si hay alguien en ese cluster, sumar los elementos del espacio y dividirlos por la cantidad de elementos que hay
 
                 for indice_elemento in self.indices_cluster(i_centroide+1).iter() {
-                    vect = vect + self.espacio[*indice_elemento].clone();
+                    vect = vect + (&self.espacio[*indice_elemento]);
                 }
 
                 self.centroides[i_centroide] = vect.scale(1.0/(self.recuento_clusters[i_centroide] as f64));
