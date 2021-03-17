@@ -118,10 +118,12 @@ impl Clusters {
                 {
                     1 => {
                         self.restricciones_ML.insert(i, j);
+                        self.restricciones_ML.insert(j, i);
                         self.num_restricciones = self.num_restricciones + 1;
                     }
                     -1 => {
                         self.restricciones_CL.insert(i, j);
+                        self.restricciones_CL.insert(j, i);
                         self.num_restricciones = self.num_restricciones + 1;
                     }
                     _ => ()
@@ -188,7 +190,7 @@ impl Clusters {
     //
 
 
-    pub fn centroide_cluster(&mut self, c: usize) -> Punto {
+    pub fn centroide_cluster(&self, c: usize) -> Punto {
         assert_ne!(c, 0);
         self.centroides[c - 1].clone()
     }

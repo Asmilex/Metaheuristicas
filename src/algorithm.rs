@@ -61,8 +61,8 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     let mut cambios_en_cluster = true;
     let mut iters: usize = 0;
+
     while cambios_en_cluster {
-        println!("Iteración {}", iters);
         iters = iters + 1;
 
         cambios_en_cluster = false;
@@ -107,6 +107,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
         cluster.calcular_centroides();
     }
 
-    println!("Cálculo del cluster finalizado ✓");
+    println!("Cálculo del cluster finalizado en {} iteraciones ✓", iters);
     cluster
 }
