@@ -3,12 +3,11 @@ use std::path::{Path, PathBuf};
 use std::io::{BufReader, BufRead};
 use std::error::Error;
 
-
-
 use crate::cluster::*;
 use crate::utils::*;
 
 use nalgebra::{DVector, DMatrix};
+use colored::*;
 
 
 //
@@ -36,7 +35,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
         2. Cargar las restricciones (se encuentran en los .const)
     */
 
-    println!("Comienza la lectura de los archivos");
+    println!("{} Comienza la lectura de los archivos", "🗘".yellow());
 
     let mut cluster = Clusters::new(parametros.clusters , parametros.atributos, parametros.instancias);
 
@@ -46,7 +45,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
 
     // ────────────────────────────────────────────────────── LECTURA DEL ARCHIVO ─────
 
-    println!("\t▸ Se empieza a leer el archivo {:?}", &parametros.archivo_datos);
+    println!("\t{} Se empieza a leer el archivo {:?}", "▸".yellow() , &parametros.archivo_datos);
 
     let f = File::open(parametros.archivo_datos).unwrap();
     let reader = BufReader::new(f);
@@ -80,7 +79,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
         }
     };
 
-    println!("\t▸ Se empiezan a leer las restricciones {:?}", &ruta_archivo_restric);
+    println!("\t{} Se empiezan a leer las restricciones {:?}", "▸".yellow(), &ruta_archivo_restric);
 
     let mut restricciones: MatrizDinamica<i8> = DMatrix::from_element(parametros.instancias, parametros.instancias, 0);
     let mut fila: usize = 0;
@@ -106,7 +105,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
 
     cluster.asignar_matriz_restricciones(restricciones);
 
-    println!("Finalizada la lectura del cluster ✓\n");
+    println!("{} Finalizada la lectura del cluster {}\n", "🗘".yellow(), "✓".green());
 
     cluster
 }

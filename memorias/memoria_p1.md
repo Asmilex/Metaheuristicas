@@ -44,7 +44,7 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
 - `greedy`.
 - `bl`.
 
-Si no se especifican, se usarán todos. Cada algoritmo se ejecuta 5 veces por data set (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `TODO.csv`, el cual contendrá las medidas necesarias para el análisis de la práctica.
+Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por data set (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `TODO.csv`, el cual contendrá las medidas necesarias para el análisis de la práctica.
 
 #### Ejecutar uno o varios algoritmos para un data set en particular
 
