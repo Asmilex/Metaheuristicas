@@ -1,5 +1,6 @@
 use nalgebra::*;
 use std::path::{PathBuf};
+use std::time;
 
 //
 // ───────────────────────────────────────────────────── TIPOS PERSONALIZADOS ─────
@@ -20,6 +21,12 @@ use std::path::{PathBuf};
         Bupa,
         Glass,
         Zoo
+    }
+
+    #[allow(non_camel_case_types)]
+    pub enum PAR_restr {
+        Diez,
+        Veinte
     }
 
 
@@ -79,14 +86,69 @@ use std::path::{PathBuf};
     #[allow(non_camel_case_types)]
     pub struct Algoritmos {
         pub greedy: bool,
+        pub greedy_10_csv_path: String,
+        pub greedy_20_csv_path: String,
+
         pub BL: bool,
+        pub BL_10_csv_path: String,
+        pub BL_20_csv_path: String,
 
         pub benchmark: bool,
     }
 
     impl Algoritmos {
         pub fn new() -> Algoritmos {
-            Algoritmos {greedy: false, BL: false, benchmark: false}
+            Algoritmos {
+                greedy: false,
+                greedy_10_csv_path: String::from("../data/csv/greedy_10.csv"),
+                greedy_20_csv_path: String::from("../data/csv/greedy_20.csv"),
+
+                BL: false,
+                BL_10_csv_path: String::from("../data/csv/bl_10.csv"),
+                BL_20_csv_path: String::from("../data/csv/bl_20.csv"),
+
+                benchmark: false}
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────────────
+
+    #[allow(non_camel_case_types)]
+    pub struct InfoExecution {
+        pub tasa_inf_zoo: u32,
+        pub error_dist_zoo: f64,
+        pub agr_zoo: f64,
+        pub tiempo_zoo: std::time::Duration,
+
+        pub tasa_inf_glass: u32,
+        pub error_dist_glass: f64,
+        pub agr_glass: f64,
+        pub tiempo_glass: std::time::Duration,
+
+        pub tasa_inf_bupa: u32,
+        pub error_dist_bupa: f64,
+        pub agr_bupa: f64,
+        pub tiempo_bupa: std::time::Duration
+    }
+
+    impl InfoExecution {
+        pub fn new() -> InfoExecution {
+            InfoExecution {
+                tasa_inf_zoo: 0,
+                error_dist_zoo: 0.0,
+                agr_zoo: 0.0,
+                tiempo_zoo: time::Duration::new(0, 0),
+
+                tasa_inf_glass: 0,
+                error_dist_glass: 0.0,
+                agr_glass: 0.0,
+                tiempo_glass: time::Duration::new(0, 0),
+
+                tasa_inf_bupa: 0,
+                error_dist_bupa: 0.0,
+                agr_bupa: 0.0,
+                tiempo_bupa: time::Duration::new(0, 0),
+            }
         }
     }
 

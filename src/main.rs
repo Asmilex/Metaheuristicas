@@ -13,76 +13,49 @@
 
     use std::time::{Instant};
     use file_io::*;
-    use utils::{Algoritmos, PAR_nombres, PAR_parametros};
+    use utils::{Algoritmos, InfoExecution, PAR_nombres, PAR_parametros, PAR_restr};
     use std::env;
 
 // ────────────────────────────────────────────────────────────────────────────────
 
-fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Option<usize>, Algoritmos), &'static str> {
+fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_restr) -> Vec<InfoExecution> {
+    /*
+        Se ejecutarán los algoritmos seleccionados 5 veces cada uno. Los dataset a usar, y por orden de ejecución, son:
+            1. Zoo, 10% de restricciones
+            2. Zoo, 20% de restricciones
+            3. Glass, 10% de restricciones
+            4. Glass, 20% de restricciones
+            5. Bupa, 10% de restricciones
+            6. Bupa, 20% de restricciones
+    */
 
-    // ─────────────────────────────────────────────────────────────── ALGORITMOS ─────
+    // FIXME REFACTORIZAR LA FUNCIÓN
+    //
 
-    let mut algoritmos =  Algoritmos::new();
+    let lambda: f64 = 1.0;
+    let mut ejecuciones: Vec<InfoExecution> = Vec::new();
 
-    if args.contains(&String::from("benchmark")) {
-        algoritmos.benchmark = true;
+    for _i in 1..=5 {
+        let mut info = InfoExecution::new();
+        let mut mi_cluster = leer_archivo_PAR(PAR_parametros::new(PAR_nombres::Zoo), PAR_restr::Diez);
+        let now = Instant::now();
+        let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster);
+
+        info.tiempo_zoo     = now.elapsed();
+        info.tasa_inf_zoo   = mi_cluster.infeasibility();
+        info.error_dist_zoo = mi_cluster.desviacion_general_particion();
+        info.agr_zoo        = info.error_dist_zoo + lambda * info.tasa_inf_zoo as f64;
+
+
+        ejecuciones.push(info);
     }
 
-    // Si no se especifican algoritmos, ejecutarlos todos
-    if !args.contains(&String::from("greedy")) && !args.contains(&String::from("bl")) {
-        algoritmos.greedy = true;
-        algoritmos.BL = true;
-    }
-    else {
-        // En caso contrario, seleccionar aquellos que sí que se usarán
-        if args.contains(&String::from("greedy")) {
-            algoritmos.greedy = true
-        }
-        if args.contains(&String::from("bl")) {
-            algoritmos.BL = true
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────── PARAMETROS ─────
-
-    if !algoritmos.benchmark {
-        // Al no haber escogido benchmark, hay que especificar el tipo de archivo y las restricciones
-        let parametros: PAR_parametros;
-
-        if args.contains(&String::from("zoo")) {
-            parametros = PAR_parametros::new(PAR_nombres::Zoo);
-        }
-        else if args.contains(&String::from("glass")) {
-            parametros = PAR_parametros::new(PAR_nombres::Glass);
-        }
-        else if args.contains(&String::from("bupa")) {
-            parametros = PAR_parametros::new(PAR_nombres::Bupa);
-        }
-        else {
-            return Err("No se ha especificado el conjunto de datos a resolver ni especificado un benchmark");
-        }
-
-        // ──────────────────────────────────────────────────────────── RESTRICCIONES ─────
-
-        let restricciones: usize;
-
-        if args.contains(&String::from("10")) {
-            restricciones = 10;
-        }
-        else if args.contains(&String::from("20")) {
-            restricciones = 20;
-        }
-        else {
-            return Err("No se ha proporcionado el archivo de restricciones que usar. Posibilidades: {10, 20}");
-        }
-
-        Ok((Some(parametros), Some(restricciones), algoritmos))
-    }
-    else {
-        Ok((None, None, algoritmos))
-    }
+    ejecuciones
 
 }
+
+
+// ────────────────────────────────────────────────────────────────────────────────
 
 fn main() {
     let (parametros, restricciones, algoritmos) = match parse_arguments(&env::args().collect()) {
@@ -103,6 +76,12 @@ fn main() {
         }
     }
     else {
+        if algoritmos.greedy {
 
+        }
+
+        if algoritmos.BL {
+
+        }
     }
 }
