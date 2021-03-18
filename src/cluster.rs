@@ -142,6 +142,11 @@ impl Clusters {
         &self.lista_clusters
     }
 
+    pub fn reset_clusters(&mut self) {
+        self.lista_clusters = vec![0; self.num_elementos];
+        self.centroides =  vec![DVector::zeros(self.dim_vectores); self.num_clusters];
+    }
+
 
     //
     // ──────────────────────────────────────────────────────────────── ELEMENTOS ─────
