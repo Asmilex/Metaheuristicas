@@ -27,6 +27,7 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
     vector_path
 }
 
+
 #[allow(non_snake_case)]
 pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_restr) -> Clusters {
     /*
@@ -73,7 +74,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
 
     let ruta_archivo_restric = match restricciones_a_usar {
         PAR_restr::Diez => parametros.archivo_restricciones_10,
-        PAR_restr::Diez => parametros.archivo_restricciones_20,
+        PAR_restr::Veinte => parametros.archivo_restricciones_20,
         _ => {
             panic!("Se ha introducido incorrectamente el tipo de archivo de restricciones a usar");
         }
@@ -111,11 +112,11 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
 }
 
 
-pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Option<PAR_restr>, Algoritmos), &'static str> {
+pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Option<PAR_restr>, AlgoritmosAEjecutar), &'static str> {
 
     // ─────────────────────────────────────────────────────────────── ALGORITMOS ─────
 
-    let mut algoritmos =  Algoritmos::new();
+    let mut algoritmos =  AlgoritmosAEjecutar::new();
 
     if args.contains(&String::from("benchmark")) {
         algoritmos.benchmark = true;
@@ -181,23 +182,22 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Op
 // ─────────────────────────────────────────────────────────────────── SALIDA ─────
 //
 
-pub fn export_to_csv (info: &Vec<InfoExecution>, path: &str) ->  Result<(), Box<dyn Error>> {
+pub fn export_to_csv (info: &Vec<InfoEjecucion>, path: &str) ->  Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_path(path)?;
 
     // When writing records without Serde, the header record is written just
     // like any other record.
     wtr.write_record(&[
-        "Tasa_inf Zoo", "Error_dist Zoo", "Agr Zoo", "T Zoo",
-        "Tasa_inf Glass", "Error_dist Glass", "Agr Glass", "T Glass",
-        "Tasa_inf Bupa", "Error_dist Bupa", "Agr Bupa", "T Bupa",
+        "Tasa infeasibility", "Error de las distancias", "Agregado", "Tiempo de ejecución (ms)",
     ])?;
 
     let mut record: Vec<String>;
     for bench in info.iter() {
         record = Vec::from([
-            bench.tasa_inf_zoo.to_string(),   bench.error_dist_zoo.to_string(),   bench.agr_zoo.to_string(),   bench.tiempo_zoo.as_secs().to_string(),
-            bench.tasa_inf_glass.to_string(), bench.error_dist_glass.to_string(), bench.agr_glass.to_string(), bench.tiempo_glass.as_secs().to_string(),
-            bench.tasa_inf_bupa.to_string(),  bench.error_dist_bupa.to_string(),  bench.agr_bupa.to_string(),  bench.tiempo_bupa.as_secs().to_string()
+            bench.tasa_inf.to_string(),
+            bench.error_dist.to_string(),
+            bench.agr.to_string(),
+            bench.tiempo.as_millis().to_string()
         ]);
 
         wtr.write_record(&record)?;
