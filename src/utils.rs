@@ -24,6 +24,7 @@ use std::time;
     }
 
     #[allow(non_camel_case_types)]
+    #[derive(Debug)]
     pub enum PAR_restr {
         Diez,
         Veinte
@@ -83,74 +84,85 @@ use std::time;
 
     // ────────────────────────────────────────────────────────────────────────────────
 
-    #[allow(non_camel_case_types)]
-    pub struct Algoritmos {
-        pub greedy: bool,
-        pub greedy_10_csv_path: String,
-        pub greedy_20_csv_path: String,
+    #[derive(Debug)]
+    pub enum Algoritmos {
+        Greedy,
+        BL
+    }
 
+    #[allow(non_camel_case_types)]
+    pub struct AlgoritmosAEjecutar {
+        pub greedy: bool,
         pub BL: bool,
-        pub BL_10_csv_path: String,
-        pub BL_20_csv_path: String,
 
         pub benchmark: bool,
     }
 
-    impl Algoritmos {
-        pub fn new() -> Algoritmos {
-            Algoritmos {
+    impl AlgoritmosAEjecutar {
+        pub fn new() -> AlgoritmosAEjecutar {
+            AlgoritmosAEjecutar {
                 greedy: false,
-                greedy_10_csv_path: String::from("../data/csv/greedy_10.csv"),
-                greedy_20_csv_path: String::from("../data/csv/greedy_20.csv"),
-
                 BL: false,
-                BL_10_csv_path: String::from("../data/csv/bl_10.csv"),
-                BL_20_csv_path: String::from("../data/csv/bl_20.csv"),
-
-                benchmark: false}
+                benchmark: false
+            }
         }
     }
 
     // ────────────────────────────────────────────────────────────────────────────────
 
     #[allow(non_camel_case_types)]
-    pub struct InfoExecution {
-        pub tasa_inf_zoo: u32,
-        pub error_dist_zoo: f64,
-        pub agr_zoo: f64,
-        pub tiempo_zoo: std::time::Duration,
-
-        pub tasa_inf_glass: u32,
-        pub error_dist_glass: f64,
-        pub agr_glass: f64,
-        pub tiempo_glass: std::time::Duration,
-
-        pub tasa_inf_bupa: u32,
-        pub error_dist_bupa: f64,
-        pub agr_bupa: f64,
-        pub tiempo_bupa: std::time::Duration
+    pub struct InfoEjecucion {
+        pub tasa_inf: u32,
+        pub error_dist: f64,
+        pub agr: f64,
+        pub tiempo: std::time::Duration,
     }
 
-    impl InfoExecution {
-        pub fn new() -> InfoExecution {
-            InfoExecution {
-                tasa_inf_zoo: 0,
-                error_dist_zoo: 0.0,
-                agr_zoo: 0.0,
-                tiempo_zoo: time::Duration::new(0, 0),
-
-                tasa_inf_glass: 0,
-                error_dist_glass: 0.0,
-                agr_glass: 0.0,
-                tiempo_glass: time::Duration::new(0, 0),
-
-                tasa_inf_bupa: 0,
-                error_dist_bupa: 0.0,
-                agr_bupa: 0.0,
-                tiempo_bupa: time::Duration::new(0, 0),
+    impl InfoEjecucion {
+        pub fn new() -> InfoEjecucion {
+            InfoEjecucion {
+                tasa_inf: 0,
+                error_dist: 0.0,
+                agr: 0.0,
+                tiempo: time::Duration::new(0, 0),
             }
         }
     }
+
+    // ────────────────────────────────────────────────────────────────────────────────
+
+    pub struct RutasCSV {
+        pub zoo_10: String,
+        pub zoo_20: String,
+        pub glass_10: String,
+        pub glass_20: String,
+        pub bupa_10: String,
+        pub bupa_20: String
+    }
+
+    impl RutasCSV {
+        pub fn new(alg: Algoritmos) -> RutasCSV {
+            match alg {
+                Algoritmos::Greedy => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/greedy_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/greedy_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/greedy_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/greedy_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/greedy_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/greedy_bupa_20.csv"),
+                },
+                Algoritmos::BL => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/bl_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/bl_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/bl_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/bl_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/bl_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/bl_bupa_20.csv"),
+                }
+            }
+        }
+    }
+
 
 //
 // ──────────────────────────────────────────────────────────────── FUNCIONES ─────
