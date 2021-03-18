@@ -1,6 +1,7 @@
 use rand::{thread_rng, Rng};
 use rand::distributions::{Distribution, Uniform};
 use nalgebra::{DVector};
+use colored::*;
 
 use crate::cluster::*;
 use crate::utils::*;
@@ -18,8 +19,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     // ───────────────────────────────────────────────── 1. CENTROIDES ALEATORIOS ─────
 
-    println!("Ejecutando greedy_COPKM para el cálculo de los clusters");
-    println!("\t▸ Calculando centroides aleatorios iniciales");
+    println!("{} Ejecutando greedy_COPKM para el cálculo de los clusters", "▸".cyan());
 
     let mut rng = thread_rng();     // Criptográficamente seguro; distribución estándar https://rust-random.github.io/book/guide-rngs.html
 
@@ -34,8 +34,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
     cluster.asignar_centroides(centroides_aleatorios);
 
     // ─────────────────────────────────────────────────────── 2. BARAJAR INDICES ─────
-
-    println!("\t▸ Barajando índices");
 
     let mut indices_barajados: Vec<i32> = vec![-1; cluster.num_elementos];
     let mut recuento_indices: usize = 0;
@@ -56,8 +54,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
     }
 
     // ─────────────────────────────────────────────────── 3. COMPUTO DEL CLUSTER ─────
-
-    println!("\t▸ Computando cluster");
 
     let mut cambios_en_cluster = true;
     let mut iters: usize = 0;
@@ -107,6 +103,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
         cluster.calcular_centroides();
     }
 
-    println!("Cálculo del cluster finalizado en {} iteraciones ✓", iters);
+    println!("{} Cálculo del cluster finalizado en {} iteraciones {}\n", "▸".cyan() , iters, "✓".green());
     cluster
 }
