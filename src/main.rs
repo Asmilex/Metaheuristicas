@@ -12,46 +12,48 @@
 //
 
     use std::time::{Instant};
+    use algorithm::greedy_COPKM;
     use file_io::*;
-    use utils::{Algoritmos, InfoExecution, PAR_nombres, PAR_parametros, PAR_restr};
+    use utils::{Algoritmos, InfoEjecucion, PAR_nombres, PAR_parametros, PAR_restr, RutasCSV};
     use std::env;
+    use colored::*;
 
 // ────────────────────────────────────────────────────────────────────────────────
 
-fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_restr) -> Vec<InfoExecution> {
+fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_restr) -> Vec<InfoEjecucion> {
     /*
-        Se ejecutarán los algoritmos seleccionados 5 veces cada uno. Los dataset a usar, y por orden de ejecución, son:
-            1. Zoo, 10% de restricciones
-            2. Zoo, 20% de restricciones
-            3. Glass, 10% de restricciones
-            4. Glass, 20% de restricciones
-            5. Bupa, 10% de restricciones
-            6. Bupa, 20% de restricciones
+        Primero, se rellena el cluster con la información del espacio.
+        Después, se decide qué algoritmo utilizar.
+        Finalmente, se ejecuta el algoritmo seleccionado 5 veces y se provee un vector con los resultados de la ejecución.
     */
 
-    // FIXME REFACTORIZAR LA FUNCIÓN
-    //
+    println!("\n§ {} §: Se empieza a ejecutar el benchmark del algoritmo {:#?} para el dataset {:#?} con las restricciones {:#?}", "BENCHMARK".red(), algoritmo, dataset.tipo, restriccion);
+    let mut cluster = leer_archivo_PAR(dataset, restriccion);
 
-    let lambda: f64 = 1.0;
-    let mut ejecuciones: Vec<InfoExecution> = Vec::new();
+    // TODO cambiar cuando haya implementado el resto de algoritmos
+    let funcion = greedy_COPKM;
 
-    for _i in 1..=5 {
-        let mut info = InfoExecution::new();
-        let mut mi_cluster = leer_archivo_PAR(PAR_parametros::new(PAR_nombres::Zoo), PAR_restr::Diez);
+    let lambda = 1.0;
+    let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
+
+    for i in 1 ..= 5 {
+        let mut info = InfoEjecucion::new();
         let now = Instant::now();
-        let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster);
 
-        info.tiempo_zoo     = now.elapsed();
-        info.tasa_inf_zoo   = mi_cluster.infeasibility();
-        info.error_dist_zoo = mi_cluster.desviacion_general_particion();
-        info.agr_zoo        = info.error_dist_zoo + lambda * info.tasa_inf_zoo as f64;
+        let cluster = funcion(&mut cluster);
 
+        info.tiempo     = now.elapsed();
+        info.tasa_inf   = cluster.infeasibility();
+        info.error_dist = cluster.desviacion_general_particion();
+        info.agr        = info.error_dist + lambda * info.tasa_inf as f64;
 
         ejecuciones.push(info);
+
+        cluster.reset_clusters();
     }
 
+    println!("Benchmark completado {}\n", "✓".green());
     ejecuciones
-
 }
 
 
@@ -77,7 +79,85 @@ fn main() {
     }
     else {
         if algoritmos.greedy {
+            let rutas = RutasCSV::new(Algoritmos::Greedy);
 
+            // ──────────────────────────────────────────────────── ZOO 10 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Zoo),
+                PAR_restr::Diez
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.zoo_10) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.zoo_10, "✓".green()),
+                Err(r) => println!("ERROR: {}", r)
+            };
+
+            // ──────────────────────────────────────────────────── ZOO 20 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Zoo),
+                PAR_restr::Veinte
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.zoo_20) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.zoo_20, "✓".green()),
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
+            }
+
+            // ────────────────────────────────────────────────── GLASS 10 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Glass),
+                PAR_restr::Diez
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.glass_10) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.glass_10, "✓".green()),
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
+            }
+
+            // ────────────────────────────────────────────────── GLASS 20 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Glass),
+                PAR_restr::Veinte
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.glass_20) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.glass_20, "✓".green()),
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
+            }
+
+            // ─────────────────────────────────────────────────── BUPA 10 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Bupa),
+                PAR_restr::Diez
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.bupa_10) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.bupa_10, "✓".green()),
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
+            }
+
+            // ─────────────────────────────────────────────────── BUPA 20 ─────
+
+            let datos_benchmark = benchmark(
+                Algoritmos::Greedy,
+                PAR_parametros::new(PAR_nombres::Bupa),
+                PAR_restr::Veinte
+            );
+
+            match export_to_csv(&datos_benchmark, &rutas.bupa_20) {
+                Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.bupa_20, "✓".green()),
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
+            }
         }
 
         if algoritmos.BL {
