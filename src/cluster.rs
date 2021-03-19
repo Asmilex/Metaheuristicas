@@ -243,22 +243,13 @@ impl Clusters {
     pub fn vector_distancias_medias_intracluster(&self) -> Vec<f64> {
         let mut dm_ic = vec![0.0; self.num_clusters];
 
-        for i in 1 ..= self.num_clusters {
-            let indices_cluster = self.indices_cluster(i);
-            let cent = &self.centroides[i - 1];
-
-        /*  let mut suma_distancias = 0.0;
-            for i in 0..indices_cluster.len() {
-                suma_distancias = suma_distancias + distancia(&self.espacio[(indices_cluster[i] as usize)].clone(), &cent);
+        for i in 0 .. self.num_clusters {
+            let centroide = self.centroide_cluster(i+1);
+            for indice in self.indices_cluster(i+1).iter() {
+                dm_ic[i] = dm_ic[i] + distancia(&self.espacio[*indice], &centroide);
             }
-            dm_ic[i - 1] = suma_distancias * 1.0/self.elementos_en_cluster(i) as f64;
-        */
 
-            dm_ic[i-1] = indices_cluster.iter()
-                .map(
-                    |&indice|
-                    distancia(&self.espacio[(indice as usize)], &cent)
-                ).sum();
+            dm_ic[i] = dm_ic[i] * 1.0/self.elementos_en_cluster(i+1) as f64;
         }
 
         dm_ic
