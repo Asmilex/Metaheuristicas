@@ -265,9 +265,9 @@ impl Clusters {
         self.vector_distancias_medias_intracluster().iter().sum::<f64>() * 1.0/(self.num_clusters as f64)
     }
 
-    //
-    // ──────────────────────────────────────────────────────── MEDIDAS GENERALES ─────
-    //
+//
+// ─── MEDIDAS GENERALES ──────────────────────────────────────────────────────────
+//
 
     pub fn infeasibility(&self) -> u32 {
         assert_eq!(self.espacio.len(), self.restricciones.nrows());
@@ -345,12 +345,19 @@ impl Clusters {
         expected_infeasibility
     }
 
+
     fn maximo_distancias(&self) -> f64 {
         self.distancias.max()
     }
 
+
     pub fn lambda(&self) -> f64 {
         self.maximo_distancias()/self.num_restricciones as f64
+    }
+
+
+    pub fn solucion_valida(&self) -> bool {
+        !self.recuento_clusters.iter().any(|&valor| valor == 0)
     }
 }
 
