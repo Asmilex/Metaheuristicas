@@ -103,6 +103,12 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
         cluster.calcular_centroides();
     }
 
-    println!("{} Cálculo del cluster finalizado en {} iteraciones {}\n", "▸".cyan() , iters, "✓".green());
-    cluster
+    if cluster.solucion_valida() {
+        println!("{} Cálculo del cluster finalizado en {} iteraciones {}\n", "▸".cyan() , iters, "✓".green());
+        cluster
+    }
+    else {
+        println!("{} Se ha encontrado una solución no válida. Ejecutando de nuevo el algoritmo\n", "✗".red());
+        greedy_COPKM(cluster)
+    }
 }
