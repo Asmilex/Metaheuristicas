@@ -344,6 +344,14 @@ impl Clusters {
 
         expected_infeasibility
     }
+
+    fn maximo_distancias(&self) -> f64 {
+        self.distancias.max()
+    }
+
+    pub fn lambda(&self) -> f64 {
+        self.maximo_distancias()/self.num_restricciones as f64
+    }
 }
 
 //

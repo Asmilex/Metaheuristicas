@@ -33,7 +33,6 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
     // TODO cambiar cuando haya implementado el resto de algoritmos
     let funcion = greedy_COPKM;
 
-    let lambda = 1.0;
     let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
 
     for i in 1 ..= 5 {
@@ -45,7 +44,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
         info.tiempo     = now.elapsed();
         info.tasa_inf   = cluster.infeasibility();
         info.error_dist = cluster.desviacion_general_particion();
-        info.agr        = info.error_dist + lambda * info.tasa_inf as f64;
+        info.agr        = info.error_dist + cluster.lambda() * info.tasa_inf as f64;
 
         ejecuciones.push(info);
 
