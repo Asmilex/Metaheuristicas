@@ -163,6 +163,34 @@ use std::time;
         }
     }
 
+    // ────────────────────────────────────────────────────────────────────────────────
+
+
+    pub struct Semillas {
+        semillas: Vec<u64>
+    }
+
+    impl Semillas {
+        pub fn new() -> Semillas {
+            Semillas {
+                semillas: vec![
+                    328471273,
+                    1821789317287,
+                    128931083781,
+                    1802783721873,
+                    9584985309
+                ]
+            }
+        }
+
+        pub fn semilla(&self, i: usize) -> u64 {
+            if i > self.semillas.len() {
+                panic!("Se ha introducido un índice mayor que el número de semillas presente");
+            }
+
+            self.semillas[i]
+        }
+    }
 
 //
 // ──────────────────────────────────────────────────────────────── FUNCIONES ─────

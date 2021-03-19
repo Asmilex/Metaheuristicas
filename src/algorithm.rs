@@ -1,5 +1,7 @@
-use rand::{thread_rng, Rng};
+use rand_chacha::*;
+use rand::{Rng, SeedableRng};
 use rand::distributions::{Distribution, Uniform};
+
 use nalgebra::{DVector};
 use colored::*;
 
@@ -7,7 +9,7 @@ use crate::cluster::*;
 use crate::utils::*;
 
 #[allow(non_snake_case)]
-pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
+pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
     /*
         Pasos:
             1. Sacar centroides aleatorios. Todos los elementos del espacio se encuentran en [0, 1]x...x[0,1]
@@ -21,13 +23,13 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
 
     println!("{} Ejecutando greedy_COPKM para el cálculo de los clusters", "▸".cyan());
 
-    let mut rng = thread_rng();     // Criptográficamente seguro; distribución estándar https://rust-random.github.io/book/guide-rngs.html
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
     let mut centroides_aleatorios: Vec<Punto> = vec![DVector::zeros(cluster.dim_vectores); cluster.num_clusters];
 
     for i in 0 .. centroides_aleatorios.len() {
         for j in 0 .. centroides_aleatorios[i].nrows() {
-            centroides_aleatorios[i][(j)] = rng.gen();  // Distribución en 0 .. 1
+            centroides_aleatorios[i][(j)] = rng.gen();
         }
     }
 
@@ -109,6 +111,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters) -> &mut Clusters {
     }
     else {
         println!("{} Se ha encontrado una solución no válida. Ejecutando de nuevo el algoritmo\n", "✗".red());
-        greedy_COPKM(cluster)
+        greedy_COPKM(cluster, seed)
     }
 }

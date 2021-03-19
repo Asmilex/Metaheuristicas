@@ -34,12 +34,13 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
     let funcion = greedy_COPKM;
 
     let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
+    let semillas = utils::Semillas::new();
 
-    for i in 1 ..= 5 {
+    for i in 0 .. 5 {
         let mut info = InfoEjecucion::new();
         let now = Instant::now();
 
-        let cluster = funcion(&mut cluster);
+        let cluster = funcion(&mut cluster, semillas.semilla(i));
 
         info.tiempo     = now.elapsed();
         info.tasa_inf   = cluster.infeasibility();
@@ -71,7 +72,7 @@ fn main() {
 
         if algoritmos.greedy {
             let now = Instant::now();
-            let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster);
+            let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster, utils::Semillas::new().semilla(0));
             println!("{}", &mi_cluster);
             println!("Greedy calculado en {:?}\n", now.elapsed());
         }
