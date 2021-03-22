@@ -265,7 +265,8 @@ impl Clusters {
     //
 
 
-    pub fn vector_distancias_medias_intracluster(&self) -> Vec<f64> {
+    pub fn vector_distancias_medias_intracluster(&mut self) -> Vec<f64> {
+        self.calcular_centroides();
         let mut dm_ic = vec![0.0; self.num_clusters];
 
         for i in 0 .. self.num_clusters {
@@ -281,12 +282,12 @@ impl Clusters {
     }
 
 
-    pub fn distancia_media_intracluster(&self, c: usize) -> f64 {
+    pub fn distancia_media_intracluster(&mut self, c: usize) -> f64 {
         self.vector_distancias_medias_intracluster()[c - 1]
     }
 
 
-    pub fn desviacion_general_particion(&self) -> f64 {
+    pub fn desviacion_general_particion(&mut self) -> f64 {
         self.vector_distancias_medias_intracluster().iter().sum::<f64>() * 1.0/(self.num_clusters as f64)
     }
 
