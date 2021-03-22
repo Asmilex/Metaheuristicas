@@ -390,21 +390,26 @@ impl Clusters {
 
 impl fmt::Display for Clusters {
     fn fmt (&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write! (
+        writeln! (
             f,
             "Información del cluster:
             ▸ Número de clusters: {}
             ▸ Lista con los clusters: {:?}
             ▸ Elementos en cada cluster: {:?}
             ▸ Número de restricciones: {}
-            ▸ Centroides: {:?}
-            ▸ Elementos en el espacio: {:?}",
+            ▸ Elementos en el espacio: {:?}
+            ▸ Centroides:",
             self.num_clusters,
             self.lista_clusters,
             self.recuento_clusters,
             self.num_restricciones,
-            self.centroides,
-            self.num_elementos
-        )
+            self.num_elementos,
+        )?;
+
+        for centroide in self.centroides.iter() {
+            writeln!(f, "\t{}", centroide)?;
+        }
+        writeln!(f, " ▸ Infeasibility: {}", self.infeasibility())?;
+        Ok(())
     }
 }
