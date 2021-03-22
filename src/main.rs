@@ -44,8 +44,8 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
 
         info.tiempo     = now.elapsed();
         info.tasa_inf   = cluster.infeasibility();
-        info.error_dist = cluster.desviacion_general_particion();
-        info.agr        = info.error_dist + cluster.lambda() * info.tasa_inf as f64;
+        info.error_dist = f64::abs(cluster.desviacion_general_particion() - dataset.distancia_optima);
+        info.agr        = cluster.fitness();
 
         ejecuciones.push(info);
 

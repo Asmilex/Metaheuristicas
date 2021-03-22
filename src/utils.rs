@@ -42,7 +42,8 @@ use std::time;
 
         pub atributos: usize,
         pub clusters: usize,
-        pub instancias: usize
+        pub instancias: usize,
+        pub distancia_optima: f64
     }
 
 
@@ -56,7 +57,8 @@ use std::time;
                     archivo_restricciones_20: PathBuf::from("./data/PAR/bupa_set_const_20.const"),
                     atributos: 5,
                     clusters: 16,
-                    instancias: 345
+                    instancias: 345,
+                    distancia_optima: 0.229248
                 },
 
                 PAR_nombres::Glass => PAR_parametros {
@@ -66,7 +68,8 @@ use std::time;
                     archivo_restricciones_20: PathBuf::from("./data/PAR/glass_set_const_20.const"),
                     atributos: 9,
                     clusters: 7,
-                    instancias: 214
+                    instancias: 214,
+                    distancia_optima: 0.36429
                 },
 
                 PAR_nombres::Zoo   => PAR_parametros {
@@ -76,7 +79,8 @@ use std::time;
                     archivo_restricciones_20: PathBuf::from("./data/PAR/zoo_set_const_20.const"),
                     atributos: 16,
                     clusters: 7,
-                    instancias: 101
+                    instancias: 101,
+                    distancia_optima: 0.9048
                 }
             }
         }
