@@ -143,15 +143,31 @@ impl Clusters {
         &self.lista_clusters
     }
 
+    pub fn asignar_clusters(&mut self, clusters: Vec<usize>) {
+        if clusters.len() != self.lista_clusters.len() {
+            panic!("La longitud de la lista pasada no es la indicada (debería ser {}, es {})", self.lista_clusters.len(), clusters.len());
+        }
+
+        self.lista_clusters = clusters;
+
+        // Recontar los elementos
+        self.recuento_clusters.fill(0);
+        for c in self.lista_clusters.iter() {
+            self.recuento_clusters[c-1] = self.recuento_clusters[c-1] + 1;
+        }
+    }
+
+
     pub fn reset_clusters(&mut self) {
         self.lista_clusters = vec![0; self.num_elementos];
         self.centroides =  vec![DVector::zeros(self.dim_vectores); self.num_clusters];
     }
 
 
-    //
-    // ──────────────────────────────────────────────────────────────── ELEMENTOS ─────
-    //
+    pub fn solucion_valida(&self) -> bool {
+        !self.recuento_clusters.iter().any(|&valor| valor == 0)
+    }
+
 
     pub fn indices_cluster(&self, c: usize) -> Vec<usize> {
         /*
@@ -166,6 +182,11 @@ impl Clusters {
             .filter(|&(_indice, valor)| *valor == c)  // Filtrar por aquellos que están en el cluster
             .map(|(indice, _)| indice)                   // Quedarnos con los índices
             .collect()                                                                 // Recogerlos y devolver el valor
+    }
+
+
+    pub fn cluster_de_indice (&self, i: usize) -> usize {
+        self.lista_clusters[i]
     }
 
 
@@ -189,6 +210,9 @@ impl Clusters {
         self.lista_clusters[i] = c;
         self.recuento_clusters[c-1] = self.recuento_clusters[c-1] + 1;
     }
+
+
+
 
 
     //
