@@ -94,6 +94,7 @@ impl Clusters {
         }
 
         self.espacio = nuevo_espacio;
+        self.calcular_matriz_distancias();
     }
 
     //
