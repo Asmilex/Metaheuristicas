@@ -28,7 +28,7 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
 
 
 #[allow(non_snake_case)]
-pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_restr) -> Clusters {
+pub fn leer_archivo_PAR (parametros: &PAR_parametros, restricciones_a_usar: &PAR_restr) -> Clusters {
     /*
         Pasos a seguir:
         1. Cargar todos los puntos (se encuentran en los .dat)
@@ -47,7 +47,7 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
 
     println!("\t{} Se empieza a leer el archivo {:?}", "▸".yellow() , &parametros.archivo_datos);
 
-    let f = File::open(parametros.archivo_datos).unwrap();
+    let f = File::open(&parametros.archivo_datos).unwrap();
     let reader = BufReader::new(f);
 
     for linea in reader.lines() {
@@ -72,11 +72,8 @@ pub fn leer_archivo_PAR (parametros: PAR_parametros, restricciones_a_usar: PAR_r
     // ───────────────────────────────────────────── LECTURA DE LAS RESTRICCIONES ─────
 
     let ruta_archivo_restric = match restricciones_a_usar {
-        PAR_restr::Diez => parametros.archivo_restricciones_10,
-        PAR_restr::Veinte => parametros.archivo_restricciones_20,
-        _ => {
-            panic!("Se ha introducido incorrectamente el tipo de archivo de restricciones a usar");
-        }
+        PAR_restr::Diez => parametros.archivo_restricciones_10.clone(),
+        PAR_restr::Veinte => parametros.archivo_restricciones_20.clone(),
     };
 
     println!("\t{} Se empiezan a leer las restricciones {:?}", "▸".yellow(), &ruta_archivo_restric);
