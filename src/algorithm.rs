@@ -1,9 +1,9 @@
-use rand_chacha::*;
-use rand::{Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
 use rand::distributions::{Distribution, Uniform};
 
 use nalgebra::{DVector};
 use colored::*;
+
 
 use crate::cluster::*;
 use crate::utils::*;
@@ -23,7 +23,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
 
     println!("{} Ejecutando greedy_COPKM para el cálculo de los clusters", "▸".cyan());
 
-    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut rng = StdRng::seed_from_u64(seed);
 
     let mut centroides_aleatorios: Vec<Punto> = vec![DVector::zeros(cluster.dim_vectores); cluster.num_clusters];
 
@@ -111,6 +111,112 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
     }
     else {
         println!("{} Se ha encontrado una solución no válida. Ejecutando de nuevo el algoritmo\n", "✗".red());
-        greedy_COPKM(cluster, seed)
+        greedy_COPKM(cluster, seed+1)
     }
+}
+
+
+
+pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    /*
+        Pasos:
+            1. Generar una solución válida inicial. Esto es, aquella en la que los clusters están entre 1 y num_cluster, y
+            no tiene clusters vacíos
+            2. Recorrer el vecindario hasta que encuentres una solución cuyo fitness se queda por debajo de tu solución actual.
+            El vecindario se debe recorrer de forma (i, l), donde
+                -> i = índice de la solución
+                -> l es el cluster nuevo a asignar.
+            3. Cuando se alcancen el número máximo de iteraciones, o no se consiga minimizar la función objetivo, hemos acabado.
+    */
+    use std::time::{Instant};
+    println!("{} Ejecutando búsqueda local para el cálculo de los clusters", "▸".cyan());
+
+    let max_iteraciones = 10_000;
+
+    let k = cluster.num_clusters;
+    let mut generador = StdRng::seed_from_u64(semilla);
+    let solucion_valida = |s: &Vec<usize>| -> bool {
+        for c in 1..=k {
+            if !s.iter().any(|&valor| valor == c) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    // ──────────────────────────────────────────────────────────────────────── 1 ─────
+
+    let mut solucion_inicial: Vec<usize> = vec![0; cluster.num_elementos];
+
+    while !solucion_valida(&solucion_inicial) {
+        for c in solucion_inicial.iter_mut() {
+            *c = generador.gen_range(1..=cluster.num_clusters);
+        }
+    }
+
+    cluster.asignar_clusters(solucion_inicial.clone());
+    let mut sol_optima: bool;      // Aquella que cumple que no existe otra solución S' tal que f(S) < f(S') para toda otra S
+
+    for _ in 0..max_iteraciones {
+        let mut nueva_sol_encontrada = false;
+        sol_optima = false;
+
+        let fitness_actual = cluster.fitness();
+        let solucion_antigua = cluster.clusters().clone();
+
+        let mut indices: Vec<usize> = (1..cluster.num_elementos).collect();
+        indices.shuffle(&mut generador);
+
+
+        //let now = Instant::now();
+        for i in indices.iter() {
+
+            for c in 1..=cluster.num_clusters {
+                /*
+                    NOTE: esto no está todavía implementado, pero lo tendré en cuenta si hace falta optimizar.
+                    Comprobar si este vecino tiene mejor fitness que la solución actual.
+
+                    Para ello, en vez de estar calculando la infeasibility de todo el sistema en cada iteración, comprobamos
+                    qué infeasibility al hacer lo siguiente:
+                        infeasibility de la solución actual - infeasibility_delta de la solución actual en la posición i en su cluster lista_clusters[i]
+                        + infeasibility_delta del vecino explorado en la posición i con nuevo cluster c
+                */
+
+                // Si el vecino generado no es válido, debemos restaurar la solución que se está explorando.
+                if c != solucion_antigua[*i] {
+                    let mut solucion_nueva = solucion_antigua.clone();
+                    solucion_nueva[*i] = c;
+
+                    if solucion_valida(&solucion_nueva) {
+                        cluster.asignar_clusters(solucion_nueva.clone());
+
+                        if cluster.fitness() < fitness_actual {
+                            nueva_sol_encontrada = true;
+                            cluster.asignar_clusters(solucion_nueva);
+                            break;
+                        }
+                        else {
+                            cluster.asignar_clusters(solucion_antigua.clone());
+                        }
+                    }
+                }
+            }
+
+
+            if nueva_sol_encontrada {
+                sol_optima = false;
+                break;
+            }
+        }
+
+        if sol_optima{
+            break;
+        }
+        //println!("Nueva solución encontrada en {}. Iteraciones: {}", now.elapsed().as_micros(), &iters);
+
+    }
+
+    println!("{} Cálculo del cluster finalizado {}\n", "▸".cyan(), "✓".green());
+
+    cluster
 }
