@@ -372,19 +372,15 @@ impl Clusters {
     }
 
 
-    fn maximo_distancias(&self) -> f64 {
-        self.distancias.max()
-    }
-
-
     pub fn lambda(&self) -> f64 {
-        self.maximo_distancias()/self.num_restricciones as f64
+        self.distancias.max()/self.num_restricciones as f64
     }
 
 
-    pub fn solucion_valida(&self) -> bool {
-        !self.recuento_clusters.iter().any(|&valor| valor == 0)
+    pub fn fitness(&mut self) -> f64 {
+        self.desviacion_general_particion() + self.lambda() * self.infeasibility() as f64
     }
+
 }
 
 //
