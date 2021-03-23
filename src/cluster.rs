@@ -408,9 +408,9 @@ impl Clusters {
         }
 
         let nuevo_infeas = antiguo_infeas - self.infeasibility_delta_esperada(i, antiguo_c) + self.infeasibility_delta_esperada(i, c);
+        let fitness = self.desviacion_general_particion() + self.lambda()*nuevo_infeas as f64;
 
         self.asignar_cluster_a_elemento(i, antiguo_c);
-        let fitness = self.desviacion_general_particion() + self.lambda()*nuevo_infeas as f64;
 
         //println!("Tiempo en bl_fitness_posible_sol: {}", now.elapsed().as_millis());
         Ok(fitness)

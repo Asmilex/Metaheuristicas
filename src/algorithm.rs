@@ -172,25 +172,6 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
         for i in indices.iter() {
             for c in clusters_barajados.iter() {
-                /*
-                    NOTE esto no está todavía implementado, pero lo tendré en cuenta si hace falta optimizar.
-                    Comprobar si este vecino tiene mejor fitness que la solución actual.
-
-                    Para ello, en vez de estar calculando la infeasibility de todo el sistema en cada iteración, comprobamos
-                    qué infeasibility al hacer lo siguiente:
-                        infeasibility de la solución actual - infeasibility_delta de la solución actual en la posición i en su cluster lista_clusters[i]
-                        + infeasibility_delta del vecino explorado en la posición i con nuevo cluster c
-
-
-                    TODO optimizaciones de memoria. Por orden:
-                    1. Implementar en el cluster el propio validador de soluciones y potencial fitness.
-                    Esto lo haría para evitar tanto .clone() en memoria.
-                    2. Vigilar cuánto tarda el cálculo del fitness.
-                    3. Generar toda la lista de (índice, nuevo cluster). Optimización menor - De hecho, podría ser hasta peor.
-
-                    Debería usar un profiler para ver esto con detalle. Pero estoy bastnte seguro de que tanto .clone() laggea.
-                */
-
                 if *c != cluster.cluster_de_indice(*i) {
                     let posible_fitness_nuevo = cluster.bl_fitness_posible_sol(*i, *c, infeasibility_actual);
 
