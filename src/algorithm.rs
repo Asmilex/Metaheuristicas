@@ -164,28 +164,40 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
         let fitness_actual = cluster.fitness();
         let solucion_antigua = cluster.clusters().clone();
 
-        let mut indices: Vec<usize> = (1..cluster.num_elementos).collect();
+        let mut indices: Vec<usize> = (0..cluster.num_elementos).collect();
         indices.shuffle(&mut generador);
 
 
         //let now = Instant::now();
         for i in indices.iter() {
 
-            for c in 1..=cluster.num_clusters {
+            let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
+            clusters_barajados.shuffle(&mut generador);
+
+            for c in clusters_barajados.iter() {
                 /*
-                    NOTE: esto no está todavía implementado, pero lo tendré en cuenta si hace falta optimizar.
+                    NOTE esto no está todavía implementado, pero lo tendré en cuenta si hace falta optimizar.
                     Comprobar si este vecino tiene mejor fitness que la solución actual.
 
                     Para ello, en vez de estar calculando la infeasibility de todo el sistema en cada iteración, comprobamos
                     qué infeasibility al hacer lo siguiente:
                         infeasibility de la solución actual - infeasibility_delta de la solución actual en la posición i en su cluster lista_clusters[i]
                         + infeasibility_delta del vecino explorado en la posición i con nuevo cluster c
+
+
+                    TODO optimizaciones de memoria. Por orden:
+                    1. Implementar en el cluster el propio validador de soluciones y potencial fitness.
+                    Esto lo haría para evitar tanto .clone() en memoria.
+                    2. Vigilar cuánto tarda el cálculo del fitness.
+                    3. Generar toda la lista de (índice, nuevo cluster). Optimización menor.
+
+                    Debería usar un profiler para ver esto con detalle. Pero estoy bastnte seguro de que tanto .clone() laggea.
                 */
 
-                // Si el vecino generado no es válido, debemos restaurar la solución que se está explorando.
-                if c != solucion_antigua[*i] {
+                if *c != solucion_antigua[*i] {
+                    // Si el vecino generado no es válido, debemos restaurar la solución que se está explorando.
                     let mut solucion_nueva = solucion_antigua.clone();
-                    solucion_nueva[*i] = c;
+                    solucion_nueva[*i] = *c;
 
                     if solucion_valida(&solucion_nueva) {
                         cluster.asignar_clusters(solucion_nueva.clone());
