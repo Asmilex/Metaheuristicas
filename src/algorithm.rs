@@ -157,23 +157,20 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     cluster.asignar_clusters(solucion_inicial.clone());
     let mut sol_optima: bool;      // Aquella que cumple que no existe otra solución S' tal que f(S) < f(S') para toda otra S
 
-    for _ in 0..max_iteraciones {
+    for iters in 0..max_iteraciones {
+        //let now = Instant::now();
         let mut nueva_sol_encontrada = false;
         sol_optima = false;
 
         let fitness_actual = cluster.fitness();
-        let solucion_antigua = cluster.clusters().clone();
+        let infeasibility_actual = cluster.infeasibility();
 
         let mut indices: Vec<usize> = (0..cluster.num_elementos).collect();
         indices.shuffle(&mut generador);
+        let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
+        clusters_barajados.shuffle(&mut generador);
 
-
-        //let now = Instant::now();
         for i in indices.iter() {
-
-            let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
-            clusters_barajados.shuffle(&mut generador);
-
             for c in clusters_barajados.iter() {
                 /*
                     NOTE esto no está todavía implementado, pero lo tendré en cuenta si hace falta optimizar.
@@ -189,28 +186,24 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
                     1. Implementar en el cluster el propio validador de soluciones y potencial fitness.
                     Esto lo haría para evitar tanto .clone() en memoria.
                     2. Vigilar cuánto tarda el cálculo del fitness.
-                    3. Generar toda la lista de (índice, nuevo cluster). Optimización menor.
+                    3. Generar toda la lista de (índice, nuevo cluster). Optimización menor - De hecho, podría ser hasta peor.
 
                     Debería usar un profiler para ver esto con detalle. Pero estoy bastnte seguro de que tanto .clone() laggea.
                 */
 
-                if *c != solucion_antigua[*i] {
-                    // Si el vecino generado no es válido, debemos restaurar la solución que se está explorando.
-                    let mut solucion_nueva = solucion_antigua.clone();
-                    solucion_nueva[*i] = *c;
+                if *c != cluster.cluster_de_indice(*i) {
+                    let posible_fitness_nuevo = cluster.bl_fitness_posible_sol(*i, *c, infeasibility_actual);
 
-                    if solucion_valida(&solucion_nueva) {
-                        cluster.asignar_clusters(solucion_nueva.clone());
-
-                        if cluster.fitness() < fitness_actual {
-                            nueva_sol_encontrada = true;
-                            cluster.asignar_clusters(solucion_nueva);
-                            break;
-                        }
-                        else {
-                            cluster.asignar_clusters(solucion_antigua.clone());
-                        }
-                    }
+                    match posible_fitness_nuevo {
+                        Ok(fitness) => {
+                            if fitness < fitness_actual {
+                                cluster.asignar_cluster_a_elemento(*i, *c);
+                                nueva_sol_encontrada = true;
+                                break;
+                            }
+                        },
+                        Err(_r) => {}
+                    };
                 }
             }
 
@@ -224,8 +217,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
         if sol_optima{
             break;
         }
-        //println!("Nueva solución encontrada en {}. Iteraciones: {}", now.elapsed().as_micros(), &iters);
-
+        //println!("Iteración: {}. Tiempo transcurrido: {}.", &iters, now.elapsed().as_millis());
     }
 
     println!("{} Cálculo del cluster finalizado {}\n", "▸".cyan(), "✓".green());

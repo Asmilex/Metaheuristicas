@@ -184,7 +184,7 @@ pub fn export_to_csv (info: &Vec<InfoEjecucion>, path: &str) ->  Result<(), Box<
     // When writing records without Serde, the header record is written just
     // like any other record.
     wtr.write_record(&[
-        "Tasa infeasibility", "|Desviación general - distancia óptima|", "Agregado", "Tiempo de ejecución (ms)",
+        "Tasa infeasibility", "| Desviación general - distancia óptima |", "Agregado", "Tiempo de ejecución (ms)",
     ])?;
 
     let mut record: Vec<String>;

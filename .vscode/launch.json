@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/metaheuristicas.exe",
-            "args": ["benchmark", "greedy"],
+            "args": ["benchmark", "bl"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

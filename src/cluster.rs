@@ -18,6 +18,7 @@ pub struct Clusters {
     pub num_elementos: usize,       // Tamaño del espacio
     pub espacio: Vec<Punto>,
     pub distancias: MatrizDinamica<f64>,
+    maximo_distancias: f64,
 
     restricciones: MatrizDinamica<i8>,
 
@@ -40,6 +41,7 @@ impl Clusters {
             num_elementos,
             espacio: vec![DVector::zeros(dim_vectores); num_elementos],       // Vector de puntos aka matriz.
             distancias: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0.0),  // Matriz de distancias entre puntos.
+            maximo_distancias: 0.0,
 
             restricciones: DMatrix::from_diagonal_element(num_elementos, num_elementos, 0),
 
@@ -70,6 +72,8 @@ impl Clusters {
                 self.distancias[(i, j)] = distancia(&self.espacio[(i)], &self.espacio[(j)]);
             }
         }
+
+        self.maximo_distancias = self.distancias.max();
     }
 
 
@@ -241,22 +245,24 @@ impl Clusters {
 
 
     pub fn calcular_centroides(&mut self) {
-        if self.lista_clusters.iter().any(|&x| x == 0) {
+        if !self.solucion_valida() {
             println!("Existen elementos que no tienen cluster asignado. No se ejecuta nada - calcular_centroides");
             return
         }
 
+
+        for centroide in self.centroides.iter_mut() {
+            centroide.fill(0.0);
+        }
+
         for i_centroide in 0 .. self.num_clusters {
-            if self.recuento_clusters[i_centroide] != 0 {
-                let mut vect: Punto = DVector::zeros(self.dim_vectores);
-                // Si hay alguien en ese cluster, sumar los elementos del espacio y dividirlos por la cantidad de elementos que hay
 
-                for indice_elemento in self.indices_cluster(i_centroide+1).iter() {
-                    vect = vect + (&self.espacio[*indice_elemento]);
-                }
-
-                self.centroides[i_centroide] = vect.scale(1.0/(self.recuento_clusters[i_centroide] as f64));
+            // Si hay alguien en ese cluster, sumar los elementos del espacio y dividirlos por la cantidad de elementos que hay
+            for indice_elemento in self.indices_cluster(i_centroide+1).iter() {
+                self.centroides[i_centroide] = &self.centroides[i_centroide] + (&self.espacio[*indice_elemento]);
             }
+
+            self.centroides[i_centroide] = self.centroides[i_centroide].scale(1.0/(self.recuento_clusters[i_centroide] as f64));
         }
     }
 
@@ -373,7 +379,7 @@ impl Clusters {
 
 
     pub fn lambda(&self) -> f64 {
-        self.distancias.max()/self.num_restricciones as f64
+        self.maximo_distancias/self.num_restricciones as f64
     }
 
 
@@ -381,6 +387,34 @@ impl Clusters {
         self.desviacion_general_particion() + self.lambda() * self.infeasibility() as f64
     }
 
+    //
+    // ─── ESPECIFICOS ────────────────────────────────────────────────────────────────
+    //
+
+    pub fn bl_fitness_posible_sol(&mut self, i: usize, c: usize, antiguo_infeas: u32) -> Result<f64, &'static str> {
+        /*
+            Computa si la solución que ocurre de asginar el cluster c al vector en la posición c es válido. En ese caso, devuelve su fitness
+        */
+        //use std::time::{Instant};
+        //let now = Instant::now();
+
+        let antiguo_c = self.lista_clusters[i];
+
+        self.asignar_cluster_a_elemento(i, c);
+
+        if !self.solucion_valida() {
+            self.asignar_cluster_a_elemento(i, antiguo_c);
+            return Err("La solución no es válida");
+        }
+
+        let nuevo_infeas = antiguo_infeas - self.infeasibility_delta_esperada(i, antiguo_c) + self.infeasibility_delta_esperada(i, c);
+
+        self.asignar_cluster_a_elemento(i, antiguo_c);
+        let fitness = self.desviacion_general_particion() + self.lambda()*nuevo_infeas as f64;
+
+        //println!("Tiempo en bl_fitness_posible_sol: {}", now.elapsed().as_millis());
+        Ok(fitness)
+    }
 }
 
 //
