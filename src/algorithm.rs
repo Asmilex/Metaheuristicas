@@ -130,6 +130,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     */
     use std::time::{Instant};
     println!("{} Ejecutando búsqueda local para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
 
     let max_iteraciones = 10_000;
 
@@ -156,21 +157,20 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
     cluster.asignar_clusters(solucion_inicial.clone());
     let mut sol_optima: bool;      // Aquella que cumple que no existe otra solución S' tal que f(S) < f(S') para toda otra S
+    let mut fitness_actual = cluster.fitness();
+    let mut infeasibility_actual = cluster.infeasibility();
+    let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
 
-    for iters in 0..max_iteraciones {
+    for _ in 0..max_iteraciones {
         //let now = Instant::now();
         let mut nueva_sol_encontrada = false;
-        sol_optima = false;
-
-        let fitness_actual = cluster.fitness();
-        let infeasibility_actual = cluster.infeasibility();
+        sol_optima = true;
 
         let mut indices: Vec<usize> = (0..cluster.num_elementos).collect();
         indices.shuffle(&mut generador);
-        let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
-        clusters_barajados.shuffle(&mut generador);
 
         for i in indices.iter() {
+            clusters_barajados.shuffle(&mut generador);
             for c in clusters_barajados.iter() {
                 if *c != cluster.cluster_de_indice(*i) {
                     let posible_fitness_nuevo = cluster.bl_fitness_posible_sol(*i, *c, infeasibility_actual);
@@ -178,6 +178,10 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
                     match posible_fitness_nuevo {
                         Ok(fitness) => {
                             if fitness < fitness_actual {
+                                fitness_actual = fitness;
+                                infeasibility_actual = infeasibility_actual
+                                    - cluster.infeasibility_delta_esperada(*i, cluster.cluster_de_indice(*i))
+                                    + cluster.infeasibility_delta_esperada(*i, *c);
                                 cluster.asignar_cluster_a_elemento(*i, *c);
                                 nueva_sol_encontrada = true;
                                 break;
@@ -201,7 +205,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
         //println!("Iteración: {}. Tiempo transcurrido: {}.", &iters, now.elapsed().as_millis());
     }
 
-    println!("{} Cálculo del cluster finalizado {}\n", "▸".cyan(), "✓".green());
+    println!("{} Cálculo del cluster finalizado {} en {} ms\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
 }

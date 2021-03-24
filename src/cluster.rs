@@ -57,14 +57,14 @@ impl Clusters {
 //
 
 
-/*     pub fn resize_espacio(&mut self, nuevo_tam: usize) {
+    pub fn resize_espacio(&mut self, nuevo_tam: usize) {
         self.num_elementos = nuevo_tam;
 
         // Cambiar el resto de componentes
         self.espacio = vec![DVector::zeros(self.dim_vectores); self.num_elementos];
         self.distancias = DMatrix::from_diagonal_element(self.num_elementos, self.num_elementos, 0.0);
     }
- */
+
 
     pub fn calcular_matriz_distancias(&mut self) {
         for i in 0 .. self.espacio.len() {
