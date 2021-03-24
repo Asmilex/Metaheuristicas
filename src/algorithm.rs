@@ -202,10 +202,9 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
         if sol_optima{
             break;
         }
-        //println!("Iteración: {}. Tiempo transcurrido: {}.", &iters, now.elapsed().as_millis());
     }
 
-    println!("{} Cálculo del cluster finalizado {} en {} ms\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
 }

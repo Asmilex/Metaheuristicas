@@ -27,7 +27,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
         Finalmente, se ejecuta el algoritmo seleccionado 5 veces y se provee un vector con los resultados de la ejecución.
     */
 
-    println!("\n{}: Se empieza a ejecutar el benchmark del algoritmo {:#?} para el dataset {:#?} con las restricciones {:#?}", "§ BENCHMARK §".red(), algoritmo, dataset.tipo, restriccion);
+    println!("\n{}: Se empieza a ejecutar el benchmark del algoritmo {:#?} para el dataset {:#?} con las restricciones {:#?}", "§ BENCHMARK §".red().bold(), algoritmo, dataset.tipo, restriccion);
     let mut cluster = leer_archivo_PAR(&dataset, &restriccion);
 
     // TODO cambiar cuando haya implementado el resto de algoritmos
@@ -55,7 +55,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_re
         cluster.reset_clusters();
     }
 
-    println!("Benchmark completado {}\n", "✓".green());
+    println!("Benchmark completado {}\n", "✓".green().bold());
     ejecuciones
 }
 
