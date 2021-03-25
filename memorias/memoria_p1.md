@@ -20,8 +20,10 @@
   - [Estructura del programa](#estructura-del-programa)
   - [La clase `Clusters`](#la-clase-clusters)
     - [Sobre las dimensiones](#sobre-las-dimensiones)
-    - [Elementos del espacio y restricciones](#elementos-del-espacio-y-restricciones)
+    - [Elementos del espacio](#elementos-del-espacio)
     - [Representación de las soluciones](#representación-de-las-soluciones)
+    - [Restricciones](#restricciones)
+    - [Estadísticos](#estadísticos)
 - [Algoritmos considerados](#algoritmos-considerados)
   - [Greedy](#greedy)
     - [Descripción del algoritmo](#descripción-del-algoritmo)
@@ -100,39 +102,65 @@ Se han dividido las funcionalidades clave del programa en distintos ficheros. Es
 - `algorithm.rs`: todos los algoritmos implementados se encuentran aquí. Ahora mismo, estos son greedy y búsqueda local.
 - `cluster.rs`: las principales estructuras necesarias para resolver el problema se localizan en este fichero. Específicamente, la clase `Clusters`. En la siguiente sección se detalla su implementación.
 
+
 ### La clase `Clusters`
 
-Esta estructura supondrá el grueso de nuestro programa. *Agrupará* toda la información pertinente a la resolución del problema. Describamos sus elementos:
+Esta estructura supondrá el grueso de nuestro programa. *Agrupará* toda la información pertinente a la resolución del problema. En las siguientes secciones, describiremos sus elementos. No obstante, omitiremos las funciones de poco interés didáctico
+
 
 #### Sobre las dimensiones
+
 Necesitaremos tres medidas para generar una solución:
 
 - `num_clusters` representa el número de clusters fijado por el problema.
 - `dim_vectores` es el número de atributos del dataset.
 - `num_elementos` es el número de vectores o muestras del dataset.
 
-#### Elementos del espacio y restricciones
-Representaremos las restricciones de dos formas distintas:
-1. La primera de ellas es mediante una matriz (`restricciones`) con entradas que toman valores en ${0, 1, -1}$. Para una cierta entrada $[(i, j)]$, si su valor es $0$, no hay ninguna restricción aplicada del vector con posición $i$ y el vector $j$. Si es $1$, entonces es una restricción del tipo `Must-Link`; esto es, deben ir agrupadas en el mismo cluster. Si su entrada es $-1$, ocurre lo contrario al caso anterior: estos dos vectores tienen una restricción del tipo `Cannot-Link`, y deben ir en clusters distintos. Esta estructura de datos nos resultará útil cuando queramos calcular el infeasibility de todo el sistema.
-2. La segunda es un *hashmap* para cada tipo de restricción. Dado un cierto índice $i$, los hashmaps `restricciones_ML` y `restricciones_CL` devuelven todos los índices con los que tienen restricciones. Aceleran muchísimo el cálculo del infeasibility generado por la asignación de un cluster a un cierto elemento.
+
+#### Elementos del espacio
+
+La clase conoce en todo momento el conjunto de elementos del dataset que estamos tratando, así como sus distancias respectivas. Los miembros que se encargan de guardar esta información son `espacio` y `distancias` respectivamente. El cálculo de la variable $\lambda$, de la cual hablaremos más tarde, se guarda cuál es el máximo de las distancias al calcular la matriz `distancias`.
+
+Para almacenar los vectores, hemos utilizado un vector de `Nalgebra::DVector`, un tipo de array dinámico con funciones de álgebra lineal. Esto nos será de gran ayuda, pues simplificará las operaciones del espacio vectorial con el que tratamos.
 
 
 #### Representación de las soluciones
 
-Las soluciones se representan con una lista de enteros, `lista_clusters`, de forma que, para una cierta entrada $i$ de dicha lista,
+Las soluciones se representan con una lista de enteros, `lista_clusters`, de forma que, para una cierta entrada $i$ de dicha lista:
 - Si su valor es $0$, entonces, ese elemento no tiene cluster asignado
 - En otro caso, su valor está en el conjunto $\{1, ..., num\_clusters\}$.
 
-Una solución solo se considerará válida si todo cluster tiene al menos un elemento asignado.
+Una solución solo se considerará válida si todo cluster tiene al menos un elemento asignado. Si algún elemento ha modificado su cluster, la clase automáticamente lo registra en la estructura `recuento_clusters`, por lo que nos resultará sencillo comprobar cuántos elementos hay en cada uno.
+
+
+#### Restricciones
+
+Representaremos las restricciones de dos formas distintas:
+1. La primera de ellas es mediante una matriz (`restricciones`) con entradas que toman valores en ${0, 1, -1}$. Para una cierta entrada $[(i, j)]$, si su valor es $0$, no hay ninguna restricción aplicada del vector con posición $i$ y el vector $j$. Si es $1$, entonces es una restricción del tipo `Must-Link`; esto es, deben ir agrupadas en el mismo cluster. Si su entrada es $-1$, ocurre lo contrario al caso anterior: estos dos vectores tienen una restricción del tipo `Cannot-Link`, y deben ir en clusters distintos. Esta estructura de datos nos resultará útil cuando queramos calcular el infeasibility de todo el sistema.
+2. La segunda es un *hashmap* para cada tipo de restricción. Dado un cierto índice $i$, los hashmaps `restricciones_ML` y `restricciones_CL` devuelven todos los índices con los que tienen restricciones. Aceleran muchísimo el cálculo del infeasibility generado por la asignación de un cluster a un cierto elemento.
+
+El número de restricciones se guarda al crear la matriz de restricciones.
+
+#### Estadísticos
+
+El interés de este problema reside en ser capaces de crear clusters lo más verosímiles posibles entre sí. Por tanto, para determinar cómo de buena es una solución, necesitamos algún tipo de estadístico que nos informe de ello. Debido a la naturaleza del problema, vamos a considerar dos: El **infeasibility** y el **fitness**.
+- **Infeasiblity** es una medida de cuántas restricciones han sido violadas en conjunto; es decir, cuántos elementos con restricción *Cannot-Link* han caído en el mismo cluster, y cuántos vectores con restricción del tipo *Must-Link* se encuentran en clusters separados. La función `infeasibility()` nos permite conocer esto.
+Sin embargo, no siempre nos interesa saber cuál es el estado de todo el sistema, sino cómo de malo sería meter un elemento en un cierto cluster. Para esto sirve la función `infeasibility_esperada(indice, cluster)`. Es una forma mucho más rápida de comprobar incrementos y decrementos en el sistema.
+- En este problema, tanto las restricciones incumplidas como la distancia entre los elementos son importantes. Por ello, el **fitness** considera ambas. Éste se define de la siguiente manera:
+$$
+\text{fitness} = \text{desviación general de la partición} + \lambda \cdot \text{infeasiblity}
+$$
+donde la desviación general de la partición es la media de la suma de las distancias medias intracluster, y $\lambda$ se define como el cociente entre el máximo de las distancias en el sistema y el número de restricciones totales del sistema. Se puede conocer gracias a la función `fitness()`.
+
 
   * * *
 
 
 ## Algoritmos considerados
+
+
+
 TODO hay que incluir, en total:
-- Consideraciones comunes a los algoritmos.
-- Descripción de esquema de representación de solución.
-- Descripción en pseudocódigo de la función objetivo y los operadores comunes.
 - Pseudocódigo de la estructura del método de búsqueda y operaciones relevantes de cada algoritmo.
 - Pseudocódigo de los algoritmos. Los implementados, no los de la teoría.
   - *Incluirá la descripción en pseudocódigo del método de exploración del entorno, el operador de generación de vecino y la generación de soluciones*
