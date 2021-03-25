@@ -6,7 +6,7 @@
 > Grupo de prácticas: MH3
 
 
-  * * *
+* * *
 
 
 # Tabla de contenidos
@@ -27,10 +27,9 @@
 - [Algoritmos considerados](#algoritmos-considerados)
   - [Greedy](#greedy)
     - [Descripción del algoritmo](#descripción-del-algoritmo)
-    - [Implementación](#implementación)
   - [Búsqueda local](#búsqueda-local)
     - [Descripción del algoritmo](#descripción-del-algoritmo-1)
-    - [Implementación](#implementación-1)
+    - [Implementación](#implementación)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Resultados obtenidos](#resultados-obtenidos)
@@ -38,7 +37,7 @@
 - [Referencias](#referencias)
 
 
-  * * *
+* * *
 
 
 ## Sobre esta memoria
@@ -62,7 +61,7 @@ Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces
 Para ejecutar un único algoritmo para un cierto dataset, se debe introducir en la línea de comandos `cargo run --release [dataset] {10, 20} [algoritmos]`, donde `[dataset]` puede valer `bupa`, `glass` o `zoo`, eligiendo qué conjunto de restricciones usar (`10` o `20`). La lista de algoritmos funciona de la misma manera que en apartado anterior.
 
 
-  * * *
+* * *
 
 
 ## Descripción del problema
@@ -76,7 +75,7 @@ Nuestro matiz consiste en que les ponemos restricciones a los elementos a analiz
 A lo largo de estas prácticas propondremos diferentes algoritmos para resolver este problema. En la práctica 1, presentaremos soluciones sencillas basadas en algoritmos simples como **Greedy** o **Búsqueda Local**.
 
 
-  * * *
+* * *
 
 
 ## Procedimiento seguido para resolver la práctica
@@ -153,32 +152,85 @@ $$
 donde la desviación general de la partición es la media de la suma de las distancias medias intracluster, y $\lambda$ se define como el cociente entre el máximo de las distancias en el sistema y el número de restricciones totales del sistema. Se puede conocer gracias a la función `fitness()`.
 
 
-  * * *
+* * *
 
 
 ## Algoritmos considerados
 
+Los algoritmos implementados en la práctica 1 son capaces de generar una solución partiendo de un objeto de la clase `Clusters` sin asignaciones. Es el único punto en el que podrán encontrarse en este estado.
+
+Dado que todos los métodos de resolución que programemos requieren aleatoriedad, fijaremos unas semillas para todos los generadores del programas. Se encuentran en la clase `utils.rs/Semillas`.
 
 
 TODO hay que incluir, en total:
 - Pseudocódigo de la estructura del método de búsqueda y operaciones relevantes de cada algoritmo.
 - Pseudocódigo de los algoritmos. Los implementados, no los de la teoría.
-  - *Incluirá la descripción en pseudocódigo del método de exploración del entorno, el operador de generación de vecino y la generación de soluciones*
+  - *Incluirá la descripción en pseudocódigo del método de exploración del entorno, el operador de generación de vecino y la generación de soluciones*.
 - Pseudocódigo de los algoritmos de comparación.
 
 ### Greedy
+
+El algoritmo **Greedy K-medias aplicado a clustering con restricciones** es capaz de proporcionarnos una solución relativamente buena en muy pocos milisegundos. Su implementación es muy sencilla, así como la idea que hay tras éste.
+
 #### Descripción del algoritmo
-#### Implementación
+
+Partiendo de un cluster vacío, pero con todos los elementos cargados, consideramos una serie de centroides aleatorios. Tantos como número de clusters debamos generar. Recorremos los elementos del espacio de forma aleatoria, de forma que asignamos cada uno al cluster en el que menor número de restricciones se viola (esto es, de menor infeasibility). En caso de empate, se asigna al cluster con cenroide más cercano a nuestro punto, entendiendo por cercano por aquel centroide que minimiza la distancia euclidiana. Se actualizan los centroides, y se repite todo hasta que la solución se estabilice.
+
+El pseudocódigo, por tanto, quedaría así:
+
+```
+Greedy_COPKM
+
+1. Generar centroides aleatorios con distribución uniforme en R^d.
+2. Barajar los índices de forma aleatoria y sin repetición.
+3. Mientras se produzcan cambios en el cluster:
+  3.1. Para cada índice, mirar qué incremento supone en la infeasibility al asignarlo a un cluster. Tomar el menor de estos.
+  3.2. Actualizar los centroides
+```
+
+![Ejemplo de ejecución de greedy](img/Greedy_ejemplo.png)
+
+En la sección [Análisis de resultados](#análisis-de-resultados) comprobaremos cómo de buena es la solución obtenida.
 
 ### Búsqueda local
+
+**Búsqueda local** es la primera heurística propia que programaremos. Aunque es un algoritmo sencillo, supone una mejora en ciertos aspectos con respecto a Greedy. Se basa en la exploración de vecinos a la solución actual, tomando el mejor de entre los posibles. Por su naturaleza, suele generar óptimos locales.
+
+
 #### Descripción del algoritmo
+
+Como hemos citado, se exploran los vecinos de una cierta solución, mirando en cada iteración cuáles son las mejores soluciones. Se define un vecino como la asignación de un elemento $i$ a un cluster $c$ partiendo de una solución actual. Debemos verificar que la posible solución generada con este operador es válida, pues en otro caso, no tiene sentido seguir.
+
+El concepto de *mejor solución* es el que proporciona el fitness. Es decir, en cada iteración, se comprobará si el vecino tiene un fitness menor que el actual. Si es así, la siguiente solución a explorar será esta.
+
 #### Implementación
 
+El pseudocódigo del algoritmo es el siguiente:
 
-  * * *
+```
+Generar una solución válida inicial.
+
+Hasta que no se haya alcanzado un óptimo local
+├  Guardar la información de la solución actual relevante: fitness, infeasibility,
+├  Barajar los índices
+│
+├ Para i en {0, ..., num_elementos}
+│  ├ Barajar los clusters
+│  │
+│  ├ Para c en {1, ..., num_clusters}
+│  │  │ Si el cluster del i-ésimo elemento no es c
+│  │  │  ├ Comprobar si el vecino nuevo es válido
+│  │  │  ├ En ese caso, comprobar si tiene un fitness menor.
+│  │  │  └ Si es así, reexplorar todos los índices de nuevo y actualizar la información de la solución nueva.
+│  │  │
+└  └  └─ Si se ha encontrado una nueva solución, ignorar el resto de índices.
+```
 
 
-  * * *
+* * *
+
+
+* * *
 
 
 ## Análisis de resultados
@@ -187,7 +239,7 @@ TODO hay que incluir, en total:
 ### Síntesis
 
 
-  * * *
+* * *
 
 
 ## Referencias
