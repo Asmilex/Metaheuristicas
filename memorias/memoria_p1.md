@@ -18,7 +18,10 @@
 - [Procedimiento seguido para resolver la práctica](#procedimiento-seguido-para-resolver-la-práctica)
   - [Crates usadas](#crates-usadas)
   - [Estructura del programa](#estructura-del-programa)
-  - [La clase Clusters](#la-clase-clusters)
+  - [La clase `Clusters`](#la-clase-clusters)
+    - [Sobre las dimensiones](#sobre-las-dimensiones)
+    - [Elementos del espacio y restricciones](#elementos-del-espacio-y-restricciones)
+    - [Representación de las soluciones](#representación-de-las-soluciones)
 - [Algoritmos considerados](#algoritmos-considerados)
   - [Greedy](#greedy)
     - [Descripción del algoritmo](#descripción-del-algoritmo)
@@ -93,12 +96,34 @@ Para facilitar la implementación, se han utilizado una serie de *crates* (nombr
 Se han dividido las funcionalidades clave del programa en distintos ficheros. Estos son:
 - `main.rs`: contiene el código relacionado con la ejecución de una ejecución simple y de un benchmark
 - `file_io.rs`: aquí se ubican las funciones relacionadas con entrada/salida de archivos. En particular, la lectura de los ficheros de restricciones y la salida a los archivos csv.
-- `utils.rs`: se definen las diferentes estructuras relacionadas con el problema. Por ejemplo, `PAR_parametros` devuelve los datos necesarios para operar dado un dataset.
+- `utils.rs`: se definen las diferentes estructuras relacionadas con el problema. Por ejemplo, `ParametrosDataset` agrupa los datos necesarios para operar un cierto dataset.
 - `algorithm.rs`: todos los algoritmos implementados se encuentran aquí. Ahora mismo, estos son greedy y búsqueda local.
 - `cluster.rs`: las principales estructuras necesarias para resolver el problema se localizan en este fichero. Específicamente, la clase `Clusters`. En la siguiente sección se detalla su implementación.
 
-### La clase Clusters
+### La clase `Clusters`
 
+Esta estructura supondrá el grueso de nuestro programa. *Agrupará* toda la información pertinente a la resolución del problema. Describamos sus elementos:
+
+#### Sobre las dimensiones
+Necesitaremos tres medidas para generar una solución:
+
+- `num_clusters` representa el número de clusters fijado por el problema.
+- `dim_vectores` es el número de atributos del dataset.
+- `num_elementos` es el número de vectores o muestras del dataset.
+
+#### Elementos del espacio y restricciones
+Representaremos las restricciones de dos formas distintas:
+1. La primera de ellas es mediante una matriz (`restricciones`) con entradas que toman valores en ${0, 1, -1}$. Para una cierta entrada $[(i, j)]$, si su valor es $0$, no hay ninguna restricción aplicada del vector con posición $i$ y el vector $j$. Si es $1$, entonces es una restricción del tipo `Must-Link`; esto es, deben ir agrupadas en el mismo cluster. Si su entrada es $-1$, ocurre lo contrario al caso anterior: estos dos vectores tienen una restricción del tipo `Cannot-Link`, y deben ir en clusters distintos. Esta estructura de datos nos resultará útil cuando queramos calcular el infeasibility de todo el sistema.
+2. La segunda es un *hashmap* para cada tipo de restricción. Dado un cierto índice $i$, los hashmaps `restricciones_ML` y `restricciones_CL` devuelven todos los índices con los que tienen restricciones. Aceleran muchísimo el cálculo del infeasibility generado por la asignación de un cluster a un cierto elemento.
+
+
+#### Representación de las soluciones
+
+Las soluciones se representan con una lista de enteros, `lista_clusters`, de forma que, para una cierta entrada $i$ de dicha lista,
+- Si su valor es $0$, entonces, ese elemento no tiene cluster asignado
+- En otro caso, su valor está en el conjunto $\{1, ..., num\_clusters\}$.
+
+Una solución solo se considerará válida si todo cluster tiene al menos un elemento asignado.
 
   * * *
 
