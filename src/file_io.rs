@@ -28,7 +28,7 @@ pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
 
 
 #[allow(non_snake_case)]
-pub fn leer_archivo_PAR (parametros: &PAR_parametros, restricciones_a_usar: &PAR_restr) -> Clusters {
+pub fn leer_archivo_PAR (parametros: &ParametrosDataset, restricciones_a_usar: &Restricciones) -> Clusters {
     /*
         Pasos a seguir:
         1. Cargar todos los puntos (se encuentran en los .dat)
@@ -72,8 +72,8 @@ pub fn leer_archivo_PAR (parametros: &PAR_parametros, restricciones_a_usar: &PAR
     // ───────────────────────────────────────────── LECTURA DE LAS RESTRICCIONES ─────
 
     let ruta_archivo_restric = match restricciones_a_usar {
-        PAR_restr::Diez => parametros.archivo_restricciones_10.clone(),
-        PAR_restr::Veinte => parametros.archivo_restricciones_20.clone(),
+        Restricciones::Diez => parametros.archivo_restricciones_10.clone(),
+        Restricciones::Veinte => parametros.archivo_restricciones_20.clone(),
     };
 
     println!("\t{} Se empiezan a leer las restricciones {:?}", "▸".yellow(), &ruta_archivo_restric);
@@ -108,7 +108,7 @@ pub fn leer_archivo_PAR (parametros: &PAR_parametros, restricciones_a_usar: &PAR
 }
 
 
-pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Option<PAR_restr>, AlgoritmosAEjecutar), &'static str> {
+pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>, Option<Restricciones>, AlgoritmosAEjecutar), &'static str> {
 
     // ─────────────────────────────────────────────────────────────── ALGORITMOS ─────
 
@@ -137,16 +137,16 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Op
 
     if !algoritmos.benchmark {
         // Al no haber escogido benchmark, hay que especificar el tipo de archivo y las restricciones
-        let parametros: PAR_parametros;
+        let parametros: ParametrosDataset;
 
         if args.contains(&String::from("zoo")) {
-            parametros = PAR_parametros::new(PAR_nombres::Zoo);
+            parametros = ParametrosDataset::new(Datasets::Zoo);
         }
         else if args.contains(&String::from("glass")) {
-            parametros = PAR_parametros::new(PAR_nombres::Glass);
+            parametros = ParametrosDataset::new(Datasets::Glass);
         }
         else if args.contains(&String::from("bupa")) {
-            parametros = PAR_parametros::new(PAR_nombres::Bupa);
+            parametros = ParametrosDataset::new(Datasets::Bupa);
         }
         else {
             return Err("No se ha especificado el conjunto de datos a resolver ni especificado un benchmark");
@@ -154,13 +154,13 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<PAR_parametros>, Op
 
         // ──────────────────────────────────────────────────────────── RESTRICCIONES ─────
 
-        let restricciones: PAR_restr;
+        let restricciones: Restricciones;
 
         if args.contains(&String::from("10")) {
-            restricciones = PAR_restr::Diez;
+            restricciones = Restricciones::Diez;
         }
         else if args.contains(&String::from("20")) {
-            restricciones = PAR_restr::Veinte;
+            restricciones = Restricciones::Veinte;
         }
         else {
             return Err("No se ha proporcionado el archivo de restricciones que usar. Posibilidades: {10, 20}");

@@ -164,6 +164,7 @@ impl Clusters {
 
     pub fn reset_clusters(&mut self) {
         self.lista_clusters = vec![0; self.num_elementos];
+        self.recuento_clusters = vec![0; self.num_clusters];
         self.centroides =  vec![DVector::zeros(self.dim_vectores); self.num_clusters];
     }
 
@@ -200,9 +201,6 @@ impl Clusters {
 
 
     pub fn asignar_cluster_a_elemento (&mut self, i: usize, c: usize) {
-        if i > self.lista_clusters.len() {
-            panic!("El índice pasado se sale del espacio");
-        }
         if c > self.num_clusters {
             panic!("El cluster pasado se sale del espacio");
         }
@@ -250,13 +248,11 @@ impl Clusters {
             return
         }
 
-
         for centroide in self.centroides.iter_mut() {
             centroide.fill(0.0);
         }
 
         for i_centroide in 0 .. self.num_clusters {
-
             // Si hay alguien en ese cluster, sumar los elementos del espacio y dividirlos por la cantidad de elementos que hay
             for indice_elemento in self.indices_cluster(i_centroide+1).iter() {
                 self.centroides[i_centroide] = &self.centroides[i_centroide] + (&self.espacio[*indice_elemento]);
@@ -341,7 +337,9 @@ impl Clusters {
         infeasibility
     }
 
-    pub fn infeasibility_delta_esperada (&mut self, indice: usize, c: usize) -> u32 {
+    /// Calcula el infeasibility que resulta de asignar a un cierto vector del espacio con índice `i`
+    /// el cluster `c`. No se modifica ningún elemento.
+    pub fn infeasibility_esperada (&self, indice: usize, c: usize) -> u32 {
         if c > self.num_clusters {
             panic!("Cluster mayor del que se esperaba");
         }
@@ -350,7 +348,7 @@ impl Clusters {
         }
 
         // NOTE
-        // El incremento que se produce en la infeasibility es independiente del estado del resto del sistema (¿Creo?)
+        // El incremento que se produce en la infeasibility es independiente del estado del resto del sistema.
         // Por tanto, es suficiente comprobar cuáles se violan al colocar el índice en un cierto cluster.
 
         let mut expected_infeasibility: u32 = 0;
@@ -391,6 +389,9 @@ impl Clusters {
     // ─── ESPECIFICOS ────────────────────────────────────────────────────────────────
     //
 
+    /// Esta función realiza dos operaciones específicas para la búsqueda local. A partir de los parámetros de entrada:
+    /// 1. La solución es válida. Se comprueba si al asignar al vector con índice `i` el cluster `c`, se tiene que todos los clusters contienen al menos un elemento.
+    /// 2. De ser válida la solución, se devuelve el fitness que produce a partir del antiguo. Se realiza de esta manera para acelerar el cálculo.
     pub fn bl_fitness_posible_sol(&mut self, i: usize, c: usize, antiguo_infeas: u32) -> Result<f64, &'static str> {
         /*
             Computa si la solución que ocurre de asginar el cluster c al vector en la posición c es válido. En ese caso, devuelve su fitness
@@ -407,7 +408,7 @@ impl Clusters {
             return Err("La solución no es válida");
         }
 
-        let nuevo_infeas = antiguo_infeas - self.infeasibility_delta_esperada(i, antiguo_c) + self.infeasibility_delta_esperada(i, c);
+        let nuevo_infeas = antiguo_infeas - self.infeasibility_esperada(i, antiguo_c) + self.infeasibility_esperada(i, c);
         let fitness = self.desviacion_general_particion() + self.lambda()*nuevo_infeas as f64;
 
         self.asignar_cluster_a_elemento(i, antiguo_c);

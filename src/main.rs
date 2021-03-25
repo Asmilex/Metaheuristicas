@@ -11,16 +11,17 @@
 // ────────────────────────────────────────────────────────────────── IMPORTS ─────
 //
 
-    use std::time::{Instant};
-    use algorithm::{busqueda_local, greedy_COPKM};
-    use file_io::*;
-    use utils::{Algoritmos, InfoEjecucion, PAR_nombres, PAR_parametros, PAR_restr, RutasCSV};
+    use std::time::Instant;
     use std::env;
+    use file_io::*;
     use colored::*;
+
+    use algorithm::{busqueda_local, greedy_COPKM};
+    use utils::{Algoritmos, InfoEjecucion, Datasets, ParametrosDataset, Restricciones, RutasCSV};
 
 // ────────────────────────────────────────────────────────────────────────────────
 
-fn benchmark(algoritmo: Algoritmos, dataset: PAR_parametros, restriccion: PAR_restr) -> Vec<InfoEjecucion> {
+fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Restricciones) -> Vec<InfoEjecucion> {
     /*
         Primero, se rellena el cluster con la información del espacio.
         Después, se decide qué algoritmo utilizar.
@@ -95,21 +96,21 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Zoo),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Zoo),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.zoo_10) {
                 Ok(()) => println!("Exportado con éxito el archivo {} {}", &rutas.zoo_10, "✓".green()),
-                Err(r) => println!("ERROR: {}", r)
+                Err(r) => println!("ERROR al exportar el archivo csv: {}", r)
             };
 
             // ──────────────────────────────────────────────────── ZOO 20 ─────
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Zoo),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Zoo),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.zoo_20) {
@@ -121,8 +122,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Glass),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Glass),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.glass_10) {
@@ -134,8 +135,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Glass),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Glass),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.glass_20) {
@@ -147,8 +148,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Bupa),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Bupa),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.bupa_10) {
@@ -160,8 +161,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::Greedy,
-                PAR_parametros::new(PAR_nombres::Bupa),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Bupa),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.bupa_20) {
@@ -179,8 +180,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Zoo),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Zoo),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.zoo_10) {
@@ -192,8 +193,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Zoo),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Zoo),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.zoo_20) {
@@ -205,8 +206,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Glass),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Glass),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.glass_10) {
@@ -218,8 +219,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Glass),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Glass),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.glass_20) {
@@ -231,8 +232,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Bupa),
-                PAR_restr::Diez
+                ParametrosDataset::new(Datasets::Bupa),
+                Restricciones::Diez
             );
 
             match export_to_csv(&datos_benchmark, &rutas.bupa_10) {
@@ -244,8 +245,8 @@ fn main() {
 
             let datos_benchmark = benchmark(
                 Algoritmos::BL,
-                PAR_parametros::new(PAR_nombres::Bupa),
-                PAR_restr::Veinte
+                ParametrosDataset::new(Datasets::Bupa),
+                Restricciones::Veinte
             );
 
             match export_to_csv(&datos_benchmark, &rutas.bupa_20) {

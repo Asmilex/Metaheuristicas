@@ -17,7 +17,7 @@ use std::time;
 
     #[derive(Debug)]
     #[allow(non_camel_case_types)]
-    pub enum PAR_nombres {
+    pub enum Datasets {
         Bupa,
         Glass,
         Zoo
@@ -25,7 +25,7 @@ use std::time;
 
     #[allow(non_camel_case_types)]
     #[derive(Debug)]
-    pub enum PAR_restr {
+    pub enum Restricciones {
         Diez,
         Veinte
     }
@@ -33,8 +33,8 @@ use std::time;
 
     #[derive(Debug)]
     #[allow(non_camel_case_types)]
-    pub struct PAR_parametros {
-        pub tipo: PAR_nombres,
+    pub struct ParametrosDataset {
+        pub tipo: Datasets,
 
         pub archivo_datos: PathBuf,
         pub archivo_restricciones_10: PathBuf,
@@ -47,10 +47,10 @@ use std::time;
     }
 
 
-    impl PAR_parametros {
-        pub fn new (tipo: PAR_nombres) -> PAR_parametros {
+    impl ParametrosDataset {
+        pub fn new (tipo: Datasets) -> ParametrosDataset {
             match tipo {
-                PAR_nombres::Bupa  => PAR_parametros {
+                Datasets::Bupa  => ParametrosDataset {
                     tipo,
                     archivo_datos:            PathBuf::from("./data/PAR/bupa_set.dat"),
                     archivo_restricciones_10: PathBuf::from("./data/PAR/bupa_set_const_10.const"),
@@ -61,7 +61,7 @@ use std::time;
                     distancia_optima: 0.229248
                 },
 
-                PAR_nombres::Glass => PAR_parametros {
+                Datasets::Glass => ParametrosDataset {
                     tipo,
                     archivo_datos:            PathBuf::from("./data/PAR/glass_set.dat"),
                     archivo_restricciones_10: PathBuf::from("./data/PAR/glass_set_const_10.const"),
@@ -72,7 +72,7 @@ use std::time;
                     distancia_optima: 0.36429
                 },
 
-                PAR_nombres::Zoo   => PAR_parametros {
+                Datasets::Zoo   => ParametrosDataset {
                     tipo,
                     archivo_datos:            PathBuf::from("./data/PAR/zoo_set.dat"),
                     archivo_restricciones_10: PathBuf::from("./data/PAR/zoo_set_const_10.const"),
