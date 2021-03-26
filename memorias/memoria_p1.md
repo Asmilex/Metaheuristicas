@@ -32,7 +32,13 @@
     - [Implementación](#implementación)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
-  - [Resultados obtenidos](#resultados-obtenidos)
+  - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
+    - [Greedy](#greedy-1)
+    - [Restricciones al 10%](#restricciones-al-10)
+      - [Restricciones al 20%](#restricciones-al-20)
+    - [Búsqueda local](#búsqueda-local-1)
+      - [Restricciones al 10%](#restricciones-al-10-1)
+      - [Restricciones al 20%](#restricciones-al-20-1)
   - [Síntesis](#síntesis)
 - [Referencias](#referencias)
 
@@ -72,7 +78,7 @@ Se nos presenta una lista de elementos con un cierto número de atributos. Los r
 
 Nuestro matiz consiste en que les ponemos restricciones a los elementos a analizar. De esta forma, se describe cuándo un vector debe estar en el mismo cluster que otro, o cuándo deben estar en distintos. Por tanto, no solo debemos conseguir una distancia intracluster baja, sino que se debe violar el mínimo número de restricciones posibles.
 
-A lo largo de estas prácticas propondremos diferentes algoritmos para resolver este problema. En la práctica 1, presentaremos soluciones sencillas basadas en algoritmos simples como **Greedy** o **Búsqueda Local**.
+Durante estas prácticas propondremos diferentes algoritmos para resolver este problema. En la práctica 1, presentaremos soluciones sencillas basadas en algoritmos simples como **Greedy** o **Búsqueda Local**.
 
 
 * * *
@@ -159,14 +165,8 @@ donde la desviación general de la partición es la media de la suma de las dist
 
 Los algoritmos implementados en la práctica 1 son capaces de generar una solución partiendo de un objeto de la clase `Clusters` sin asignaciones. Es el único punto en el que podrán encontrarse en este estado.
 
-Dado que todos los métodos de resolución que programemos requieren aleatoriedad, fijaremos unas semillas para todos los generadores del programas. Se encuentran en la clase `utils.rs/Semillas`.
+Dado que todos los métodos de resolución que programemos requieren aleatoriedad, fijaremos unas semillas para todos los generadores del programas. Se encuentran almacenadas en la clase `utils.rs/Semillas`. Estas son: `328471273`, `1821789317287`, `128931083781`, `1802783721873`, `9584985309`.
 
-
-TODO hay que incluir, en total:
-- Pseudocódigo de la estructura del método de búsqueda y operaciones relevantes de cada algoritmo.
-- Pseudocódigo de los algoritmos. Los implementados, no los de la teoría.
-  - *Incluirá la descripción en pseudocódigo del método de exploración del entorno, el operador de generación de vecino y la generación de soluciones*.
-- Pseudocódigo de los algoritmos de comparación.
 
 ### Greedy
 
@@ -211,14 +211,14 @@ El pseudocódigo del algoritmo es el siguiente:
 Generar una solución válida inicial.
 
 Hasta que no se haya alcanzado un óptimo local
-├  Guardar la información de la solución actual relevante: fitness, infeasibility,
-├  Barajar los índices
+├ Guardar la información de la solución actual relevante: fitness, infeasibility,
+├ Barajar los índices
 │
 ├ Para i en {0, ..., num_elementos}
 │  ├ Barajar los clusters
 │  │
 │  ├ Para c en {1, ..., num_clusters}
-│  │  │ Si el cluster del i-ésimo elemento no es c
+│  │  ├ Si el cluster del i-ésimo elemento no es c
 │  │  │  ├ Comprobar si el vecino nuevo es válido
 │  │  │  ├ En ese caso, comprobar si tiene un fitness menor.
 │  │  │  └ Si es así, reexplorar todos los índices de nuevo y actualizar la información de la solución nueva.
@@ -226,17 +226,624 @@ Hasta que no se haya alcanzado un óptimo local
 └  └  └─ Si se ha encontrado una nueva solución, ignorar el resto de índices.
 ```
 
+Las operaciones más relevantes de este algoritmo las realizamos en la función `bl_fitness_posible_sol(i, c, antiguo_infeasibility)`. Por cómo está gestionado internamente el cluster, es mucho más rápido verificar que la solución es válida dentro del propio cluster, y no fuera. Esta función se encarga de asignar temporalmente el vecino, comprobar si es válido, y en caso de serlo, devolver qué fitness produciría. El motivo de que necesite el antiguo infeasibility es por eficiencia. En vez de calcular todo el sistema para cada vecino nuevo, se calcula de la siguiente manera:
+$$
+\text{Infeasibility nuevo} = (\text{infeasibility antiguo})  - (\text{infeasilibity producido por el cluster antiguo para el vector i}) + (\text{infeasibility producido por el cluster nuevo cluster c para el vector i})
+$$
 
-* * *
+Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta es muchísimo más rápido que el de todo el sistema. En la siguiente sección comprobaremos cuánto tarda en total un bechmark.
 
+![Ejemplo de ejecución de búsqueda local](./img/BL_ejemplo.png)
 
 * * *
 
 
 ## Análisis de resultados
+
+En esta sección discutiremos los resultados obtenidos por ambos algoritmos. Presentaremos los parámetros de los datasets utilizados, las distancias óptimas conocidas de estas, y cuánto se acercan Greedy y Búsqueda Local.
+
 ### Descripción de los casos del problema empleados
-### Resultados obtenidos
+
+Los datasets usados reciben el nombre de `Zoo`, `Glass`, y `Bupa`. Los dos primeros presentan una dificultad similar, mientras que el último requiere de un mayor tiempo de cómputo.
+
+|                      | **Zoo** | **Glass** | **Bupa** |
+|----------------------|--------:|----------:|---------:|
+| **Atributos**        | 16      | 9         | 5        |
+| **Clusters**         | 7       | 7         | 16       |
+| **Instancias**       | 101     | 214       | 345      |
+| **Distancia óptima** | 0.9048  | 0.36429   | 0.229248 |
+
+Sobre estos conjuntos se ha impuesto un número de restricciones: al 10% y al 20%. Naturalmente, cuantas más restricciones, más costoso resulta computar una solución aceptable, pues se debe considerar un mayor número de restricciones.
+
+Los ficheros ubicados en `./data/PAR` guardan la información sobre los datasets.
+
+### Benchmarking y resultados obtenidos
+
+Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 restricciones para cada uno, nos encontramos un total de 30 ejecuciones por algoritmo. Estudiaremos las siguientes medidas:
+- **Tasa de infeasibility**: número de restricciones que se incumplen en la solución.
+- **Error de la distancia**: Es el valor absoluto de la diferencia de la desviación intracluster media y la distancia óptima conocida hasta ahora.
+- **Agregado**: el fitness de la solución.
+- **Tiempo de ejecución**(ms).
+
+* * *
+
+#### Greedy
+#### Restricciones al 10%
+<table class="tg">
+<thead">
+  <tr>
+    <th style="text-align:right"></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Zoo</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Glass</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Bupa</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td style="text-align:right"></td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 1</span></td>
+    <td style="text-align:right">5</td>
+    <td style="text-align:right">0,0799</td>
+    <td style="text-align:right">1,0226</td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">6</td>
+    <td style="text-align:right">0,0012</td>
+    <td style="text-align:right">0,3689</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">28</td>
+    <td style="text-align:right">0,0072</td>
+    <td style="text-align:right">0,2294</td>
+    <td style="text-align:right">12</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 2</span></td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0236</td>
+    <td style="text-align:right">0,9284</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">3</td>
+    <td style="text-align:right">0,0111</td>
+    <td style="text-align:right">0,3784</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">33</td>
+    <td style="text-align:right">0,0076</td>
+    <td style="text-align:right">0,2457</td>
+    <td style="text-align:right">15</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 3</span></td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0,0446</td>
+    <td style="text-align:right">0,9570</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0,0163</td>
+    <td style="text-align:right">0,3816</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">33</td>
+    <td style="text-align:right">0,0042</td>
+    <td style="text-align:right">0,2422</td>
+    <td style="text-align:right">14</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 4</span></td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0081</td>
+    <td style="text-align:right">0,8966</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">3</td>
+    <td style="text-align:right">0,0125</td>
+    <td style="text-align:right">0,3798</td>
+    <td style="text-align:right">3</td>
+    <td style="text-align:right">12</td>
+    <td style="text-align:right">0,0092</td>
+    <td style="text-align:right">0,2231</td>
+    <td style="text-align:right">10</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 5</span></td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0570</td>
+    <td style="text-align:right">0,9618</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">7</td>
+    <td style="text-align:right">0,0331</td>
+    <td style="text-align:right">0,4043</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">37</td>
+    <td style="text-align:right">0,0025</td>
+    <td style="text-align:right">0,2366</td>
+    <td style="text-align:right">14</td>
+  </tr>
+  <tr>
+    <td style="text-align:left""><span style="font-weight:bold">Media</span></td>
+    <td style="text-align:right">1,2</td>
+    <td style="text-align:right">0,0426</td>
+    <td style="text-align:right">0,9533</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">4</td>
+    <td style="text-align:right">0,0171</td>
+    <td style="text-align:right">0,3866</td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">28,6</td>
+    <td style="text-align:right">0,0062</td>
+    <td style="text-align:right">0,2354</td>
+    <td style="text-align:right">13</td>
+  </tr>
+</tbody>
+</table>
+
+##### Restricciones al 20%
+
+<table class="tg">
+<thead">
+  <tr>
+    <th style="text-align:right"></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Zoo</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Glass</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Bupa</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td style="text-align:right"></td>
+    <td style="text-align:right"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:right"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:right"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right"><span style="font-weight:bold">T </span>(ms)</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 1</span></td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">0,0516</td>
+    <td style="text-align:right">0,9645</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0086</td>
+    <td style="text-align:right">0,3556</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">12</td>
+    <td style="text-align:right">0,0129</td>
+    <td style="text-align:right">0,2439</td>
+    <td style="text-align:right">5</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 2</span></td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0,0738</td>
+    <td style="text-align:right">0,9827</td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0,0103</td>
+    <td style="text-align:right">0,3544</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">7</td>
+    <td style="text-align:right">0,0170</td>
+    <td style="text-align:right">0,2131</td>
+    <td style="text-align:right">5</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 3</span></td>
+    <td style="text-align:right">3</td>
+    <td style="text-align:right">0,0813</td>
+    <td style="text-align:right">0,9982</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0517</td>
+    <td style="text-align:right">0,3125</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">8</td>
+    <td style="text-align:right">0,0111</td>
+    <td style="text-align:right">0,2415</td>
+    <td style="text-align:right">6</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 4</span></td>
+    <td style="text-align:right">3</td>
+    <td style="text-align:right">0,0927</td>
+    <td style="text-align:right">1,0096</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">0</td>
+    <td style="text-align:right">0,0086</td>
+    <td style="text-align:right">0,3556</td>
+    <td style="text-align:right">1</td>
+    <td style="text-align:right">19</td>
+    <td style="text-align:right">0,0091</td>
+    <td style="text-align:right">0,2410</td>
+    <td style="text-align:right">5</td>
+  </tr>
+  <tr>
+    <td style="text-align:left""><span style="font-weight:bold">Ejecución 5</span></td>
+    <td style="text-align:right"">1</td>
+    <td style="text-align:right"">0,1119</td>
+    <td style="text-align:right"">1,0208</td>
+    <td style="text-align:right"">0</td>
+    <td style="text-align:right"">0</td>
+    <td style="text-align:right"">0,0086</td>
+    <td style="text-align:right"">0,3556</td>
+    <td style="text-align:right"">4</td>
+    <td style="text-align:right"">0</td>
+    <td style="text-align:right"">0,0024</td>
+    <td style="text-align:right"">0,2317</td>
+    <td style="text-align:right"">7</td>
+  </tr>
+  <tr>
+    <td style="text-align:left""><span style="font-weight:bold">Media</span></td>
+    <td style="text-align:right"">2</td>
+    <td style="text-align:right"">0,0823</td>
+    <td style="text-align:right"">0,9951</td>
+    <td style="text-align:right"">0,6</td>
+    <td style="text-align:right"">0,2</td>
+    <td style="text-align:right"">0,0176</td>
+    <td style="text-align:right"">0,3467</td>
+    <td style="text-align:right"">1,6</td>
+    <td style="text-align:right"">9,2</td>
+    <td style="text-align:right"">0,0105</td>
+    <td style="text-align:right"">0,2342</td>
+    <td style="text-align:right"">5,6</td>
+  </tr>
+</tbody>
+</table>
+
+* * *
+
+#### Búsqueda local
+##### Restricciones al 10%
+<table class="tg">
+<thead>
+  <tr>
+    <th></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Zoo</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Glass</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Bupa</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-0pky"></td>
+    <td style="text-align:right""><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:right""><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:right""><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:right""><span style="font-weight:bold">T </span>(ms)</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 1</span></td>
+    <td style="text-align:right">11</td>
+    <td style="text-align:right">0,2940</td>
+    <td style="text-align:right">0,6940</td>
+    <td style="text-align:right">126</td>
+    <td style="text-align:right">51</td>
+    <td style="text-align:right">0,1760</td>
+    <td style="text-align:right">0,2384</td>
+    <td style="text-align:right">618</td>
+    <td style="text-align:right">116</td>
+    <td style="text-align:right">0,1196</td>
+    <td style="text-align:right">0,1407</td>
+    <td style="text-align:right">10738</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 2</span></td>
+    <td style="text-align:right">11</td>
+    <td style="text-align:right">0,2918</td>
+    <td style="text-align:right">0,6963</td>
+    <td style="text-align:right">161</td>
+    <td style="text-align:right">50</td>
+    <td style="text-align:right">0,1696</td>
+    <td style="text-align:right">0,2438</td>
+    <td style="text-align:right">460</td>
+    <td style="text-align:right">118</td>
+    <td style="text-align:right">0,1217</td>
+    <td style="text-align:right">0,1391</td>
+    <td style="text-align:right">5789</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 3</span></td>
+    <td style="text-align:right">12</td>
+    <td style="text-align:right">0,2385</td>
+    <td style="text-align:right">0,7571</td>
+    <td style="text-align:right">120</td>
+    <td style="text-align:right">60</td>
+    <td style="text-align:right">0,1791</td>
+    <td style="text-align:right">0,2442</td>
+    <td style="text-align:right">641</td>
+    <td style="text-align:right">142</td>
+    <td style="text-align:right">0,1057</td>
+    <td style="text-align:right">0,1615</td>
+    <td style="text-align:right">4228</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 4</span></td>
+    <td style="text-align:right">27</td>
+    <td style="text-align:right">0,1631</td>
+    <td style="text-align:right">0,9462</td>
+    <td style="text-align:right">186</td>
+    <td style="text-align:right">50</td>
+    <td style="text-align:right">0,1738</td>
+    <td style="text-align:right">0,2396</td>
+    <td style="text-align:right">453</td>
+    <td style="text-align:right">115</td>
+    <td style="text-align:right">0,1202</td>
+    <td style="text-align:right">0,1398</td>
+    <td style="text-align:right">6993</td>
+  </tr>
+  <tr>
+    <td class="tg-0lax"><span style="font-weight:bold">Ejecución 5</span></td>
+    <td style="text-align:right">11</td>
+    <td style="text-align:right">0,2992</td>
+    <td style="text-align:right">0,6888</td>
+    <td style="text-align:right">112</td>
+    <td style="text-align:right">54</td>
+    <td style="text-align:right">0,1694</td>
+    <td style="text-align:right">0,2479</td>
+    <td style="text-align:right">545</td>
+    <td style="text-align:right">95</td>
+    <td style="text-align:right">0,1183</td>
+    <td style="text-align:right">0,1363</td>
+    <td style="text-align:right">6717</td>
+  </tr>
+  <tr>
+    <td class="tg-0lax"><span style="font-weight:bold">Media</span></td>
+    <td style="text-align:right">14,4</td>
+    <td style="text-align:right">0,2573</td>
+    <td style="text-align:right">0,7565</td>
+    <td style="text-align:right">141</td>
+    <td style="text-align:right">53</td>
+    <td style="text-align:right">0,1736</td>
+    <td style="text-align:right">0,2428</td>
+    <td style="text-align:right">543,4</td>
+    <td style="text-align:right">117,2</td>
+    <td style="text-align:right">0,1171</td>
+    <td style="text-align:right">0,1435</td>
+    <td style="text-align:right">6893</td>
+  </tr>
+</tbody>
+</table>
+
+##### Restricciones al 20%
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-0pky"></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Zoo</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Glass</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Bupa</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-0pky"></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align-right:"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align-right:"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align-right:"><span style="font-weight:bold">T </span>(ms)</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 1</span></td>
+    <td style="text-align:right">18</td>
+    <td style="text-align:right">0,1728</td>
+    <td style="text-align:right">0,8045</td>
+    <td style="text-align:right">117</td>
+    <td style="text-align:right">37</td>
+    <td style="text-align:right">0,1141</td>
+    <td style="text-align:right">0,2694</td>
+    <td style="text-align:right">486</td>
+    <td style="text-align:right">264</td>
+    <td style="text-align:right">0,1199</td>
+    <td style="text-align:right">0,1461</td>
+    <td style="text-align:right">8105</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 2</span></td>
+    <td style="text-align:right">18</td>
+    <td style="text-align:right">0,2193</td>
+    <td style="text-align:right">0,7581</td>
+    <td style="text-align:right">160</td>
+    <td style="text-align:right">30</td>
+    <td style="text-align:right">0,1134</td>
+    <td style="text-align:right">0,2664</td>
+    <td style="text-align:right">468</td>
+    <td style="text-align:right">209</td>
+    <td style="text-align:right">0,1175</td>
+    <td style="text-align:right">0,1408</td>
+    <td style="text-align:right">7039</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 3</span></td>
+    <td style="text-align:right">18</td>
+    <td style="text-align:right">0,1532</td>
+    <td style="text-align:right">0,8242</td>
+    <td style="text-align:right">71</td>
+    <td style="text-align:right">38</td>
+    <td style="text-align:right">0,1185</td>
+    <td style="text-align:right">0,2655</td>
+    <td style="text-align:right">628</td>
+    <td style="text-align:right">224</td>
+    <td style="text-align:right">0,1151</td>
+    <td style="text-align:right">0,1453</td>
+    <td style="text-align:right">4555</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><span style="font-weight:bold">Ejecución 4</span></td>
+    <td style="text-align:right">10</td>
+    <td style="text-align:right">0,1711</td>
+    <td style="text-align:right">0,7740</td>
+    <td style="text-align:right">105</td>
+    <td style="text-align:right">36</td>
+    <td style="text-align:right">0,1142</td>
+    <td style="text-align:right">0,2687</td>
+    <td style="text-align:right">575</td>
+    <td style="text-align:right">162</td>
+    <td style="text-align:right">0,1088</td>
+    <td style="text-align:right">0,1429</td>
+    <td style="text-align:right">5845</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">Ejecución 5</span></td>
+    <td style="text-align:right">15</td>
+    <td style="text-align:right">0,1743</td>
+    <td style="text-align:right">0,7909</td>
+    <td style="text-align:right">161</td>
+    <td style="text-align:right">49</td>
+    <td style="text-align:right">0,1145</td>
+    <td style="text-align:right">0,2752</td>
+    <td style="text-align:right">486</td>
+    <td style="text-align:right">256</td>
+    <td style="text-align:right">0,1210</td>
+    <td style="text-align:right">0,1439</td>
+    <td style="text-align:right">6457</td>
+  </tr>
+  <tr>
+    <td style="text-align:lef"><span style="font-weight:bold">Media</span></td>
+    <td style="text-align:right">15,8</td>
+    <td style="text-align:right">0,1782</td>
+    <td style="text-align:right">0,7904</td>
+    <td style="text-align:right">122,8</td>
+    <td style="text-align:right">38</td>
+    <td style="text-align:right">0,1149</td>
+    <td style="text-align:right">0,2691</td>
+    <td style="text-align:right">528,6</td>
+    <td style="text-align:right">223</td>
+    <td style="text-align:right">0,1165</td>
+    <td style="text-align:right">0,1438</td>
+    <td style="text-align:right">6400,2</td>
+  </tr>
+</tbody>
+</table>
+
+
+* * *
+
+
 ### Síntesis
+
+Sinteticemos los resultados anteriores en una sola tabla, y analicemos cuáles son las consecuencias de las ideas tras los algoritmos:
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-0pky"></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Zoo</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Glass</span></th>
+    <th style="text-align:center" colspan="4"><span style="font-weight:bold">Bupa</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-0pky"></td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+    <td style="text-align:center"><span style="font-weight:bold">Tasa_inf</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Error_dist</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">Agr</span></td>
+    <td style="text-align:center"><span style="font-weight:bold">T </span>(ms)</td>
+  </tr>
+  <tr>
+    <td style="text-align:left""><span style="font-weight:bold">COPKM 10%</span></td>
+    <td style="text-align:right"">1,2</td>
+    <td style="text-align:right"">0,0426</td>
+    <td style="text-align:right"">0,9533</td>
+    <td style="text-align:right"">1</td>
+    <td style="text-align:right"">4</td>
+    <td style="text-align:right"">0,0171</td>
+    <td style="text-align:right"">0,3866</td>
+    <td style="text-align:right"">2</td>
+    <td style="text-align:right"">28,6</td>
+    <td style="text-align:right"">0,0062</td>
+    <td style="text-align:right"">0,2354</td>
+    <td style="text-align:right"">13</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">COPKM 20%</span></td>
+    <td style="text-align:right">2</td>
+    <td style="text-align:right">0,0823</td>
+    <td style="text-align:right">0,9951</td>
+    <td style="text-align:right">0,6</td>
+    <td style="text-align:right">0,2</td>
+    <td style="text-align:right">0,0176</td>
+    <td style="text-align:right">0,3467</td>
+    <td style="text-align:right">1,6</td>
+    <td style="text-align:right">9,2</td>
+    <td style="text-align:right">0,0105</td>
+    <td style="text-align:right">0,2342</td>
+    <td style="text-align:right">5,6</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">BL 10%</span></td>
+    <td style="text-align:right">14,4</td>
+    <td style="text-align:right">0,2573</td>
+    <td style="text-align:right">0,7565</td>
+    <td style="text-align:right">141</td>
+    <td style="text-align:right">53</td>
+    <td style="text-align:right">0,1736</td>
+    <td style="text-align:right">0,2428</td>
+    <td style="text-align:right">543,4</td>
+    <td style="text-align:right">117,2</td>
+    <td style="text-align:right">0,1171</td>
+    <td style="text-align:right">0,1435</td>
+    <td style="text-align:right">6893</td>
+  </tr>
+  <tr>
+    <td style="text-align:left"><span style="font-weight:bold">BL 20%</span></td>
+    <td style="text-align:right">15,8</td>
+    <td style="text-align:right">0,1782</td>
+    <td style="text-align:right">0,7904</td>
+    <td style="text-align:right">122,8</td>
+    <td style="text-align:right">38</td>
+    <td style="text-align:right">0,1149</td>
+    <td style="text-align:right">0,2691</td>
+    <td style="text-align:right">528,6</td>
+    <td style="text-align:right">223</td>
+    <td style="text-align:right">0,1165</td>
+    <td style="text-align:right">0,1438</td>
+    <td style="text-align:right">6400,2</td>
+  </tr>
+</tbody>
+</table>
 
 
 * * *

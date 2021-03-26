@@ -3,7 +3,7 @@ use crate::utils::*;
 use nalgebra::*;
 use multimap::MultiMap;
 
-use std::{fmt};
+use std::fmt;
 
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -442,7 +442,7 @@ impl fmt::Display for Clusters {
         )?;
 
         for centroide in self.centroides.iter() {
-            writeln!(f, "\t{}", centroide)?;
+            write!(f, "\t{}", centroide.to_string())?;
         }
         writeln!(f, " ▸ Infeasibility: {}", self.infeasibility())?;
         Ok(())

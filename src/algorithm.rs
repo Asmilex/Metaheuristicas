@@ -1,9 +1,7 @@
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
-use rand::distributions::{Distribution, Uniform};
 
 use nalgebra::{DVector};
 use colored::*;
-
 
 use crate::cluster::*;
 use crate::utils::*;

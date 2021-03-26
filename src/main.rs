@@ -77,9 +77,8 @@ fn main() {
         if algoritmos.greedy {
             let now = Instant::now();
             let mi_cluster = algorithm::greedy_COPKM(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("Greedy calculado en {:?} {}\n", now.elapsed(), "✓".green().bold());
             println!("{}", &mi_cluster);
-            println!("{}", mi_cluster.lambda());
-            println!("Greedy calculado en {:?}\n", now.elapsed());
         }
         else if algoritmos.BL {
             let now = Instant::now();
