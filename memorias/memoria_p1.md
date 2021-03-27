@@ -845,6 +845,16 @@ Sinteticemos los resultados anteriores en una sola tabla, y analicemos cuáles s
 </tbody>
 </table>
 
+Debemos abordar la discusión desde varios puntos de vista.
+En primer lugar, hablemos sobre el infeasibility y la agregación obtenida. En todos los conjuntos de datos, Greedy consigue un menor número de restricciones incumplidas. En zoo, la diferencia es de 12 unidades aproximadamente, pero en Bupa incrementa hasta los 90. A priori, podríamos decir que Greedy es objetivamente mejor. Sin embargo, debemos fijarnos en la agregación: en contrapartida, ésta es siempre menor en la Búsqueda Local. Esto se debe a que BL intenta minimizar el fitness, y no el infeasbility. Aún así, el error de la distancia cometido por Greedy es significativamente menor al de Búsqueda Local.
+
+Atendiendo a los tiempos de ejecución, podemos observar que Greedy consigue una solución muy buena en cuestión de pocos milisegundos, mientras que Búsqueda Local requiere hasta 7s como ocurre en el dataset Bupa.
+
+Por tanto, debemos preguntarnos: ¿Qué debemos priorizar? Si lo que necesitamos es una baja agregación, debemos optar por Greedy. En cualquier otro caso, nuestra versión de Greedy es mejor.
+
+Personalmente, la diferencia de 0.2 en la agregación no consigue justificar lo cohesionados que están los clústers de Greedy y la poca tasa de infeasibility que producen. Además, extrapolando la información que tenemos hasta ahora, si aplicáramos estos dos algoritmos que tenemos hasta ahora, Búsqueda Local necesitaría mucho más tiempo de cómputo para calcular una solución similar o incluso peor a Greedy. Por estos motivos, no podría justificar su uso.
+
+Finalmente, es necesario mencionar que en las siguientes prácticas implementaremos metaheurísticas mucho más avanzadas que Búsqueda Local, como los algoritmos genéticos. Espero ver superados los resultados de Greedy rápidamente, tanto en infeasibility como en agregación y en desviación con respecto a la distancia óptima. Será interesante comprobar cuántos segundos tardan en ejecutarse, ya que complicará la elección de un algoritmo sobre otro.
 
 * * *
 
