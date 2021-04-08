@@ -58,7 +58,7 @@ use std::time;
                     atributos: 5,
                     clusters: 16,
                     instancias: 345,
-                    distancia_optima: 0.229248
+                    distancia_optima: 0.220424
                 },
 
                 Datasets::Glass => ParametrosDataset {
