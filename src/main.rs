@@ -6,6 +6,7 @@
     mod utils;
     mod file_io;
     mod algorithm;
+    mod operator;
 
 //
 // ────────────────────────────────────────────────────────────────── IMPORTS ─────

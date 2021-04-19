@@ -5,6 +5,7 @@ use colored::*;
 
 use crate::cluster::*;
 use crate::utils::*;
+use crate::operator::*;
 
 #[allow(non_snake_case)]
 /// # Greedy para clustering con restricciones
@@ -193,6 +194,113 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     }
 
     println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+
+    cluster
+}
+
+
+
+pub fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, operador_cruce: Operadores, semilla: u64) -> &mut Clusters {
+    /*
+        Pasos:
+            1. Inicializar variables:
+                - Inicializar una población P(0)
+                - Evaluar P(0)
+            2. Bucle principal
+                2.1 Seleccionar nueva población desde la anterior P(t-1). Sea P_padres ésta. El operador de selección es torneo binario. Otras consideraciones:
+                    - En el modelo generacional, el tamaño de P_padres es el mismo que el de la población inicial => se hacen 50 torneos.
+                    - En el modelo estacionario, el tamaño de P_padres es 2 => 2 torneos.
+                2.2 Cruzar P_padres y guardarlo en P_intermedia.
+                    Como la selección ya tiene una componente aleatoria, fijamos una probabilidad de cruce (P_c) y únicamente hacemos los siguientes cruces:
+                        Número de cruces = P_c * Tamaño de la población / 2.
+                    Los tomamos por orden: primero con el segundo, tercero con el cuarto...
+                2.3 Mutar P_intermedia con probabilidad p_m y guardarlo en P_hijos
+                2.4 Reemplazar la población P(t) a partir de P(t-1) y P_hijos.
+                    - En el modelo generacional, se mantiene el mejor individuo de P(t-1).
+                    - En el modelo estacionario, los dos hijos que se encuentran en P_hijos compiten para entrar en P(t).
+                2.5 Evaluar P(t).
+    */
+    use std::time::{Instant};
+
+    let tamano_poblacion = 50;
+    let max_generaciones = 100;
+    let probabilidad_cruce = 0.6;
+    let m = match modelo {    // Sigo notación de las diapositivas
+        ModeloGenetico::Estacionario => 2,
+        ModeloGenetico::Generacional => tamano_poblacion
+    };
+    let numero_cruces = probabilidad_cruce * m as f64/2.0;
+    let mut generador = StdRng::seed_from_u64(semilla);
+
+
+    // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
+
+    // NOTE representaremos la población como un vector de soluciones.
+    // De forma paralela, llevaremos un recuento del fitness que producen.
+    let mut poblacion = Vec::new();
+    let mut fitness_poblacion = Vec::new();
+
+    let now = Instant::now();
+
+
+    for _ in 0 .. tamano_poblacion {
+        let mut solucion_inicial: Vec<usize> = vec![0; cluster.num_elementos];
+
+        let k = cluster.num_clusters;
+        let solucion_valida = |s: &Vec<usize>| -> bool {
+            for c in 1..=k {
+                if !s.iter().any(|&valor| valor == c) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        while !solucion_valida(&solucion_inicial) {
+            for c in solucion_inicial.iter_mut() {
+                *c = generador.gen_range(1..=cluster.num_clusters);
+            }
+        }
+
+        fitness_poblacion.push(cluster.genetico_fitness_sol(&solucion_inicial));
+        poblacion.push(solucion_inicial);
+    }
+
+    println!("Población inicial generada en {}", now.elapsed().as_millis());
+
+
+    // ─────────────────────────────────────────────────────── 2. BUCLE PRINCIPAL ─────
+
+    for t in 1..max_generaciones {
+        // ───────────────────────────────────────────────── SELECCION ─────
+
+        let p_padres = Vec::new();
+        let cruces = Vec::new();    // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
+
+        // Crear cuadro de combatientes
+        for i in 0 .. m {
+            cruces.push(
+                (generador.gen_range(0 .. tamano_poblacion - 1), generador.gen_range(0 .. tamano_poblacion - 1))
+            );
+        }
+
+        // Enfrentar y seleccionar
+        for i in 0 .. m {
+            if fitness_poblacion[cruces[i].0] < fitness_poblacion[cruces[i].1] {
+                p_padres.push(poblacion[cruces[i].0].clone());
+            }
+            else {
+                p_padres.push(poblacion[cruces[i].1].clone());
+            }
+        }
+
+
+        // ───────────────────────────────────────────────────── CRUCE ─────
+
+        
+
+
+    }
 
     cluster
 }

@@ -214,7 +214,13 @@ impl Clusters {
     }
 
 
+    fn recontar_clusters(&mut self) {
+        self.recuento_clusters = vec![0; self.num_clusters];
 
+        for c in self.lista_clusters.iter() {
+            self.recuento_clusters[c - 1] = self.recuento_clusters[c - 1] + 1;
+        }
+    }
 
 
     //
@@ -415,6 +421,28 @@ impl Clusters {
 
         //println!("Tiempo en bl_fitness_posible_sol: {}", now.elapsed().as_millis());
         Ok(fitness)
+    }
+
+
+
+    /// Dada una nueva solución, calcula su fitness
+    pub fn genetico_fitness_sol(&mut self, solucion: &Vec<usize>) -> f64 {
+        assert_eq!(solucion.len(), self.lista_clusters.len());
+
+        // Guardar valores antiguos
+        // FIXME no debería estar clonando. Esto va a pesar.
+        let antigua_lista = self.lista_clusters.clone();
+        let antiguo_recuento = self.recuento_clusters.clone();
+
+        self.lista_clusters = solucion.clone();
+        self.recontar_clusters();
+        let fitness = self.fitness();
+
+        // Restaurar los otros
+        self.lista_clusters = antigua_lista;
+        self.recuento_clusters = antiguo_recuento;
+
+        fitness
     }
 }
 
