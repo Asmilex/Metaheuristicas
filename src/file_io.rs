@@ -119,9 +119,23 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
     }
 
     // Si no se especifican algoritmos, ejecutarlos todos
-    if !args.contains(&String::from("greedy")) && !args.contains(&String::from("bl")) {
+    if      !args.contains(&String::from("greedy")) && !args.contains(&String::from("bl"))
+        &&  !args.contains(&String::from("agg_un")) && !args.contains(&String::from("agg_sf")) && !args.contains(&String::from("age_un")) && !args.contains(&String::from("age_sf"))
+        &&  !args.contains(&String::from("geneticos"))  {
+
         algoritmos.greedy = true;
-        algoritmos.BL = true;
+        algoritmos.BL     = true;
+
+        algoritmos.age_sf = true;
+        algoritmos.age_un = true;
+        algoritmos.agg_sf = true;
+        algoritmos.agg_un = true;
+    }
+    else if args.contains(&String::from("geneticos")) {
+        algoritmos.age_sf = true;
+        algoritmos.age_un = true;
+        algoritmos.agg_sf = true;
+        algoritmos.agg_un = true;
     }
     else {
         // En caso contrario, seleccionar aquellos que sí que se usarán
@@ -130,6 +144,22 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
         }
         if args.contains(&String::from("bl")) {
             algoritmos.BL = true
+        }
+
+        if args.contains(&String::from("agg_un")) {
+            algoritmos.agg_un = true;
+        }
+
+        if args.contains(&String::from("agg_sf")) {
+            algoritmos.agg_sf = true;
+        }
+
+        if args.contains(&String::from("age_un")) {
+            algoritmos.age_un = true;
+        }
+
+        if args.contains(&String::from("age_sf")) {
+            algoritmos.age_un = true;
         }
     }
 

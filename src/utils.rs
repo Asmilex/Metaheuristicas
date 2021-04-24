@@ -43,7 +43,6 @@ use std::time;
         pub atributos: usize,
         pub clusters: usize,
         pub instancias: usize,
-        pub distancia_optima: f64
     }
 
 
@@ -58,7 +57,6 @@ use std::time;
                     atributos: 5,
                     clusters: 16,
                     instancias: 345,
-                    distancia_optima: 0.220424
                 },
 
                 Datasets::Glass => ParametrosDataset {
@@ -69,7 +67,6 @@ use std::time;
                     atributos: 9,
                     clusters: 7,
                     instancias: 214,
-                    distancia_optima: 0.36429
                 },
 
                 Datasets::Zoo   => ParametrosDataset {
@@ -80,7 +77,6 @@ use std::time;
                     atributos: 16,
                     clusters: 7,
                     instancias: 101,
-                    distancia_optima: 0.9048
                 }
             }
         }
@@ -92,13 +88,22 @@ use std::time;
     #[allow(non_camel_case_types)]
     pub enum Algoritmos {
         Greedy,
-        BL
+        BL,
+        AGG_UN,
+        AGG_SF,
+        AGE_UN,
+        AGE_SF
     }
 
     #[allow(non_camel_case_types)]
     pub struct AlgoritmosAEjecutar {
         pub greedy: bool,
         pub BL: bool,
+
+        pub agg_un: bool,
+        pub agg_sf: bool,
+        pub age_un: bool,
+        pub age_sf: bool,
 
         pub benchmark: bool,
     }
@@ -107,7 +112,12 @@ use std::time;
         pub fn new() -> AlgoritmosAEjecutar {
             AlgoritmosAEjecutar {
                 greedy: false,
-                BL: false,
+                BL    : false,
+                agg_un: false,
+                agg_sf: false,
+                age_un: false,
+                age_sf: false,
+
                 benchmark: false
             }
         }
@@ -118,7 +128,7 @@ use std::time;
     #[allow(non_camel_case_types)]
     pub struct InfoEjecucion {
         pub tasa_inf: u32,
-        pub error_dist: f64,
+        pub desviacion_general: f64,
         pub agr: f64,
         pub tiempo: std::time::Duration,
     }
@@ -127,7 +137,7 @@ use std::time;
         pub fn new() -> InfoEjecucion {
             InfoEjecucion {
                 tasa_inf: 0,
-                error_dist: 0.0,
+                desviacion_general: 0.0,
                 agr: 0.0,
                 tiempo: time::Duration::new(0, 0),
             }
@@ -163,7 +173,39 @@ use std::time;
                     glass_20: String:: from("./data/csv/bl_glass_20.csv"),
                     bupa_10 : String:: from("./data/csv/bl_bupa_10.csv"),
                     bupa_20 : String:: from("./data/csv/bl_bupa_20.csv"),
-                }
+                },
+                Algoritmos::AGG_UN => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/agg_un_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/agg_un_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/agg_un_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/agg_un_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/agg_un_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/agg_un_bupa_20.csv"),
+                },
+                Algoritmos::AGG_SF => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/agg_sf_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/agg_sf_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/agg_sf_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/agg_sf_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/agg_sf_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/agg_sf_bupa_20.csv"),
+                },
+                Algoritmos::AGE_UN => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/age_un_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/age_un_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/age_un_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/age_un_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/age_un_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/age_un_bupa_20.csv"),
+                },
+                Algoritmos::AGE_SF => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/age_sf_zoo_10.csv"),
+                    zoo_20  : String:: from("./data/csv/age_sf_zoo_20.csv"),
+                    glass_10: String:: from("./data/csv/age_sf_glass_10.csv"),
+                    glass_20: String:: from("./data/csv/age_sf_glass_20.csv"),
+                    bupa_10 : String:: from("./data/csv/age_sf_bupa_10.csv"),
+                    bupa_20 : String:: from("./data/csv/age_sf_bupa_20.csv"),
+                },
             }
         }
     }
@@ -200,6 +242,7 @@ use std::time;
 
     // ────────────────────────────────────────────────────────────────────────────────
 
+    #[derive(Debug)]
     pub enum ModeloGenetico {
         Estacionario,
         Generacional
