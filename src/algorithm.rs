@@ -123,17 +123,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
     let mut solucion_inicial: Vec<usize> = vec![0; cluster.num_elementos];
 
-    let k = cluster.num_clusters;
-    let solucion_valida = |s: &Vec<usize>| -> bool {
-        for c in 1..=k {
-            if !s.iter().any(|&valor| valor == c) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    while !solucion_valida(&solucion_inicial) {
+    while !cluster.solucion_valida_externa(&solucion_inicial) {
         for c in solucion_inicial.iter_mut() {
             *c = generador.gen_range(1..=cluster.num_clusters);
         }

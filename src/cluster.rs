@@ -169,8 +169,19 @@ impl Clusters {
     }
 
 
+    /// Comprueba si la solución interna es válida
     pub fn solucion_valida(&self) -> bool {
         !self.recuento_clusters.iter().any(|&valor| valor == 0)
+    }
+
+    /// Comprueba si la solución pasada es válida
+    pub fn solucion_valida_externa(&self, s: &Vec<usize>) -> bool {
+        for c in 1..= self.num_clusters {
+            if !s.iter().any(|&valor| valor == c) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
