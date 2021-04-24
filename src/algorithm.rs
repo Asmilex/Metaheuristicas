@@ -190,40 +190,57 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
 
 
-pub fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, operador_cruce: Operadores, semilla: u64) -> &mut Clusters {
-    /*
-        Pasos:
-            1. Inicializar variables:
-                - Inicializar una población P(0)
-                - Evaluar P(0)
-            2. Bucle principal
-                2.1 Seleccionar nueva población desde la anterior P(t-1). Sea P_padres ésta. El operador de selección es torneo binario. Otras consideraciones:
-                    - En el modelo generacional, el tamaño de P_padres es el mismo que el de la población inicial => se hacen 50 torneos.
-                    - En el modelo estacionario, el tamaño de P_padres es 2 => 2 torneos.
-                2.2 Cruzar P_padres y guardarlo en P_intermedia.
-                    Como la selección ya tiene una componente aleatoria, fijamos una probabilidad de cruce (P_c) y únicamente hacemos los siguientes cruces:
-                        Número de cruces = P_c * Tamaño de la población / 2.
-                    Los tomamos por orden: primero con el segundo, tercero con el cuarto...
-                2.3 Mutar P_intermedia con probabilidad p_m y guardarlo en P_hijos
-                2.4 Reemplazar la población P(t) a partir de P(t-1) y P_hijos.
-                    - En el modelo generacional, se mantiene el mejor individuo de P(t-1).
-                    - En el modelo estacionario, los dos hijos que se encuentran en P_hijos compiten para entrar en P(t).
-                2.5 Evaluar P(t).
-    */
-    use std::time::{Instant};
+
+/// Pasos:
+/// 1. Inicializar variables:
+///     - Inicializar una población P(0)
+///     - Evaluar P(0)
+/// 2. Bucle principal
+///     2.1 Seleccionar nueva población desde la anterior P(t-1). Sea P_padres ésta. El operador de selección es torneo binario. Otras consideraciones:
+///         - En el modelo generacional, el tamaño de P_padres es el mismo que el de la población inicial => se hacen 50 torneos.
+///         - En el modelo estacionario, el tamaño de P_padres es 2 => 2 torneos.
+///     2.2 Cruzar P_padres y guardarlo en P_intermedia.
+///         Como la selección ya tiene una componente aleatoria, fijamos una probabilidad de cruce (P_c) y únicamente hacemos los siguientes cruces:
+///             Número de cruces = P_c * Tamaño de la población / 2.
+///         Los tomamos por orden: primero con el segundo, tercero con el cuarto...
+///         Cuando agotemos el número de cruces, copiamos el resto de elementos tal cual a P_intermedia
+///     2.3 Mutar P_intermedia con probabilidad p_m y guardarlo en P_hijos
+///         La mutación es uniforme. Fijamos un número de mutaciones = prob_mutacion * m * número de genes.
+///     2.4 Reemplazar la población P(t) a partir de P(t-1) y P_hijos.
+///         - En el modelo generacional, se mantiene el mejor individuo de P(t-1).
+///         - En el modelo estacionario, los dos hijos que se encuentran en P_hijos compiten para entrar en P(t). Quitamos el peor de la antigua
+///     2.5 Evaluar P(t).
+
+fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Operadores, semilla: u64) -> &mut Clusters {
+    use std::time::Instant;
+
+    // ─────────────────────────────────────────────────── DECISION DE PARAMETROS ─────
 
     let tamano_poblacion = 50;
-    let max_generaciones = 100;
-    let probabilidad_cruce = 0.6;
+    let numero_genes = cluster.num_elementos;
+    //let max_generaciones = 100;
+    let max_evaluaciones_fitness = 100000;
     let m = match modelo {    // Sigo notación de las diapositivas
         ModeloGenetico::Estacionario => 2,
         ModeloGenetico::Generacional => tamano_poblacion
     };
-    let numero_cruces = probabilidad_cruce * m as f64/2.0;
+
+    let probabilidad_cruce = 0.7;
+    let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
+    let operador_cruce = match op_cruce_a_usar {
+        Operadores::Uniforme => cruce_uniforme,
+        Operadores::SegmentoFijo => cruce_segmento_fijo
+    };
+
+    let probabilidad_mutacion = 0.001;
+    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).floor() as i64;
+
     let mut generador = StdRng::seed_from_u64(semilla);
 
 
     // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
+
+    println!("{} Ejecutando algoritmo genético {:?} con operador de cruce {:?} para el cálculo de los clusters", "▸".cyan(), modelo, op_cruce_a_usar);
 
     // NOTE representaremos la población como un vector de soluciones.
     // De forma paralela, llevaremos un recuento del fitness que producen.
@@ -232,21 +249,10 @@ pub fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, operador_cruce:
 
     let now = Instant::now();
 
-
     for _ in 0 .. tamano_poblacion {
-        let mut solucion_inicial: Vec<usize> = vec![0; cluster.num_elementos];
+        let mut solucion_inicial: Vec<usize> = vec![0; numero_genes];
 
-        let k = cluster.num_clusters;
-        let solucion_valida = |s: &Vec<usize>| -> bool {
-            for c in 1..=k {
-                if !s.iter().any(|&valor| valor == c) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        while !solucion_valida(&solucion_inicial) {
+        while !cluster.solucion_valida_externa(&solucion_inicial) {
             for c in solucion_inicial.iter_mut() {
                 *c = generador.gen_range(1..=cluster.num_clusters);
             }
@@ -256,12 +262,18 @@ pub fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, operador_cruce:
         poblacion.push(solucion_inicial);
     }
 
-    println!("Población inicial generada en {}", now.elapsed().as_millis());
+    println!("\t{} Población inicial generada en {}", "▸".cyan(), now.elapsed().as_millis());
 
 
     // ─────────────────────────────────────────────────────── 2. BUCLE PRINCIPAL ─────
 
-    for t in 1..max_generaciones {
+
+    let mut t = 0;
+    let evaluaciones_fitness = 0;
+
+    while evaluaciones_fitness < max_evaluaciones_fitness {
+        println!("\t{} Comienza generación {}", "▸".cyan(), t);
+
         // ───────────────────────────────────────────────── SELECCION ─────
 
         let p_padres = Vec::new();
@@ -287,10 +299,172 @@ pub fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, operador_cruce:
 
         // ───────────────────────────────────────────────────── CRUCE ─────
 
-        
+        // No tiramos random para ver si se mete o no. Lo que hacemos es calcular la esperanza,
+        // y cruzar padre_i, padre_(i+1) así como padre_(i+1), padre_i hasta completar los que debemos.
+        // Cuando hayamos agotado todos los cruces, copiamos el resto tal cual.
 
 
+        let p_intermedia = Vec::new();
+        let cromosomas_a_copiar: Vec<usize> = vec![generador.gen_range(0..numero_genes); numero_genes/2];
+        /* FIXME mirar si lo de arriba funciona. Si no, usar esto de abajo.
+        for _ in 0 .. cluster.num_elementos/2 {
+            cromosomas.push(generador.gen_range(0..cluster.num_elementos));
+        }
+        */
+
+        dbg!(cromosomas_a_copiar);
+
+        let mut cruces_restantes = numero_cruces;
+
+        for i in 0 .. m {
+            if cruces_restantes > 0 {
+                if i % 2 == 0 {     // Pares => cruzar i con i+1
+                    p_intermedia.push(
+                        operador_cruce(&poblacion[i], &poblacion[i+1], &cromosomas_a_copiar)
+                    );
+                }
+                else if i % 2 == 1 {
+                    p_intermedia.push(
+                        operador_cruce(&poblacion[i+1], &poblacion[i], &cromosomas_a_copiar)
+                    );
+                }
+            }
+            else {
+                p_intermedia.push(
+                    p_padres[i].clone()
+                );
+            }
+        }
+
+        // ────────────────────────────────────────────────── MUTACION ─────
+
+        // Elegimos un cromosoma aleatoriamente, y después, lo mutamos uniformemente
+
+        let p_hijos = p_intermedia;
+
+        let mut i: usize = 0;
+
+        for _ in 0 .. numero_mutaciones {
+            i = generador.gen_range(0 .. m);
+
+            loop {
+                let gen_a_mutar = generador.gen_range(0 .. numero_genes);
+
+                let antiguo_cluster = p_hijos[i][gen_a_mutar];
+                p_hijos[i][gen_a_mutar] = generador.gen_range(1 ..= cluster.num_clusters);
+
+                match cluster.solucion_valida_externa(&p_hijos[i]) {
+                    false => p_hijos[i][gen_a_mutar] = antiguo_cluster,
+                    true => break
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
+
+        match modelo {
+            ModeloGenetico::Estacionario => {
+                // Hacemos que luchen para ver quién entra. Nos quedamos con el mejor de los dos
+                // En la población, quitaremos de en medio al que peor rendía
+                let mut posicion_peor: usize = 0;
+                let mut peor_fitness = 0.0;
+
+                for (i, valor) in fitness_poblacion.iter().enumerate() {
+                    if *valor > peor_fitness {
+                        peor_fitness = *valor;
+                        posicion_peor = i;
+                    }
+                }
+
+                let fitness_0 = cluster.genetico_fitness_sol(&p_hijos[0]);
+                let fitness_1 = cluster.genetico_fitness_sol(&p_hijos[1]);
+                evaluaciones_fitness = evaluaciones_fitness + m;
+
+
+                if fitness_0 < fitness_1 {
+                    // Fitness más baja => mejor solución => nos quedamos con el 0
+                    poblacion[posicion_peor] = p_hijos[0];
+                    fitness_poblacion[posicion_peor] = fitness_0;
+                }
+                else {
+                    poblacion[posicion_peor] = p_hijos[1];
+                    fitness_poblacion[posicion_peor] = fitness_1;
+                }
+            },
+
+            ModeloGenetico::Generacional => {
+                // Calculamos el fitness de la nueva población de hijos.
+                // El peor nos lo quitamos de en medio, y mantenemos el mejor de lapoblación antigua.
+
+                let mut posicion_mejor: usize = 0;
+                let mut mejor_fitness = f64::MAX;
+
+                for (i, valor) in fitness_poblacion.iter().enumerate() {
+                    if *valor < mejor_fitness {
+                        mejor_fitness = *valor;
+                        posicion_mejor = i;
+                    }
+                }
+
+                let mejor_cromosoma_antiguo = poblacion[posicion_mejor].clone();
+                poblacion = p_hijos;
+
+                for (i, cromosoma) in poblacion.iter().enumerate() {
+                    fitness_poblacion[i] = cluster.genetico_fitness_sol(cromosoma);
+                }
+                evaluaciones_fitness = evaluaciones_fitness + m;
+
+                // Miramos cuál es el peor de la población, y nos lo cargamos
+                let mut posicion_peor: usize = 0;
+                let mut peor_fitness = 0.0;
+
+                for (i, valor) in fitness_poblacion.iter().enumerate() {
+                    if *valor > peor_fitness {
+                        peor_fitness = *valor;
+                        posicion_peor = i;
+                    }
+                }
+
+                poblacion[posicion_peor] = mejor_cromosoma_antiguo;
+                fitness_poblacion[posicion_peor] = mejor_fitness;
+            }
+        }
+
+        println!("\t{} Generación {} finalizada en {}", "▸".cyan(), t, now.elapsed().as_millis());
+
+        t = t+1;
     }
 
+    // Seleccionamos el mejor cromosoma
+    let mut posicion_mejor: usize = 0;
+    let mut mejor_fitness = f64::MAX;
+
+    for (i, valor) in fitness_poblacion.iter().enumerate() {
+        if *valor < mejor_fitness {
+            mejor_fitness = *valor;
+            posicion_mejor = i;
+        }
+    }
+
+    cluster.asignar_clusters(poblacion[posicion_mejor]);
+
+    println!("{} (CAMBIAR REFERENCIA; HAY ELAPSEDs EN MEDIO)Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+
     cluster
+}
+
+pub fn agg_un (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    genetico(cluster, ModeloGenetico::Generacional, Operadores::Uniforme, semilla)
+}
+
+pub fn agg_sf (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    genetico(cluster, ModeloGenetico::Generacional, Operadores::SegmentoFijo, semilla)
+}
+
+pub fn age_un (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    genetico(cluster, ModeloGenetico::Estacionario, Operadores::Uniforme, semilla)
+}
+
+pub fn age_sf (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    genetico(cluster, ModeloGenetico::Estacionario, Operadores::SegmentoFijo, semilla)
 }
