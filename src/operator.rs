@@ -1,9 +1,10 @@
+#[derive(Debug)]
 pub enum Operadores {
     Uniforme,
     SegmentoFijo
 }
 
-pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, cromosomas_padre_1: Vec<usize>) -> Vec<usize> {
+pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, cromosomas_padre_1: &Vec<usize>) -> Vec<usize> {
     let mut descendencia = vec![0; padre_1.len()];
 
     // Copiar cromosomas del padre 1
@@ -21,8 +22,8 @@ pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, cromosomas_pad
 }
 
 
-pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, cromosomas_padre_1: Vec<usize>) -> Vec<usize> {
+pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, cromosomas_padre_1: &Vec<usize>) -> Vec<usize> {
     let mut descendencia = vec![0; padre_1.len()];
 
-
+    // TODO
 }
