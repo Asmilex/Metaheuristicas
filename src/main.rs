@@ -131,6 +131,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Res
     let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
     let semillas = utils::Semillas::new();
 
+    let ejecucion_total = Instant::now();
     for i in 0 .. 5 {
         let mut info = InfoEjecucion::new();
         let now = Instant::now();
@@ -147,7 +148,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Res
         cluster.reset_clusters();
     }
 
-    println!("Benchmark completado {}\n", "✓".green().bold());
+    println!("Benchmark completado en {} segundos {}\n", ejecucion_total.elapsed().as_secs(), "✓".green().bold());
     ejecuciones
 }
 
@@ -181,7 +182,8 @@ fn main() {
             let now = Instant::now();
             let mi_cluster = algorithm::agg_un(&mut mi_cluster, utils::Semillas::new().semilla(0));
             println!("{}", &mi_cluster);
-            println!("Algoritmo genético AGG_UN calculado en {:?}\n", now.elapsed().as_millis());
+            println!("Fitness: {}", &mi_cluster.fitness());
+            println!("Algoritmo genético AGG_UN calculado en {:?} ms\n", now.elapsed().as_millis());
         }
         else if algoritmos.agg_sf {
             let now = Instant::now();
