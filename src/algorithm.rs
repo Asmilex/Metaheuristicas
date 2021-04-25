@@ -219,7 +219,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     let tamano_poblacion = 50;
     let numero_genes = cluster.num_elementos;
     //let max_generaciones = 100;
-    let max_evaluaciones_fitness = 100000;
+    let max_evaluaciones_fitness = 100_000;
     let m = match modelo {    // Sigo notación de las diapositivas
         ModeloGenetico::Estacionario => 2,
         ModeloGenetico::Generacional => tamano_poblacion
@@ -262,8 +262,6 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         poblacion.push(solucion_inicial);
     }
 
-    println!("\t{} Población inicial generada en {}", "▸".cyan(), now.elapsed().as_millis());
-
 
     // ─────────────────────────────────────────────────────── 2. BUCLE PRINCIPAL ─────
 
@@ -272,30 +270,24 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     let mut evaluaciones_fitness = 0;
 
     while evaluaciones_fitness < max_evaluaciones_fitness {
-        println!("\t{} Comienza generación {}", "▸".cyan(), t);
+        //println!("\t{} Comienza generación {}", "▸".cyan(), t);
 
         // ───────────────────────────────────────────────── SELECCION ─────
 
         let mut p_padres = Vec::new();
-        let mut cruces = Vec::new();    // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
+        let mut combate; // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
 
         // Crear cuadro de combatientes
-        for i in 0 .. m {
-            cruces.push(
-                (generador.gen_range(0 .. tamano_poblacion - 1), generador.gen_range(0 .. tamano_poblacion - 1))
-            );
-        }
+        for _ in 0 .. m {
+            combate = (generador.gen_range(0 .. tamano_poblacion), generador.gen_range(0 .. tamano_poblacion));
 
-        // Enfrentar y seleccionar
-        for i in 0 .. m {
-            if fitness_poblacion[cruces[i].0] < fitness_poblacion[cruces[i].1] {
-                p_padres.push(poblacion[cruces[i].0].clone());
+            if fitness_poblacion[combate.0] < fitness_poblacion[combate.1] {
+                p_padres.push(poblacion[combate.0].clone());
             }
             else {
-                p_padres.push(poblacion[cruces[i].1].clone());
+                p_padres.push(poblacion[combate.1].clone());
             }
         }
-
 
         // ───────────────────────────────────────────────────── CRUCE ─────
 
@@ -309,18 +301,25 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         for i in 0 .. m {
             if cruces_restantes > 0 {
-                if i % 2 == 0 {     // Pares => cruzar i con i+1
-                    p_intermedia.push(
-                        operador_cruce(&poblacion[i], &poblacion[i+1], &mut generador)
-                    );
-                    cruces_restantes = cruces_restantes - 1;
+                let mut hijo;
+
+                if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
                 }
-                else if i % 2 == 1 {
-                    p_intermedia.push(
-                        operador_cruce(&poblacion[i+1], &poblacion[i], &mut generador)
-                    );
-                    cruces_restantes = cruces_restantes - 1;
+                else {                      // Impares => cruzar i con i-1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
                 }
+
+                if !cluster.solucion_valida_externa(&hijo) {
+                    reparar(&mut hijo, cluster.num_clusters, &mut generador);
+                }
+
+                p_intermedia.push(
+                    hijo
+                );
+
+                cruces_restantes = cruces_restantes - 1;
+
             }
             else {
                 p_intermedia.push(
@@ -335,7 +334,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         let mut p_hijos = p_intermedia;
 
-        let mut i: usize = 0;
+        let mut i: usize;
 
         for _ in 0 .. numero_mutaciones {
             i = generador.gen_range(0 .. m);
@@ -346,9 +345,11 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
                 let antiguo_cluster = p_hijos[i][gen_a_mutar];
                 p_hijos[i][gen_a_mutar] = generador.gen_range(1 ..= cluster.num_clusters);
 
-                match cluster.solucion_valida_externa(&p_hijos[i]) {
-                    false => p_hijos[i][gen_a_mutar] = antiguo_cluster,
-                    true => break
+                if cluster.solucion_valida_externa(&p_hijos[i]) {
+                    break;
+                }
+                else {
+                    p_hijos[i][gen_a_mutar] = antiguo_cluster;
                 }
             }
         }
@@ -384,7 +385,6 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
                     fitness_poblacion[posicion_peor] = fitness_1;
                 }
             },
-
             ModeloGenetico::Generacional => {
                 // Calculamos el fitness de la nueva población de hijos.
                 // El peor nos lo quitamos de en medio, y mantenemos el mejor de lapoblación antigua.
@@ -423,9 +423,10 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
             }
         }
 
-        println!("\t{} Generación {} finalizada en {}", "▸".cyan(), t, now.elapsed().as_millis());
+        //println!("\t{} Generación {} finalizada en {}", "▸".cyan(), t, now.elapsed().as_millis());
 
         t = t+1;
+        //println!("\tPeor fitness: {}; mejor fitness: {}", fitness_poblacion.iter().cloned().fold(0./0., f64::max), fitness_poblacion.iter().cloned().fold(0./0., f64::min));
     }
 
     // Seleccionamos el mejor cromosoma
@@ -441,7 +442,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
     cluster.asignar_clusters(poblacion[posicion_mejor].clone());
 
-    println!("{} (CAMBIAR REFERENCIA; HAY ELAPSEDs EN MEDIO)Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
 }
