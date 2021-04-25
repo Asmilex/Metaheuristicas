@@ -269,15 +269,15 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
 
     let mut t = 0;
-    let evaluaciones_fitness = 0;
+    let mut evaluaciones_fitness = 0;
 
     while evaluaciones_fitness < max_evaluaciones_fitness {
         println!("\t{} Comienza generación {}", "▸".cyan(), t);
 
         // ───────────────────────────────────────────────── SELECCION ─────
 
-        let p_padres = Vec::new();
-        let cruces = Vec::new();    // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
+        let mut p_padres = Vec::new();
+        let mut cruces = Vec::new();    // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
 
         // Crear cuadro de combatientes
         for i in 0 .. m {
@@ -303,16 +303,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         // y cruzar padre_i, padre_(i+1) así como padre_(i+1), padre_i hasta completar los que debemos.
         // Cuando hayamos agotado todos los cruces, copiamos el resto tal cual.
 
-
-        let p_intermedia = Vec::new();
-        let cromosomas_a_copiar: Vec<usize> = vec![generador.gen_range(0..numero_genes); numero_genes/2];
-        /* FIXME mirar si lo de arriba funciona. Si no, usar esto de abajo.
-        for _ in 0 .. cluster.num_elementos/2 {
-            cromosomas.push(generador.gen_range(0..cluster.num_elementos));
-        }
-        */
-
-        dbg!(cromosomas_a_copiar);
+        let mut p_intermedia = Vec::new();
 
         let mut cruces_restantes = numero_cruces;
 
@@ -320,13 +311,15 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
             if cruces_restantes > 0 {
                 if i % 2 == 0 {     // Pares => cruzar i con i+1
                     p_intermedia.push(
-                        operador_cruce(&poblacion[i], &poblacion[i+1], &cromosomas_a_copiar)
+                        operador_cruce(&poblacion[i], &poblacion[i+1], &mut generador)
                     );
+                    cruces_restantes = cruces_restantes - 1;
                 }
                 else if i % 2 == 1 {
                     p_intermedia.push(
-                        operador_cruce(&poblacion[i+1], &poblacion[i], &cromosomas_a_copiar)
+                        operador_cruce(&poblacion[i+1], &poblacion[i], &mut generador)
                     );
+                    cruces_restantes = cruces_restantes - 1;
                 }
             }
             else {
@@ -340,7 +333,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         // Elegimos un cromosoma aleatoriamente, y después, lo mutamos uniformemente
 
-        let p_hijos = p_intermedia;
+        let mut p_hijos = p_intermedia;
 
         let mut i: usize = 0;
 
@@ -383,11 +376,11 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
                 if fitness_0 < fitness_1 {
                     // Fitness más baja => mejor solución => nos quedamos con el 0
-                    poblacion[posicion_peor] = p_hijos[0];
+                    poblacion[posicion_peor] = p_hijos[0].clone();
                     fitness_poblacion[posicion_peor] = fitness_0;
                 }
                 else {
-                    poblacion[posicion_peor] = p_hijos[1];
+                    poblacion[posicion_peor] = p_hijos[1].clone();
                     fitness_poblacion[posicion_peor] = fitness_1;
                 }
             },
@@ -446,7 +439,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         }
     }
 
-    cluster.asignar_clusters(poblacion[posicion_mejor]);
+    cluster.asignar_clusters(poblacion[posicion_mejor].clone());
 
     println!("{} (CAMBIAR REFERENCIA; HAY ELAPSEDs EN MEDIO)Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
