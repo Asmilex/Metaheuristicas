@@ -84,7 +84,7 @@ use std::time;
 
     // ────────────────────────────────────────────────────────────────────────────────
 
-    #[derive(Debug)]
+    #[derive(Debug, Copy, Clone)]
     #[allow(non_camel_case_types)]
     pub enum Algoritmos {
         Greedy,
