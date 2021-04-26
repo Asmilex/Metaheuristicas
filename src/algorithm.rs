@@ -297,34 +297,59 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         let mut p_intermedia = Vec::new();
 
-        let mut cruces_restantes = numero_cruces;
+        match modelo {
+            ModeloGenetico::Estacionario => {
+                // Crucar ambos con probabilidad uno
+                let mut hijo_1= operador_cruce(&p_padres[0], &p_padres[1], &mut generador);
 
-        for i in 0 .. m {
-            if cruces_restantes > 0 {
-                let mut hijo;
-
-                if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
-                    hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
-                }
-                else {                      // Impares => cruzar i con i-1
-                    hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
-                }
-
-                if !cluster.solucion_valida_externa(&hijo) {
-                    reparar(&mut hijo, cluster.num_clusters, &mut generador);
+                if !cluster.solucion_valida_externa(&hijo_1) {
+                    reparar(&mut hijo_1, cluster.num_clusters, &mut generador);
                 }
 
                 p_intermedia.push(
-                    hijo
+                    hijo_1
                 );
 
-                cruces_restantes = cruces_restantes - 1;
+                let mut hijo_2 = operador_cruce(&p_padres[1], &p_padres[0], &mut generador);
 
-            }
-            else {
+                if !cluster.solucion_valida_externa(&hijo_2) {
+                    reparar(&mut hijo_2, cluster.num_clusters, &mut generador);
+                }
+
                 p_intermedia.push(
-                    p_padres[i].clone()
+                    hijo_2
                 );
+            },
+            ModeloGenetico::Generacional => {
+                let mut cruces_restantes = numero_cruces;
+
+                for i in 0 .. m {
+                    if cruces_restantes > 0 {
+                        let mut hijo;
+
+                        if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
+                            hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
+                        }
+                        else {                      // Impares => cruzar i con i-1
+                            hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
+                        }
+
+                        if !cluster.solucion_valida_externa(&hijo) {
+                            reparar(&mut hijo, cluster.num_clusters, &mut generador);
+                        }
+
+                        p_intermedia.push(
+                            hijo
+                        );
+
+                        cruces_restantes = cruces_restantes - 1;
+                    }
+                    else {
+                        p_intermedia.push(
+                            p_padres[i].clone()
+                        );
+                    }
+                }
             }
         }
 
