@@ -159,7 +159,7 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
         }
 
         if args.contains(&String::from("age_sf")) {
-            algoritmos.age_un = true;
+            algoritmos.age_sf = true;
         }
     }
 
