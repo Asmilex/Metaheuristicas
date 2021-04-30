@@ -536,12 +536,17 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallo
             if c != mejor_cluster {     // Evitar comprobar el cluster que ya venía
                 solucion[indices_barajados[i]] = c;
 
-                let fitness_actual = cluster.genetico_fitness_sol(solucion);
+                if cluster.solucion_valida_externa(solucion) {
+                    let fitness_actual = cluster.genetico_fitness_sol(solucion);
 
-                if fitness_actual < mejor_fitness {
-                    mejor_cluster = c;
-                    mejor_fitness = fitness_actual;
-                    mejora = true;
+                    if fitness_actual < mejor_fitness {
+                        mejor_cluster = c;
+                        mejor_fitness = fitness_actual;
+                        mejora = true;
+                    }
+                    else {
+                        solucion[indices_barajados[i]] = mejor_cluster;
+                    }
                 }
                 else {
                     solucion[indices_barajados[i]] = mejor_cluster;
@@ -647,6 +652,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
                 for i in 0 .. busquedas_totales {
                     busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
                     fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                    evaluaciones_fitness = evaluaciones_fitness + 1;
                 }
             }
             else {
@@ -654,6 +660,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
                     if generador.gen_range(0.0..=1.0) <= probabilidad {
                         busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
                         fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                        evaluaciones_fitness = evaluaciones_fitness + 1;
                     }
                 }
             }
