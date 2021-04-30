@@ -806,14 +806,14 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
 // NOTE está feo tener funciones fijadas para los parámetros, pero bueno. Los requisitos de la práctica
 
-fn memetico_10_1 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+pub fn am_10_1 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     memetico(cluster, 10, 1.0, false, semilla)
 }
 
-fn memetico_10_01 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+pub fn am_10_01 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     memetico(cluster, 10, 0.1, false, semilla)
 }
 
-fn memetico_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+pub fn am_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     memetico(cluster, 10, 0.1, true, semilla)
 }
