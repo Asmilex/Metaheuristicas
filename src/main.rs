@@ -210,18 +210,21 @@ fn main() {
             let now = Instant::now();
             let mi_cluster = algorithm::am_10_1(&mut mi_cluster, utils::Semillas::new().semilla(0));
             println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
             println!("Algoritmo memético AM_10_1 calculado en {:?}\n", now.elapsed().as_millis());
         }
         else if algoritmos.am_10_01 {
             let now = Instant::now();
             let mi_cluster = algorithm::am_10_01(&mut mi_cluster, utils::Semillas::new().semilla(0));
             println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
             println!("Algoritmo memético AM_10_01 calculado en {:?}\n", now.elapsed().as_millis());
         }
         else if algoritmos.am_10_01_mejores {
             let now = Instant::now();
             let mi_cluster = algorithm::am_10_01_mejores(&mut mi_cluster, utils::Semillas::new().semilla(0));
             println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
             println!("Algoritmo memético AM_10_01_mejores calculado en {:?}\n", now.elapsed().as_millis());
         }
     }

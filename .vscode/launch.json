@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/metaheuristicas.exe",
-            "args": ["agg_un", "zoo", "10"],
+            "args": ["am_10_1", "zoo", "10"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],
