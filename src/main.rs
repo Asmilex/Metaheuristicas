@@ -126,6 +126,9 @@ fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Res
         Algoritmos::AGG_SF => agg_sf,
         Algoritmos::AGE_UN => age_un,
         Algoritmos::AGE_SF => age_sf,
+        Algoritmos::AM_10_1 => am_10_1,
+        Algoritmos::AM_10_01 => am_10_01,
+        Algoritmos::AM_10_01_mejores => am_10_01_mejores,
     };
 
     let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
@@ -203,6 +206,24 @@ fn main() {
             println!("{}", &mi_cluster);
             println!("Algoritmo genético AGE_SF calculado en {:?}\n", now.elapsed().as_millis());
         }
+        else if algoritmos.am_10_1 {
+            let now = Instant::now();
+            let mi_cluster = algorithm::am_10_1(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Algoritmo memético AM_10_1 calculado en {:?}\n", now.elapsed().as_millis());
+        }
+        else if algoritmos.am_10_01 {
+            let now = Instant::now();
+            let mi_cluster = algorithm::am_10_01(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Algoritmo memético AM_10_01 calculado en {:?}\n", now.elapsed().as_millis());
+        }
+        else if algoritmos.am_10_01_mejores {
+            let now = Instant::now();
+            let mi_cluster = algorithm::am_10_01_mejores(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Algoritmo memético AM_10_01_mejores calculado en {:?}\n", now.elapsed().as_millis());
+        }
     }
     else {
         if algoritmos.greedy {
@@ -228,5 +249,18 @@ fn main() {
         if algoritmos.age_sf {
             inicializador_benchmark(Algoritmos::AGE_SF);
         }
+
+        if algoritmos.am_10_1 {
+            inicializador_benchmark(Algoritmos::AM_10_1);
+        }
+
+        if algoritmos.am_10_01 {
+            inicializador_benchmark(Algoritmos::AM_10_01);
+        }
+
+        if algoritmos.am_10_01_mejores {
+            inicializador_benchmark(Algoritmos::AM_10_01_mejores);
+        }
+
     }
 }

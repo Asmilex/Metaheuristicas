@@ -92,7 +92,10 @@ use std::time;
         AGG_UN,
         AGG_SF,
         AGE_UN,
-        AGE_SF
+        AGE_SF,
+        AM_10_1,
+        AM_10_01,
+        AM_10_01_mejores
     }
 
     #[allow(non_camel_case_types)]
@@ -105,6 +108,10 @@ use std::time;
         pub age_un: bool,
         pub age_sf: bool,
 
+        pub am_10_1: bool,
+        pub am_10_01: bool,
+        pub am_10_01_mejores: bool,
+
         pub benchmark: bool,
     }
 
@@ -113,10 +120,15 @@ use std::time;
             AlgoritmosAEjecutar {
                 greedy: false,
                 BL    : false,
+
                 agg_un: false,
                 agg_sf: false,
                 age_un: false,
                 age_sf: false,
+
+                am_10_1: false,
+                am_10_01: false,
+                am_10_01_mejores: false,
 
                 benchmark: false
             }
@@ -206,6 +218,30 @@ use std::time;
                     bupa_10 : String:: from("./data/csv/bupa_10/age_sf.csv"),
                     bupa_20 : String:: from("./data/csv/bupa_20/age_sf.csv"),
                 },
+                Algoritmos::AM_10_1 => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/am_10_1.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/am_10_1.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/am_10_1.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/am_10_1.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/am_10_1.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/am_10_1.csv"),
+                },
+                Algoritmos::AM_10_01 => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/am_10_01.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/am_10_01.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/am_10_01.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/am_10_01.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/am_10_01.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/am_10_01.csv"),
+                },
+                Algoritmos::AM_10_01_mejores => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/am_10_01_mejores.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/am_10_01_mejores.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/am_10_01_mejores.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/am_10_01_mejores.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/am_10_01_mejores.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/am_10_01_mejores.csv"),
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ pub enum Operadores {
     SegmentoFijo
 }
 
+
 pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
     let mut descendencia = vec![0; padre_1.len()];
 
