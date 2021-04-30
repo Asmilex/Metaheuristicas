@@ -206,6 +206,9 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 // ──────────────────────────────────────────────────────────────────────
 //
 
+//
+// ──────────────────────────────────────────────────────────────── GÉNETICOS ─────
+//
 
 /// Pasos:
 /// 1. Inicializar variables:
@@ -488,6 +491,8 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     cluster
 }
 
+// ────────────────────────────────────────────────────────────────────────────────
+
 pub fn agg_un (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     genetico(cluster, ModeloGenetico::Generacional, Operadores::Uniforme, semilla)
 }
@@ -505,10 +510,12 @@ pub fn age_sf (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 }
 
 
-// ────────────────────────────────────────────────────────────────────────────────
+//
+// ──────────────────────────────────────────────────────────────── MÉMETICOS ─────
+//
 
 
-fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: Clusters, fallos_permitidos: usize, generador: &mut StdRng) {
+fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallos_permitidos: usize, generador: &mut StdRng) {
     let mut indices_barajados: Vec<usize> = (0..solucion.len()).collect();
     indices_barajados.shuffle(generador);
 
@@ -557,7 +564,7 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: Clusters, fallos_per
 /// - **Solo_a_mejores**: si está activado, la búsqueda local solo se aplica a los `probabilidad * tamaño de la población` mejores cromosomas.
 fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: f64, solo_a_mejores: bool, semilla: u64) -> &mut Clusters {
     /*
-        NOTE
+        TODO
         Realmente, la implementación debería usar la función agg_un, pero por motivos de comodidad/tiempo/pereza,
         voy a hacer copy - paste del genético usando únicamente el modelo generacional con operador de cruce uniforme,
         que es el que mejores resultados produce.
@@ -596,8 +603,6 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
     println!("{} Ejecutando algoritmo memético de base agg_un para el cálculo de los clusters", "▸".cyan());
 
-    // NOTE representaremos la población como un vector de soluciones.
-    // De forma paralela, llevaremos un recuento del fitness que producen.
     let mut poblacion = Vec::new();
     let mut fitness_poblacion = Vec::new();
 
@@ -795,4 +800,20 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+// NOTE está feo tener funciones fijadas para los parámetros, pero bueno. Los requisitos de la práctica
+
+fn memetico_10_1 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    memetico(cluster, 10, 1.0, false, semilla)
+}
+
+fn memetico_10_01 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    memetico(cluster, 10, 0.1, false, semilla)
+}
+
+fn memetico_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    memetico(cluster, 10, 0.1, true, semilla)
 }
