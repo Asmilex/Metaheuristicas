@@ -98,7 +98,7 @@ use std::time;
         AM_10_01_mejores
     }
 
-    #[allow(non_camel_case_types)]
+    #[allow(non_snake_case)]
     pub struct AlgoritmosAEjecutar {
         pub greedy: bool,
         pub BL: bool,

@@ -28,6 +28,7 @@ pub struct Clusters {
     pub num_restricciones: usize
 }
 
+#[allow(dead_code)]     // Sí, lo sé. Está implementado, se deja ahí por si acaso
 impl Clusters {
     pub fn new(num_clusters: usize, dim_vectores: usize, num_elementos: usize) -> Clusters {
         Clusters {

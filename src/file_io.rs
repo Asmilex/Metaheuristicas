@@ -14,7 +14,7 @@ use colored::*;
 // ───────────────────────────────────────────────────────── LECTURA DE DATOS ─────
 //
 
-
+#[allow(dead_code)]     // NOTE En principio no se va a usar, pero por si acaso.
 pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
     let mut vector_path:Vec<PathBuf> = Vec::new();
 
