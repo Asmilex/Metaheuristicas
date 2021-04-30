@@ -7,6 +7,14 @@ use crate::cluster::*;
 use crate::utils::*;
 use crate::operator::*;
 
+
+//
+// ──────────────────────────────────────────────────────────── I ──────────
+//   :::::: P R A C T I C A   1 : :  :   :    :     :        :          :
+// ──────────────────────────────────────────────────────────────────────
+//
+
+
 #[allow(non_snake_case)]
 /// # Greedy para clustering con restricciones
 /// Pasos a seguir para implementar el algoritmo:
@@ -99,6 +107,9 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
 }
 
 
+// ────────────────────────────────────────────────────────────────────────────────
+
+
 /// # Búsqueda local
 ///  Pasos para implementar este algoritmo:
 /// 1. Generar una solución válida inicial. Esto es, aquella en la que los clusters están entre 1 y num_cluster, y no tiene clusters vacíos
@@ -189,6 +200,11 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 }
 
 
+//
+// ──────────────────────────────────────────────────────────── II ──────────
+//   :::::: P R A C T I C A   2 : :  :   :    :     :        :          :
+// ──────────────────────────────────────────────────────────────────────
+//
 
 
 /// Pasos:
@@ -486,4 +502,297 @@ pub fn age_un (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
 pub fn age_sf (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     genetico(cluster, ModeloGenetico::Estacionario, Operadores::SegmentoFijo, semilla)
+}
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+
+fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: Clusters, fallos_permitidos: usize, generador: &mut StdRng) {
+    let mut indices_barajados: Vec<usize> = (0..solucion.len()).collect();
+    indices_barajados.shuffle(generador);
+
+    let mut fallos = 0;
+    let mut mejora = true;
+    let mut i = 0;
+
+    while (mejora || fallos < fallos_permitidos) && i < solucion.len() {
+        mejora = false;
+
+        // Asignar el mejor valor posible a solucion[indice de indices_barajados]
+        // Es decir, asignar la instancia indices_barajados[i] al cluster que minimice el fitness
+
+        let mut mejor_fitness = cluster.genetico_fitness_sol(solucion);
+        let mut mejor_cluster = solucion[indices_barajados[i]];
+
+        for c in 1 ..= cluster.num_clusters {
+            if c != mejor_cluster {     // Evitar comprobar el cluster que ya venía
+                solucion[indices_barajados[i]] = c;
+
+                let fitness_actual = cluster.genetico_fitness_sol(solucion);
+
+                if fitness_actual < mejor_fitness {
+                    mejor_cluster = c;
+                    mejor_fitness = fitness_actual;
+                    mejora = true;
+                }
+                else {
+                    solucion[indices_barajados[i]] = mejor_cluster;
+                }
+            }
+        }
+
+        if !mejora {
+            fallos = fallos + 1;
+        }
+
+        i = i + 1;
+    }
+}
+
+/// # Algoritmo memético
+/// Parámetros:
+/// - **Periodo generacional**: cada cuántas generaciones se aplica la búsqueda local
+/// - **Probabilidad**: En `[0, 1]`. Indica cuál es la probabilidad de aplicar la búsqueda local a un cromosoma
+/// - **Solo_a_mejores**: si está activado, la búsqueda local solo se aplica a los `probabilidad * tamaño de la población` mejores cromosomas.
+fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: f64, solo_a_mejores: bool, semilla: u64) -> &mut Clusters {
+    /*
+        NOTE
+        Realmente, la implementación debería usar la función agg_un, pero por motivos de comodidad/tiempo/pereza,
+        voy a hacer copy - paste del genético usando únicamente el modelo generacional con operador de cruce uniforme,
+        que es el que mejores resultados produce.
+
+        Si el Andrés del futuro va menos agobiado con el tiempo, y tiene ganas, le dejo propuesto como ejercicio
+        solucionar este problema y refactorizar la función (?)
+    */
+
+    use std::time::Instant;
+
+    // ─────────────────────────────────────────────────── DECISION DE PARÁMETROS ─────
+
+    let tamano_poblacion = 10;
+    let numero_genes = cluster.num_elementos;
+    //let max_generaciones = 100;
+    let max_evaluaciones_fitness = 100_000;
+    let m = tamano_poblacion;
+
+    let probabilidad_cruce = 0.7;
+    let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
+    let operador_cruce = cruce_uniforme;
+
+    let probabilidad_mutacion = 0.001;
+    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).floor() as i64;
+
+    let fallos_maximos = (0.1 * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
+
+    if probabilidad != 0.1 && solo_a_mejores {
+        println!("{}: este algoritmo no está pensado para ejecutarse con estos parámetros de entrada", "WARNING".red());
+    }
+
+    let mut generador = StdRng::seed_from_u64(semilla);
+
+
+    // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
+
+    println!("{} Ejecutando algoritmo memético de base agg_un para el cálculo de los clusters", "▸".cyan());
+
+    // NOTE representaremos la población como un vector de soluciones.
+    // De forma paralela, llevaremos un recuento del fitness que producen.
+    let mut poblacion = Vec::new();
+    let mut fitness_poblacion = Vec::new();
+
+    let now = Instant::now();
+
+    for _ in 0 .. tamano_poblacion {
+        let mut solucion_inicial: Vec<usize> = vec![0; numero_genes];
+
+        while !cluster.solucion_valida_externa(&solucion_inicial) {
+            for c in solucion_inicial.iter_mut() {
+                *c = generador.gen_range(1..=cluster.num_clusters);
+            }
+        }
+
+        fitness_poblacion.push(cluster.genetico_fitness_sol(&solucion_inicial));
+        poblacion.push(solucion_inicial);
+    }
+
+
+    // ─────────────────────────────────────────────────────── 2. BUCLE PRINCIPAL ─────
+
+
+    let mut t = 0;  // Generaciones
+    let mut evaluaciones_fitness = 0;
+
+    while evaluaciones_fitness < max_evaluaciones_fitness {
+        //println!("\t{} Comienza generación {}", "▸".cyan(), t);
+
+        // ───────────────────────────────────────── EXPLORACION LOCAL ─────
+
+        if t % periodo_generacional == 0 {
+            if solo_a_mejores {
+                let busquedas_totales = (probabilidad * poblacion.len() as f64).floor() as usize;
+
+                // Necesitamos ordenar de menor a mayor para ver quiénes son los mejores.
+                // Los mejores se encuentran al principio del vector
+                fitness_poblacion.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                poblacion.sort_by(|a, b|
+                    cluster.genetico_fitness_sol(a).partial_cmp(&cluster.genetico_fitness_sol(b)).unwrap()
+                );
+
+                for i in 0 .. busquedas_totales {
+                    busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
+                    fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                }
+            }
+            else {
+                for i in 0 .. tamano_poblacion {
+                    if generador.gen_range(0.0..=1.0) <= probabilidad {
+                        busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
+                        fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                    }
+                }
+            }
+        }
+
+        // ───────────────────────────────────────────────── SELECCION ─────
+
+        let mut p_padres = Vec::new();
+        let mut combate; // Los enfrentamientos se harán del `i` vs `i+1`. Se guardan como (combatiente 1, combatiente 2)
+
+        // Crear cuadro de combatientes
+        for _ in 0 .. m {
+            combate = (generador.gen_range(0 .. tamano_poblacion), generador.gen_range(0 .. tamano_poblacion));
+
+            if fitness_poblacion[combate.0] < fitness_poblacion[combate.1] {
+                p_padres.push(poblacion[combate.0].clone());
+            }
+            else {
+                p_padres.push(poblacion[combate.1].clone());
+            }
+        }
+
+        // ───────────────────────────────────────────────────── CRUCE ─────
+
+        // No tiramos random para ver si se mete o no. Lo que hacemos es calcular la esperanza,
+        // y cruzar padre_i, padre_(i+1) así como padre_(i+1), padre_i hasta completar los que debemos.
+        // Cuando hayamos agotado todos los cruces, copiamos el resto tal cual.
+
+        let mut p_intermedia = Vec::new();
+
+        let mut cruces_restantes = numero_cruces;
+
+        for i in 0 .. m {
+            if cruces_restantes > 0 {
+                let mut hijo;
+
+                if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
+                }
+                else {                      // Impares => cruzar i con i-1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
+                }
+
+                if !cluster.solucion_valida_externa(&hijo) {
+                    reparar(&mut hijo, cluster.num_clusters, &mut generador);
+                }
+
+                p_intermedia.push(
+                    hijo
+                );
+
+                cruces_restantes = cruces_restantes - 1;
+            }
+            else {
+                p_intermedia.push(
+                    p_padres[i].clone()
+                );
+            }
+        }
+
+        // ────────────────────────────────────────────────── MUTACION ─────
+
+        // Elegimos un cromosoma aleatoriamente, y después, lo mutamos uniformemente
+
+        let mut p_hijos = p_intermedia;
+
+        let mut i: usize;
+
+        for _ in 0 .. numero_mutaciones {
+            i = generador.gen_range(0 .. m);
+
+            loop {
+                let gen_a_mutar = generador.gen_range(0 .. numero_genes);
+
+                let antiguo_cluster = p_hijos[i][gen_a_mutar];
+                p_hijos[i][gen_a_mutar] = generador.gen_range(1 ..= cluster.num_clusters);
+
+                if cluster.solucion_valida_externa(&p_hijos[i]) {
+                    break;
+                }
+                else {
+                    p_hijos[i][gen_a_mutar] = antiguo_cluster;
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
+
+        // Calculamos el fitness de la nueva población de hijos.
+        // El peor nos lo quitamos de en medio, y mantenemos el mejor de lapoblación antigua.
+
+        let mut posicion_mejor: usize = 0;
+        let mut mejor_fitness = f64::MAX;
+
+        for (i, valor) in fitness_poblacion.iter().enumerate() {
+            if *valor < mejor_fitness {
+                mejor_fitness = *valor;
+                posicion_mejor = i;
+            }
+        }
+
+        let mejor_cromosoma_antiguo = poblacion[posicion_mejor].clone();
+        poblacion = p_hijos;
+
+        for (i, cromosoma) in poblacion.iter().enumerate() {
+            fitness_poblacion[i] = cluster.genetico_fitness_sol(cromosoma);
+        }
+        evaluaciones_fitness = evaluaciones_fitness + m;
+
+        // Miramos cuál es el peor de la población, y nos lo cargamos
+        let mut posicion_peor: usize = 0;
+        let mut peor_fitness = 0.0;
+
+        for (i, valor) in fitness_poblacion.iter().enumerate() {
+            if *valor > peor_fitness {
+                peor_fitness = *valor;
+                posicion_peor = i;
+            }
+        }
+
+        poblacion[posicion_peor] = mejor_cromosoma_antiguo;
+        fitness_poblacion[posicion_peor] = mejor_fitness;
+
+
+        //println!("\t{} Generación {} finalizada en {}", "▸".cyan(), t, now.elapsed().as_millis());
+
+        t = t+1;
+        //println!("\tPeor fitness: {}; mejor fitness: {}", fitness_poblacion.iter().cloned().fold(0./0., f64::max), fitness_poblacion.iter().cloned().fold(0./0., f64::min));
+    }
+
+    // Seleccionamos el mejor cromosoma
+    let mut posicion_mejor: usize = 0;
+    let mut mejor_fitness = f64::MAX;
+
+    for (i, valor) in fitness_poblacion.iter().enumerate() {
+        if *valor < mejor_fitness {
+            mejor_fitness = *valor;
+            posicion_mejor = i;
+        }
+    }
+
+    cluster.asignar_clusters(poblacion[posicion_mejor].clone());
+
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+
+    cluster
 }
