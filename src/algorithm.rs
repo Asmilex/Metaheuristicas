@@ -254,7 +254,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     };
 
     let probabilidad_mutacion = 0.001;
-    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).floor() as i64;
+    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let mut generador = StdRng::seed_from_u64(semilla);
     let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
@@ -599,7 +599,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let operador_cruce = cruce_uniforme;
 
     let probabilidad_mutacion = 0.001;
-    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).floor() as i64;
+    let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let fallos_maximos = (0.1 * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
 
