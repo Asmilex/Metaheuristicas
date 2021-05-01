@@ -246,14 +246,21 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         ModeloGenetico::Generacional => tamano_poblacion
     };
 
-    let probabilidad_cruce = 0.7;
+    let probabilidad_cruce = match modelo {
+        ModeloGenetico::Generacional => 0.7,
+        ModeloGenetico::Estacionario => 1.0
+    };
+
+    // NOTE contamos el cruce de i, i+1 e i+1, i como uno solo
+    // En serio un poco hasta las narices de que nos den parámetros confusos, eh?
+
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = match op_cruce_a_usar {
         Operadores::Uniforme => cruce_uniforme,
         Operadores::SegmentoFijo => cruce_segmento_fijo
     };
 
-    let probabilidad_mutacion = 0.001;
+    let probabilidad_mutacion = 1.0/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let mut generador = StdRng::seed_from_u64(semilla);
@@ -322,61 +329,41 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         let mut p_intermedia = Vec::new();
 
-        match modelo {
-            ModeloGenetico::Estacionario => {
-                // Crucar ambos con probabilidad uno
-                let mut hijo_1= operador_cruce(&p_padres[0], &p_padres[1], &mut generador);
+        // NOTE ver nota de más arriba sobre el número de cruces
+        let mut cruces_restantes = numero_cruces;
 
-                if !cluster.solucion_valida_externa(&hijo_1) {
-                    reparar(&mut hijo_1, cluster.num_clusters, &mut generador);
+        for i in 0 .. m {
+            if cruces_restantes > 0 {
+                let mut hijo;
+
+                if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
+                }
+                else {                      // Impares => cruzar i con i-1
+                    hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
+                    cruces_restantes = cruces_restantes - 1;
+
+                    // Restamos solo aquí porque consideramos que hemos cruzado los dos necesarios para que cuente un cruce
+                    // Suena confuso pero yo no lo he elegido. Las culpas al guión y al seminario.
+                }
+
+                if !cluster.solucion_valida_externa(&hijo) {
+                    reparar(&mut hijo, cluster.num_clusters, &mut generador);
                 }
 
                 p_intermedia.push(
-                    hijo_1
+                    hijo
                 );
 
-                let mut hijo_2 = operador_cruce(&p_padres[1], &p_padres[0], &mut generador);
-
-                if !cluster.solucion_valida_externa(&hijo_2) {
-                    reparar(&mut hijo_2, cluster.num_clusters, &mut generador);
-                }
-
+            }
+            else {
                 p_intermedia.push(
-                    hijo_2
+                    p_padres[i].clone()
                 );
-            },
-            ModeloGenetico::Generacional => {
-                let mut cruces_restantes = numero_cruces;
-
-                for i in 0 .. m {
-                    if cruces_restantes > 0 {
-                        let mut hijo;
-
-                        if i % 2 == 0 && i < m {     // Pares => cruzar i con i+1
-                            hijo = operador_cruce(&p_padres[i], &p_padres[i+1], &mut generador);
-                        }
-                        else {                      // Impares => cruzar i con i-1
-                            hijo = operador_cruce(&p_padres[i], &p_padres[i-1], &mut generador);
-                        }
-
-                        if !cluster.solucion_valida_externa(&hijo) {
-                            reparar(&mut hijo, cluster.num_clusters, &mut generador);
-                        }
-
-                        p_intermedia.push(
-                            hijo
-                        );
-
-                        cruces_restantes = cruces_restantes - 1;
-                    }
-                    else {
-                        p_intermedia.push(
-                            p_padres[i].clone()
-                        );
-                    }
-                }
             }
         }
+
+
 
         // ────────────────────────────────────────────────── MUTACION ─────
 
@@ -598,7 +585,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = cruce_uniforme;
 
-    let probabilidad_mutacion = 0.001;
+    let probabilidad_mutacion = 1.0/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let fallos_maximos = (0.1 * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
