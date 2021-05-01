@@ -1,4 +1,4 @@
-use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
+use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom, distributions::Uniform};
 
 use nalgebra::{DVector};
 use colored::*;
@@ -29,13 +29,14 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
 
     // ───────────────────────────────────────────────── 1. CENTROIDES ALEATORIOS ─────
 
-    let mut rng = StdRng::seed_from_u64(seed);
+    let mut generador = StdRng::seed_from_u64(seed);
+    let rango_uniforme = Uniform::new_inclusive(0.0, 1.0);
 
     let mut centroides_aleatorios: Vec<Punto> = vec![DVector::zeros(cluster.dim_vectores); cluster.num_clusters];
 
     for i in 0 .. centroides_aleatorios.len() {
         for j in 0 .. centroides_aleatorios[i].nrows() {
-            centroides_aleatorios[i][(j)] = rng.gen();
+            centroides_aleatorios[i][(j)] = generador.sample(rango_uniforme);
         }
     }
 
@@ -44,7 +45,7 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
     // ─────────────────────────────────────────────────────── 2. BARAJAR INDICES ─────
 
     let mut indices_barajados: Vec<usize> = (0..cluster.num_elementos).collect();
-    indices_barajados.shuffle(&mut rng);
+    indices_barajados.shuffle(&mut generador);
 
     // ─────────────────────────────────────────────────── 3. COMPUTO DEL CLUSTER ─────
 
@@ -129,6 +130,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     // Parámetros de la ejecución
     let max_iteraciones = 10_000;
     let mut generador = StdRng::seed_from_u64(semilla);
+    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
 
     // ──────────────────────────────────────────────────────────────────────── 1 ─────
 
@@ -136,7 +138,7 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 
     while !cluster.solucion_valida_externa(&solucion_inicial) {
         for c in solucion_inicial.iter_mut() {
-            *c = generador.gen_range(1..=cluster.num_clusters);
+            *c = generador.sample(rango_clusters);
         }
     }
 
@@ -255,6 +257,10 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).floor() as i64;
 
     let mut generador = StdRng::seed_from_u64(semilla);
+    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
+    let rango_poblacion = Uniform::new(0, tamano_poblacion);
+    let rango_m = Uniform::new(0, m);
+    let rango_genes = Uniform::new(0, numero_genes);
 
 
     // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
@@ -273,7 +279,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         while !cluster.solucion_valida_externa(&solucion_inicial) {
             for c in solucion_inicial.iter_mut() {
-                *c = generador.gen_range(1..=cluster.num_clusters);
+                *c = generador.sample(rango_clusters);
             }
         }
 
@@ -298,7 +304,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
         // Crear cuadro de combatientes
         for _ in 0 .. m {
-            combate = (generador.gen_range(0 .. tamano_poblacion), generador.gen_range(0 .. tamano_poblacion));
+            combate = (generador.sample(rango_poblacion), generador.sample(rango_poblacion));
 
             if fitness_poblacion[combate.0] < fitness_poblacion[combate.1] {
                 p_padres.push(poblacion[combate.0].clone());
@@ -381,13 +387,13 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         let mut i: usize;
 
         for _ in 0 .. numero_mutaciones {
-            i = generador.gen_range(0 .. m);
+            i = generador.sample(rango_m);
 
             loop {
-                let gen_a_mutar = generador.gen_range(0 .. numero_genes);
+                let gen_a_mutar = generador.sample(rango_genes);
 
                 let antiguo_cluster = p_hijos[i][gen_a_mutar];
-                p_hijos[i][gen_a_mutar] = generador.gen_range(1 ..= cluster.num_clusters);
+                p_hijos[i][gen_a_mutar] = generador.sample(rango_clusters);
 
                 if cluster.solucion_valida_externa(&p_hijos[i]) {
                     break;
@@ -602,6 +608,11 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     }
 
     let mut generador = StdRng::seed_from_u64(semilla);
+    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
+    let rango_0_1 = Uniform::new_inclusive(0.0, 1.0);
+    let rango_poblacion = Uniform::new(0, tamano_poblacion);
+    let rango_m = Uniform::new(0, m);
+    let rango_genes = Uniform::new(0, numero_genes);
 
 
     // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
@@ -618,7 +629,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
         while !cluster.solucion_valida_externa(&solucion_inicial) {
             for c in solucion_inicial.iter_mut() {
-                *c = generador.gen_range(1..=cluster.num_clusters);
+                *c = generador.sample(rango_clusters);
             }
         }
 
@@ -657,7 +668,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
             }
             else {
                 for i in 0 .. tamano_poblacion {
-                    if generador.gen_range(0.0..=1.0) <= probabilidad {
+                    if generador.sample(rango_0_1) <= probabilidad {
                         busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
                         fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
                         evaluaciones_fitness = evaluaciones_fitness + 1;
@@ -673,7 +684,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
         // Crear cuadro de combatientes
         for _ in 0 .. m {
-            combate = (generador.gen_range(0 .. tamano_poblacion), generador.gen_range(0 .. tamano_poblacion));
+            combate = (generador.sample(rango_poblacion), generador.sample(rango_poblacion));
 
             if fitness_poblacion[combate.0] < fitness_poblacion[combate.1] {
                 p_padres.push(poblacion[combate.0].clone());
@@ -730,13 +741,13 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
         let mut i: usize;
 
         for _ in 0 .. numero_mutaciones {
-            i = generador.gen_range(0 .. m);
+            i = generador.sample(rango_m);
 
             loop {
-                let gen_a_mutar = generador.gen_range(0 .. numero_genes);
+                let gen_a_mutar = generador.sample(rango_genes);
 
                 let antiguo_cluster = p_hijos[i][gen_a_mutar];
-                p_hijos[i][gen_a_mutar] = generador.gen_range(1 ..= cluster.num_clusters);
+                p_hijos[i][gen_a_mutar] = generador.sample(rango_clusters);
 
                 if cluster.solucion_valida_externa(&p_hijos[i]) {
                     break;

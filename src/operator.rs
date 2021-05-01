@@ -1,4 +1,4 @@
-use rand::{Rng, rngs::StdRng};
+use rand::{Rng, rngs::StdRng, distributions::Uniform};
 use std::cmp::{min, max};
 
 
@@ -10,13 +10,14 @@ pub enum Operadores {
 
 
 pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
-    let mut descendencia = vec![0; padre_1.len()];
+    let rango = Uniform::new(0, padre_1.len());
 
+    let mut descendencia = vec![0; padre_1.len()];
     let mut genes_a_copiar = Vec::new();
 
     for _ in 0 .. padre_1.len()/2 {
         loop {
-            let pos_gen = generador.gen_range(0..padre_1.len());
+            let pos_gen = generador.sample(rango);
 
             if !genes_a_copiar.contains(&pos_gen) {
                 genes_a_copiar.push(pos_gen);
@@ -43,8 +44,10 @@ pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mu
 pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
     let mut descendencia = vec![0; padre_1.len()];
 
-    let inicio_segmento = generador.gen_range(0 .. padre_1.len());            // Inicio del segmento
-    let tamano_segmento = generador.gen_range(0.. padre_1.len());
+    let rango = Uniform::new(0, padre_1.len());
+
+    let inicio_segmento = generador.sample(rango);            // Inicio del segmento
+    let tamano_segmento = generador.sample(rango);
 
     let mut i = inicio_segmento;
     let mut copias: usize = 0;
@@ -62,9 +65,10 @@ pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador
 
     let mut genes_a_copiar = Vec::new();
 
+    let rango_nuevo = Uniform::new_inclusive(inicio, fin);
     for _ in 0 .. fin - inicio + 1 {
         loop {
-            let pos_gen = generador.gen_range(inicio..=fin);
+            let pos_gen = generador.sample(rango_nuevo);
 
             if !genes_a_copiar.contains(&pos_gen) {
                 genes_a_copiar.push(pos_gen);
@@ -96,11 +100,12 @@ pub fn reparar(hijo: &mut Vec<usize>, k: usize, generador: &mut StdRng) {
         recuento[c - 1] = recuento[c - 1] + 1;
     }
 
+    let rango = Uniform::new(0, hijo.len());
     for indice_cluster_vacio in 0 .. recuento.len() {
         if recuento[indice_cluster_vacio] == 0 {
             loop {
                 // Buscar elemento aleatorio y moverlo al clúster vacío.
-                let i = generador.gen_range(0..hijo.len());
+                let i = generador.sample(rango);
 
                 if recuento[hijo[i]-1] > 1 {
                     recuento[hijo[i]-1] = recuento[hijo[i]-1] - 1;
