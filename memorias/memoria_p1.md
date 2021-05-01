@@ -1,6 +1,6 @@
 # Búsqueda local y greedy para el Problema de Agrupamiento con Restricciones
 
-<img src="./img/Portada.jpg" width="808" height="1264" style="zoom:75%;"/>
+<img src="./img/P1/Portada.jpg" width="808" height="1264" style="zoom:75%;"/>
 
 > **Autor**: Andrés Millán
 > **DNI**:
@@ -186,7 +186,7 @@ Greedy_COPKM
   3.2. Actualizar los centroides
 ```
 
-![Ejemplo de ejecución de greedy](img/Greedy_ejemplo.png)
+![Ejemplo de ejecución de greedy](img/P1/Greedy_ejemplo.png)
 
 En la sección [Análisis de resultados](#análisis-de-resultados) comprobaremos cómo de buena es la solución obtenida.
 
@@ -235,7 +235,7 @@ $$
 
 Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta es muchísimo más rápido que el de todo el sistema. En la siguiente sección comprobaremos cuánto tarda en total un bechmark.
 
-![Ejemplo de ejecución de búsqueda local](./img/BL_ejemplo.png)
+![Ejemplo de ejecución de búsqueda local](./img/P1/BL_ejemplo.png)
 
 
 
