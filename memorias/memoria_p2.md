@@ -326,6 +326,10 @@ cruce_segmento_fijo(p1, p2):
 
 ### Operadores de mutación
 
+Este operador elige un cromosoma al azar de la población, y muta un gen aleatorio manteniendo la validez de la solución. No obstante, esto es únicamente el operador. La elección de cuántas mutaciones se deben hacer en la población total dependen de una serie de parámetros.
+
+La implementación se verá en el pseudocódigo del algoritmo completo.
+
 ### Reparación
 
 A veces, los operadores de cruce no generan soluciones válidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
