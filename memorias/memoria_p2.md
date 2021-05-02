@@ -34,8 +34,8 @@
     - [Cruce de segmento fijo](#cruce-de-segmento-fijo)
   - [Operadores de mutación](#operadores-de-mutación)
   - [Reparación](#reparación)
-- [Algoritmos genéticos](#algoritmos-genéticos)
-  - [Descripción de los genéticos](#descripción-de-los-genéticos)
+  - [Generación aleatoria de la población inicial](#generación-aleatoria-de-la-población-inicial)
+- [Algoritmos genéticos considerados](#algoritmos-genéticos-considerados)
   - [Esquemas de reemplazamiento](#esquemas-de-reemplazamiento)
   - [Implementación](#implementación)
 - [Algoritmos meméticos](#algoritmos-meméticos)
@@ -69,10 +69,12 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
   - Se puede introducir `geneticos` para ejecutarlos todos
   - Alternativamente, se pueden especificar a mano: `agg_un`, `agg_sf`, `age_un` o `age_sf`.
 - Algoritmos meméticos:
-  - Usando `memeticos` se ejecutarán todos los algoritmos descritos en esta documentación
+  - Usando `memeticos` se ejecutarán todos los de esta categoría descritos en esta documentación
   - Alternativamente, se pueden especificar a mano: `am_10_1`, `am_10_01`, `am_10_01_mejores`.
 
 Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos.
+
+Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
 #### Ejecutar uno o varios algoritmos para un dataset en particular
 
@@ -224,7 +226,7 @@ La forma en la que se realizan estas fases se define mediante los **operadores**
 
 Los operadores son funciones que reciben una o dos soluciones y producen otra. Cada paso tiene su operador específico, y todos poseen algún componente de aleatoriedad.
 
-En la implementación, únicamente los operadores de cruce se han separado. El resto se encuentran incrustados en el código del algoritmo genético.
+En la implementación, únicamente los operadores de cruce se han separado. El resto se encuentran incrustados en el código del algoritmo genético principal.
 
 ### Operadores de selección
 
@@ -296,11 +298,11 @@ cruce_segmento_fijo(p1, p2):
         copias = copias + 1
 
     inicio = min (
-        inicio_segmento + 1)%p1.len(),
+        (inicio_segmento + 1)%p1.len(),
         (inicio_segmento + tamano_segmento + 1)%p1.len()
     )
     fin = max (
-        inicio_segmento + 1)%p1.len(),
+        (inicio_segmento + 1)%p1.len(),
         (inicio_segmento + tamano_segmento + 1)%p1.len()
     )
 
@@ -340,18 +342,219 @@ reparar(hijo, k):
 
     Para c en hijo
         recuento[c - 1] = recuento[c-1] + 1
+
+    Para indice en 0 .. recuento.len()
+        Si recuento[indice] == 0
+            loop
+                i = aleatorio en [0, hijo.len())
+
+                Si recuento[hijo[i]-1] > 1
+                    recuento[hijo[i]-1]--
+                    hijo[i] = indice + 1
+                    recuento[indice]++
+                    break
 ```
 
-Recordemos que los clústers toman valores de 1 a k inclusive.
+Recordemos que los clústers toman valores en $[1, k]$.
 
-## Algoritmos genéticos
 
-### Descripción de los genéticos
+### Generación aleatoria de la población inicial
+
+La mayor parte de los algoritmos requieren generar una población aleatoria inicial. Para ello, hacemos lo siguiente:
+
+```
+Para _ en 0 .. tamano_poblacion
+    solucion_inicial: Vector de tamaño numero_genes inicializado a 0
+
+    Mientras que solucion_inicial no sea válida
+        Para c en solucion_inicial
+            c = aleatorio en [0, k]
+
+    poblacion.push(solucion_inicial)
+```
+
+## Algoritmos genéticos considerados
+
+Implementaremos 4 tipos de algoritmos genéticos en total, que surgirán de combinar operadores y modelos de reemplazamiento. Estos son:
+- Genético generacional con operador de cruce uniforme (**agg_un**).
+- Genético generacional con operador de cruce de segmento fijo (**agg_sf**).
+- Genético estacionario con operador de cruce uniforme (**age_un**).
+- Genético estacionario con operador de cruce de segmento fijo (**age_sf**).
+
+Todos estos algoritmos dependen de unos determinados parámetros, los cuales son:
+- **Tamaño de la población**: cuántos individuos existen al final de un ciclo. Por defecto, consideramos $50$.
+- **Número de genes** que tiene un cromosoma. Depende del dataset.
+- **Evaluaciones del fitnes máximas**. Por defecto $100000$.
+- **Número de cromosomas que se desarrollan**. Lo llamaremos $m$. Depende del esquema de reemplazamiento.
+- **Probabilidad de cruce**. Depende del esquema de reemplazamiento.
+- **Número de cruces esperado** = `probabilidad del cruce * m / 2`. Consideramos un único cruce al del cromosoma $i$ con $i+1$, así como el del $i+1$ con $i$. Los motivos son de eficiencia, pues en la selección, ya se considera que es aleatoria.
+- **Operador de cruce**.
+- **Probabilidad de mutación** = `1/número de genes`.
+- **Número de mutaciones** = `probabilidad de mutación * m * número de genes`. Mutaremos considerando la población como una matriz, y eligiendo una entrada al azar.
 
 ### Esquemas de reemplazamiento
 
+El esquema de reemplazamiento refleja cómo se procesa la generación actual, y cuántos descendientes se generan. Como hemos citado antes, usamos el modelo **generacional** y **estacionario**
+
+El **modelo generacional** considera para el desarrollo de una generación el mismo número de cromosomas que el de la población. En nuestro caso, esto significa que `m = tamaño de la población` y que la probabilidad de cruce es de $0.7$.
+
+El **modelo estacionario** toma dos individuos aleatorios y los procesa, para hacerlos competir por ver si entran en la población.
+Por tanto, `m = 2`, y la probabilidad de cruce es de $1$.
+
 ### Implementación
 
+Los 4 tipos de genéticos resultarán de cambiar los parámetros de la llamada de la función principal. Por tanto, solo consideraremos el pseudocódigo de ésta.
+
+En la llamada no se ha tenido en cuenta la semilla.
+
+```
+genetico(cluster, modelo, operador_cruce):
+
+tamano_poblacion = 50
+numero_genes = cluster.num_elementos
+max_evaluaciones_fitness = 100_000
+m = 2 si modelo == estacionario, tamano_poblacion si m == generacional
+
+probabilidad_cruce = 0.7 si modelo == estacionario, 1 si modelo == generacional
+numero_cruces = (probabilidad_cruce * m/2).floor()
+
+probabilidad_mutacion = 1.0/numero_genes
+numero_mutaciones = (probabilidad_mutacion * m * numero_genes).ceil()
+
+rango_clusters = distribución uniforme en [1, clusters.num_clusters]
+rango_poblacion = distribución uniforme en [0, tamano_poblacion)
+rango_m = distribución uniforme en [0, m)
+rango_genes = distribución uniforme en [0, numero_genes)
+
+Poblacion: Vector de tamaño tamano_poblacion
+fitness_poblacion: Vector de tamaño tamano_poblacion
+
+Generar la población inicial y evaluar su fitness
+
+t = 0
+evaluaciones_fitness = 0
+
+Mientras que evaluaciones_fitness < max_evaluaciones_fitness
+
+// ───────────────────────────────────────────────── SELECCION ─────
+
+    p_padres: Vector nuevo vacío
+    combate: par de números entero
+
+    Para _ en 0 .. m
+        combate = (aleatorio en rango_poblacion, aleatorio en rango_poblacion)
+
+        Si fitness(poblacion[combate.0]) < fitness(poblacion[comabte.1])
+            p_padres.push(poblacion[combate.0])
+        En otro caso
+            p_padres.push(poblacion[combate.1])
+
+// ───────────────────────────────────────────────────── CRUCE ─────
+     p_intermedio: Vector nuevo vacío
+
+     cruces_restantes = numero_cruces
+
+     Para i en 0 .. m
+        Si cruces_restantes > 0
+            hijo: Vector nuevo vacío
+
+            Si i%2 == 0 y i < m
+                hijo = operador_cruce(p_padres[i], p_padres[i+1])
+            En otro caso
+                hijo = operador_cruce(p_padres[i], p_padres[i-1])
+                cruces_restantes--
+
+            Si hijo no es un cromosoma válido
+                reparar(hijo)
+
+            p_intermedia.push(hijo)
+
+        En otro caso
+            p_intermedia.push(p_padres[i])
+
+// ────────────────────────────────────────────────── MUTACION ─────
+
+    p_hijos = p_intermedia
+    i = 0
+
+    Para _ en 0 .. numero_mutaciones
+        i = aleatorio en rango_m
+
+        loop
+            gen_a_mutar = aleatorio en rango_genes
+
+            antiguo_cluster = p_hijos[i][gen_a_mutar]
+            p_hijos[i][gen_a_mutar] = aleatorio en rango_clusters
+
+            Si p_hijos[i] no es una solución válida
+                p_hijos[i][gen_a_mutar] = antiguo_cluster
+            En otro caso
+                break
+
+// ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
+
+    Si el modelo es el estacionario
+        posicion_peor = 0
+        peor_fitness = 0.0
+
+        Para (i, valor) en fitness_poblacion.enumerate()
+            Si valor > peor_fitness
+                peor_fitness = valor
+                posicion_peor = i
+
+        fitness_0 = fitness(p_hijos[0])
+        fitness_1 = fitness(p_hijos[1])
+        evaluaciones_fitness = evaluaciones_fitness + m
+
+        Si fitness_0 < fitness_1
+            poblacion[posicion_peor] = p_hijos[0]
+            fitness_poblacion[posicion_peor] = fitness_0
+        En otro caso
+            poblacion[posicion_peor] = p_hijos[1]
+            fitness_poblacion[posicion_peor] = fitness_1
+
+    Si el modelo es el generacional
+        posicion_mejor = 0
+        mejor_fitness = máximo f64 posible
+
+        Para (i, valor) en fitness_poblacion.enumerate()
+            Si valor < mejor_fitness
+                mejor_fitness = valor
+                posicion_mejor = i
+
+        mejor_cromosoma_antiguo = poblacion[posicion_mejor]
+        poblacion = p_hijos
+
+        Para (i, cromosoma) en poblacion.enumerate()
+            fitness_poblacion[i] = fitness(cromosoma)
+
+        evaluaciones_fitness = evaluaciones_fitness + m
+
+        posicion_peor = 0
+        peor_fitness = 0.0
+
+        Para (i, valor) en fitness_poblacion.enumerate()
+            Si valor > peor_fitness
+                peor_fitness = valor
+                posicion_peor = i
+
+        poblacion[posicion_peor] = mejor_cromosoma_antiguo
+        fitness[posicion_peor] = mejor_fitness
+
+    t = t+1
+
+posicion_mejor = 0
+mejor_fitness = máximo f64 posible
+
+Para (i, valor) en fitness_poblacion.enumerate()
+    Si valor < mejor_fitness
+        mejor_fitness = valor
+        posicion_mejor = i
+
+cluster.asignar_clusters(poblacion[posicion_mejor])
+
+cluster
+```
 
 ## Algoritmos meméticos
 
