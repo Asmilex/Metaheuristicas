@@ -508,13 +508,14 @@ pub fn age_sf (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 //
 
 
-fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallos_permitidos: usize, generador: &mut StdRng) {
+fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallos_permitidos: usize, generador: &mut StdRng) -> usize {
     let mut indices_barajados: Vec<usize> = (0..solucion.len()).collect();
     indices_barajados.shuffle(generador);
 
     let mut fallos = 0;
     let mut mejora = true;
     let mut i = 0;
+    let mut evaluaciones_fitness: usize = 0;
 
     while (mejora || fallos < fallos_permitidos) && i < solucion.len() {
         mejora = false;
@@ -531,6 +532,7 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallo
 
                 if cluster.solucion_valida_externa(solucion) {
                     let fitness_actual = cluster.genetico_fitness_sol(solucion);
+                    evaluaciones_fitness = evaluaciones_fitness + 1;
 
                     if fitness_actual < mejor_fitness {
                         mejor_cluster = c;
@@ -553,6 +555,8 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallo
 
         i = i + 1;
     }
+
+    evaluaciones_fitness
 }
 
 /// # Algoritmo memético
@@ -588,7 +592,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let probabilidad_mutacion = 1.0/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
-    let fallos_maximos = (0.1 * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
+    let fallos_maximos = (probabilidad * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
 
     if probabilidad != 0.1 && solo_a_mejores {
         println!("{}: este algoritmo no está pensado para ejecutarse con estos parámetros de entrada", "WARNING".red());
@@ -648,17 +652,17 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
                 );
 
                 for i in 0 .. busquedas_totales {
-                    busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
+                    let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
                     fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
-                    evaluaciones_fitness = evaluaciones_fitness + 1;
+                    evaluaciones_fitness = evaluaciones_fitness + evaluaciones;
                 }
             }
             else {
                 for i in 0 .. tamano_poblacion {
                     if generador.sample(rango_0_1) <= probabilidad {
-                        busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
+                        let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
                         fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
-                        evaluaciones_fitness = evaluaciones_fitness + 1;
+                        evaluaciones_fitness = evaluaciones_fitness + evaluaciones;
                     }
                 }
             }
