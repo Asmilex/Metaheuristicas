@@ -39,7 +39,7 @@
   - [Esquemas de reemplazamiento](#esquemas-de-reemplazamiento)
   - [Implementación](#implementación)
 - [Algoritmos meméticos](#algoritmos-meméticos)
-  - [Descripción de los meméticos](#descripción-de-los-meméticos)
+  - [Búsqueda local suave](#búsqueda-local-suave)
   - [Implementación](#implementación-1)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
@@ -558,10 +558,102 @@ cluster
 
 ## Algoritmos meméticos
 
-### Descripción de los meméticos
+Los **algoritmos meméticos** son algoritmos genéticos a los que se les introduce una fase de exploración del entorno cada ciertas generaciones. De esta forma, se optimiza localmente de forma periódica.
+
+De base utilizaremos el algoritmo genético generacional con operador de cruce uniforme. Por tanto, los parámetros serán los mismos.
+
+Aparte, debemos considerar algunos nuevos:
+- **Periodo generacional**: cada cuántas generaciones se aplica el optimizador local. Valdrá $10$.
+- **Probabilidad**: para cada cromosoma, cuál es la probabilidad de que se le aplique el optimizador.
+- **Solo a mejores**: si este parámetro está activo, únicamente se aplicará a los `probabilidad * número de cromosomas` mejores soluciones de la población.
+
+Consideraremos las siguientes versiones:
+  - **AM_10_1**: `probabilidad = 1`, `solo_a_mejores = false`
+  - **AM_10_01**: `probabilidad = 01`, `solo_a_mejores = false`
+  - **AM_10_01_mejores**: `probabilidad = 01`, `solo_a_mejores = true`
+
+### Búsqueda local suave
+
+Para el PAR utilizaremos como optimizador local una búsqueda local suave, descrita de la siguiente manera:
+
+```
+busqueda_local_suave(solucion, cluster, fallos_permitidos):
+
+indices_barajados: Vector con sus componentes inicializadas a 0 .. solucion.len()
+
+indices_barajados.shuffle()
+
+fallos = 0
+evaluaciones_fitness = 0
+mejora = true
+i = 0
+
+Mientras (mejora || fallos < fallos_permitidos) && i < solucion.len()
+    mejora = false
+
+    mejor_fitness = fitness(solucion)
+    mejor_cluster = solucion[indices_barajados[i]]
+
+    Para c en 1 ..= cluster.num_clusters
+        Si c != mejor_cluster
+            solucion[indices_barajados[i]] = c
+
+            Si solución es válida
+                fitness_actual = fitness(solucion)
+                evaluaciones_fitness++
+
+                Si fitness_actual < mejor_fitness
+                    mejor_cluster = c
+                    mejor_fitness = fitness_actual
+                    mejora = true
+                En otro caso
+                    solucion[indices_barajados[i]] = mejor_cluster
+            En otro caso
+                solucion[indices_barajados[i]] = mejor_cluster
+
+    Si !mejora
+        fallos = fallos + 1
+
+    i++
+
+
+solucion
+```
 
 ### Implementación
 
+```
+memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
+    // Mismos pasos que AGG_UN
+    ...
+
+    fallos_maximos = probabilidad * tamano_poblacion
+
+    ...
+
+    Mientras que evaluaciones < max_evaluaciones_fitness
+        Si t % periodo_generacional == 0
+            Si solo_a_mejores
+                busquedas_totales = probabilidad * poblacion.len()
+
+                Ordenar poblacion y fitness_poblacion de menor a mayor
+
+                Para i en 0 .. busquedas_totales
+                    evaluaciones = BLS(poblacion[i], cluster, fallos_maximos)
+                    fitness_poblacion[i] = fitness(poblacion[i])
+                    evaluaciones_fitness = evaluaciones_fitness + evaluaciones
+            En otro caso
+                Para i en 0 .. tamano_poblacion
+                    Si aleatorio en [0, 1] <= probabilidad
+                        evaluaciones = BLS(poblacion[i], cluster, fallos_maximos)
+                        fitness_poblacion[i] = fitness(poblacion[i])
+                        evaluaciones_fitness = evaluaciones_fitness + evaluaciones
+
+
+// ───────────────────────────────────────────────── SELECCION ─────
+        // Mismo código que el algoritmo genético
+        ...
+```
 
 * * *
 
