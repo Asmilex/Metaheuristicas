@@ -46,6 +46,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
       - [Cruce uniforme](#cruce-uniforme)
       - [Cruce de segmento fijo](#cruce-de-segmento-fijo)
     - [Operadores de mutación](#operadores-de-mutación)
+- [Otras consideraciones](#otras-consideraciones)
     - [Reparación](#reparación)
     - [Generación aleatoria de la población inicial](#generación-aleatoria-de-la-población-inicial)
   - [Algoritmos genéticos considerados](#algoritmos-genéticos-considerados)
@@ -59,7 +60,6 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
   - [Síntesis](#síntesis)
 - [Referencias](#referencias)
-  - [POR HACER](#por-hacer)
 
 
 * * *
@@ -431,6 +431,7 @@ Este operador elige un cromosoma al azar de la población, y muta un gen aleator
 
 La implementación se verá en el pseudocódigo del algoritmo completo.
 
+## Otras consideraciones
 #### Reparación
 
 A veces, los operadores de cruce no generan soluciones válidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
@@ -754,18 +755,18 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
 
 ## Análisis de resultados
 
-En esta sección discutiremos los resultados obtenidos por ambos algoritmos. Presentaremos los parámetros de los datasets utilizados, las distancias óptimas conocidas de estas, y cuánto se acercan Greedy y Búsqueda Local a esta.
+En esta sección discutiremos los resultados obtenidos por ambos algoritmos. Presentaremos los parámetros de los datasets utilizados, las distancias óptimas generadas por el Greedy suponiendo que no hay restricciones, y, lo más importante, **cómo rinden nuestros algoritmos**.
 
 ### Descripción de los casos del problema empleados
 
 Los datasets usados reciben el nombre de `Zoo`, `Glass`, y `Bupa`. Los dos primeros presentan una dificultad similar, mientras que el último requiere de un mayor tiempo de cómputo.
 
-|                      | **Zoo** | **Glass** |  **Bupa** |
-|----------------------|--------:|----------:|----------:|
-| **Atributos**        | `16`    | `9`       | `5`       |
-| **Clusters**         | `7`     | `7`       | `16`      |
-| **Instancias**       | `101`   | `214`     | `345`     |
-| **Distancia óptima** | `0.9048`| `0.36429` | `0.229248`|
+|                                          |  **Zoo** | **Glass** |   **Bupa** |
+| ---------------------------------------- | -------: | --------: | ---------: |
+| **Atributos**                            |     `16` |       `9` |        `5` |
+| **Clusters**                             |      `7` |       `7` |       `16` |
+| **Instancias**                           |    `101` |     `214` |      `345` |
+| **Distancia óptima generada por Greedy** | `0.9048` | `0.36429` | `0.229248` |
 
 Sobre estos conjuntos se ha impuesto un número de restricciones: al 10% y al 20%. Naturalmente, cuantas más restricciones, más costoso resulta computar una solución aceptable, pues el sistema contempla una mayor cantidad de enlaces entre sus elementos.
 Los ficheros ubicados en `./data/PAR` guardan la información sobre los datasets.
@@ -796,11 +797,3 @@ Se ha utlizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como 
 - [Documentación de Multimap](https://docs.rs/multimap/0.8.3/multimap/)
 - [StackOverflow](https://stackoverflow.com/)
 - Material de teoría y de prácticas
-
-
-### POR HACER
-
-Cosas que he hecho que tengo que documentar:
-
-- parámetros (agX_Y) + geneticos + (am_10_*) + memeticos
-- Cambio en la estructura de la carpeta csv
