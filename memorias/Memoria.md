@@ -19,6 +19,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
 - [Sobre esta memoria](#sobre-esta-memoria)
     - [Benchmark de uno o más algoritmos](#benchmark-de-uno-o-más-algoritmos)
     - [Ejecutar uno o varios algoritmos para un dataset en particular](#ejecutar-uno-o-varios-algoritmos-para-un-dataset-en-particular)
+    - [Analizar los archivos `.csv`](#analizar-los-archivos-csv)
 - [Descripción del problema](#descripción-del-problema)
 - [Procedimiento seguido para resolver la práctica](#procedimiento-seguido-para-resolver-la-práctica)
   - [Crates usadas](#crates-usadas)
@@ -93,6 +94,10 @@ Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
 Para ejecutar un único algoritmo para un cierto dataset, se debe introducir en la línea de comandos `cargo run --release [dataset] {10, 20} [algoritmos]`, donde `[dataset]` puede valer `bupa`, `glass` o `zoo`, eligiendo qué conjunto de restricciones usar (`10` o `20`). La lista de algoritmos funciona de la misma manera que en el apartado anterior.
 
+#### Analizar los archivos `.csv`
+
+Una vez se hayan ejecutado los benchmarks correspondientes, se puede extraer automáticamente la información de los resultados. Para ello, se debe introducir `cargo run --release analyze`. Esto exportará un archivo en las carpetas de los datasets con la media de cada algoritmo.
+
 
 * * *
 
@@ -127,6 +132,7 @@ Para facilitar la implementación, se han utilizado una serie de *crates* (nombr
 - [Rand](https://docs.rs/rand/0.8.3/rand/): para los generadores de números aleatorios.
 - [Multimap](https://docs.rs/multimap/0.8.3/multimap/index.html): para el almacenamiento eficiente de las listas de restricciones.
 - [Csv](https://docs.rs/csv/1.1.6/csv/): para exportar los resultados a `.csv`.
+- [Serde](https://serde.rs/): Para facilitar el análisis de resultados. Me permite leer fácilmente los archivos `.csv`.
 - [Colored](https://docs.rs/colored/2.0.0/colored/): para hacer más bonitas y legibles las salidas a consola.
 
 
@@ -236,7 +242,7 @@ El algoritmo **Greedy K-medias aplicado a clustering con restricciones** es capa
 
 #### Descripción del algoritmo
 
-Partiendo de un clúster vacío, pero con todos los elementos cargados, consideramos una serie de centroides aleatorios, tantos como número de clústers debamos generar. Recorremos los elementos del espacio de forma aleatoria, de manera que asignamos cada uno al clúster en el que menor número de restricciones se viola (esto es, de menor infeasibility). En caso de empate, se asigna al clúster con cenroide más cercano a nuestro punto, entendiendo por cercano a aquel centroide que minimiza la distancia euclidiana. Se actualizan los centroides, y se repite todo hasta que la solución se estabilice.
+Partiendo de un clúster vacío, pero con todos los elementos cargados, consideramos una serie de centroides aleatorios, tantos como número de clústers debamos generar. Recorremos los elementos del espacio de forma aleatoria, de manera que asignamos cada uno al clúster en el que menor número de restricciones se viola (esto es, de menor infeasibility). En caso de empate, se asigna al clúster con centroide más cercano a nuestro punto, entendiendo por cercano a aquel centroide que minimiza la distancia euclidiana. Se actualizan los centroides, y se repite todo hasta que la solución se estabilice.
 
 El pseudocódigo, por tanto, quedaría así:
 
@@ -297,7 +303,7 @@ $$
 \text{Infeasibility nuevo} = (\text{infeasibility antiguo})  - (\text{infeasilibity producido por el cluster antiguo para el vector i}) + (\text{infeasibility producido por el nuevo cluster c para el vector i})
 $$
 
-Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta es muchísimo más rápido que el de todo el sistema. En la siguiente sección comprobaremos cuánto tarda en total un bechmark.
+Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta es muchísimo más rápido que el de todo el sistema. En la siguiente sección comprobaremos cuánto tarda en total un benchmark.
 
 ![Ejemplo de ejecución de búsqueda local](./img/P1/BL_ejemplo.png)
 
@@ -331,7 +337,7 @@ El operador de selección será un **torneo binario**. Enfrentaremos dos cromoso
 
 La selección tendrá un componente de aleatoriedad en todos los algoritmos genéticos. Elegiremos cierto número de cromosomas dependiendo del modelo en el que nos encontremos, y los emparejaremos al azar.
 
-El psedocódigo es el siguiente:
+El pseudocódigo es el siguiente:
 
 ```
 operador de selección(p1, p2):
@@ -779,7 +785,7 @@ Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 
 - **Agregado**: el fitness de la solución. Cuanto más bajo, mejor.
 - **Tiempo de ejecución** (ms).
 
-Se ha utlizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas así como la velocidad base de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo).
+Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas así como la velocidad base de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo).
 
 
 * * *
