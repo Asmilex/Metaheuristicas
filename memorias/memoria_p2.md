@@ -1,13 +1,18 @@
-# Algoritmos genéticos y meméticos Problema de Agrupamiento con Restricciones
+---
+title: Algoritmos genéticos y meméticos Problema de Agrupamiento con Restricciones
+author: Andrés Millán
+subject: Metaheurísticas
+keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas
+---
 
-<img src="./img/P2/Portada.jpg" width="808" height="1264" style="zoom:75%;"/>
+# Algoritmos genéticos y meméticos para el PAR
+
+<img src="./img/P2/Portada.jpg" width="808" height="1264" style="zoom:55%;"/>
 
 > **Autor**: Andrés Millán
 > **DNI**:
 > **Email**: amilmun@correo.ugr.es
 > **Grupo de prácticas**: MH3
-
-* * *
 
 # Tabla de contenidos
 
@@ -230,7 +235,9 @@ En la implementación, únicamente los operadores de cruce se han separado. El r
 
 ### Operadores de selección
 
-El operador de selección será un **torneo binario**. Enfrentaremos dos cromosomas para ver quién tiene mejor fitness, y nos quedaremos con esa.
+El operador de selección será un **torneo binario**. Enfrentaremos dos cromosomas para ver quién tiene mejor fitness, y nos quedaremos con ese.
+
+La selección tendrá un componente de aleatoriedad en todos los algoritmos genéticos. Elegiremos cierto número de cromosomas dependiendo del modelo en el que nos encontremos, y los emparejaremos al azar. 
 
 El psedocódigo es el siguiente:
 
@@ -248,7 +255,7 @@ Los operadores de cruce reciben dos cromosomas, y producen un nuevo hijo a parti
 
 #### Cruce uniforme
 
-El operador de cruce uniforme coge la mitad de los genes de un padre, la otra mitad de los genes del otro padre y los combina en un hijo.
+El operador de cruce uniforme toma la mitad de los genes de un padre, la otra mitad del otro padre, y los combina en un hijo.
 
 La implementación es la siguiente:
 
@@ -276,14 +283,14 @@ cruce_uniforme(p1, p2):
 
 #### Cruce de segmento fijo
 
-El operador de cruce de segemento fijo determina un segmento de tamaño aleatorio y un inicio, de forma que copia los genes de p1 desde el inicio hacia delante, empezando por el principio del cromosoma si fuera necesario.
+El operador de cruce de segmento fijo determina un fragmento de tamaño aleatorio y un inicio, de forma que copia los genes de p1 desde el inicio hacia delante, *dando la vuelta* por el principio del cromosoma si fuera necesario.
 
-Para el resto de cromosomas sin copiar, se procede de la misma manera que en el cruce uniforme.
+Para el resto de genes todavía no determinados, se procede de manera análoga al cruce uniforme: se coge la mitad de los genes de un padre, la otra mitad del otro, y se traspasan.
 
 Debemos destacar que este operador está claramente sesgado, pues siempre se copian más genes del primer cromosoma que del segundo.
 
 ```
-cruce_segmento_fijo(p1, p2):
+cruce_segmento_fijo (p1, p2):
     descendencia: Vector del mismo tamaño que p1 y p2
     inicio_segmento = aleatorio en [0, p1.len())
     tamaño_segmento = aleatorio en [0, p1.len())
@@ -337,7 +344,7 @@ La implementación se verá en el pseudocódigo del algoritmo completo.
 A veces, los operadores de cruce no generan soluciones válidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
 
 ```
-reparar(hijo, k):
+reparar (hijo, k):
     recuento: Vector de tamaño k inicializado a 0
 
     Para c en hijo
@@ -376,15 +383,15 @@ Para _ en 0 .. tamano_poblacion
 ## Algoritmos genéticos considerados
 
 Implementaremos 4 tipos de algoritmos genéticos en total, que surgirán de combinar operadores y modelos de reemplazamiento. Estos son:
-- Genético generacional con operador de cruce uniforme (**agg_un**).
-- Genético generacional con operador de cruce de segmento fijo (**agg_sf**).
-- Genético estacionario con operador de cruce uniforme (**age_un**).
-- Genético estacionario con operador de cruce de segmento fijo (**age_sf**).
+- Genético generacional con operador de cruce uniforme (**AGG_UN**).
+- Genético generacional con operador de cruce de segmento fijo (**AGG_SF**).
+- Genético estacionario con operador de cruce uniforme (**AGE_UN**).
+- Genético estacionario con operador de cruce de segmento fijo (**AGE_SF**).
 
 Todos estos algoritmos dependen de unos determinados parámetros, los cuales son:
 - **Tamaño de la población**: cuántos individuos existen al final de un ciclo. Por defecto, consideramos $50$.
 - **Número de genes** que tiene un cromosoma. Depende del dataset.
-- **Evaluaciones del fitnes máximas**. Por defecto $100000$.
+- **Evaluaciones del fitness máximas**. Por defecto $100000$.
 - **Número de cromosomas que se desarrollan**. Lo llamaremos $m$. Depende del esquema de reemplazamiento.
 - **Probabilidad de cruce**. Depende del esquema de reemplazamiento.
 - **Número de cruces esperado** = `probabilidad del cruce * m / 2`. Consideramos un único cruce al del cromosoma $i$ con $i+1$, así como el del $i+1$ con $i$. Los motivos son de eficiencia, pues en la selección, ya se considera que es aleatoria.
@@ -398,7 +405,7 @@ El esquema de reemplazamiento refleja cómo se procesa la generación actual, y 
 
 El **modelo generacional** considera para el desarrollo de una generación el mismo número de cromosomas que el de la población. En nuestro caso, esto significa que `m = tamaño de la población` y que la probabilidad de cruce es de $0.7$.
 
-El **modelo estacionario** toma dos individuos aleatorios y los procesa, para hacerlos competir por ver si entran en la población.
+El **modelo estacionario** toma dos individuos aleatorios y los procesa, reintroduciéndolos finalmente en la población. Se eliminarán los dos peores cromosomas al final de este proceso.
 Por tanto, `m = 2`, y la probabilidad de cruce es de $1$.
 
 ### Implementación
@@ -410,147 +417,147 @@ En la llamada no se ha tenido en cuenta la semilla.
 ```
 genetico(cluster, modelo, operador_cruce):
 
-tamano_poblacion = 50
-numero_genes = cluster.num_elementos
-max_evaluaciones_fitness = 100_000
-m = 2 si modelo == estacionario, tamano_poblacion si m == generacional
+   tamano_poblacion = 50
+   numero_genes = cluster.num_elementos
+   max_evaluaciones_fitness = 100_000
+   m = 2 si modelo == estacionario, tamano_poblacion si m == generacional
 
-probabilidad_cruce = 0.7 si modelo == estacionario, 1 si modelo == generacional
-numero_cruces = (probabilidad_cruce * m/2).floor()
+   probabilidad_cruce = 0.7 si modelo == estacionario, 1 si modelo == generacional
+   numero_cruces = (probabilidad_cruce * m/2).floor()
 
-probabilidad_mutacion = 1.0/numero_genes
-numero_mutaciones = (probabilidad_mutacion * m * numero_genes).ceil()
+   probabilidad_mutacion = 1.0/numero_genes
+   numero_mutaciones = (probabilidad_mutacion * m * numero_genes).ceil()
 
-rango_clusters = distribución uniforme en [1, clusters.num_clusters]
-rango_poblacion = distribución uniforme en [0, tamano_poblacion)
-rango_m = distribución uniforme en [0, m)
-rango_genes = distribución uniforme en [0, numero_genes)
+   rango_clusters = distribución uniforme en [1, clusters.num_clusters]
+   rango_poblacion = distribución uniforme en [0, tamano_poblacion)
+   rango_m = distribución uniforme en [0, m)
+   rango_genes = distribución uniforme en [0, numero_genes)
 
-Poblacion: Vector de tamaño tamano_poblacion
-fitness_poblacion: Vector de tamaño tamano_poblacion
+   Poblacion: Vector de tamaño tamano_poblacion
+   fitness_poblacion: Vector de tamaño tamano_poblacion
 
-Generar la población inicial y evaluar su fitness
+   Generar la población inicial y evaluar su fitness
 
-t = 0
-evaluaciones_fitness = 0
+   t = 0
+   evaluaciones_fitness = 0
 
-Mientras que evaluaciones_fitness < max_evaluaciones_fitness
+   Mientras que evaluaciones_fitness < max_evaluaciones_fitness
 
-// ───────────────────────────────────────────────── SELECCION ─────
+   // ───────────────────────────────────────────────── SELECCION ─────
 
-    p_padres: Vector nuevo vacío
-    combate: par de números entero
+       p_padres: Vector nuevo vacío
+       combate: par de números entero
 
-    Para _ en 0 .. m
-        combate = (aleatorio en rango_poblacion, aleatorio en rango_poblacion)
+       Para _ en 0 .. m
+           combate = (aleatorio en rango_poblacion, aleatorio en rango_poblacion)
 
-        Si fitness(poblacion[combate.0]) < fitness(poblacion[comabte.1])
-            p_padres.push(poblacion[combate.0])
-        En otro caso
-            p_padres.push(poblacion[combate.1])
+           Si fitness(poblacion[combate.0]) < fitness(poblacion[comabte.1])
+               p_padres.push(poblacion[combate.0])
+           En otro caso
+               p_padres.push(poblacion[combate.1])
 
-// ───────────────────────────────────────────────────── CRUCE ─────
-     p_intermedio: Vector nuevo vacío
+   // ───────────────────────────────────────────────────── CRUCE ─────
+        p_intermedio: Vector nuevo vacío
 
-     cruces_restantes = numero_cruces
+        cruces_restantes = numero_cruces
 
-     Para i en 0 .. m
-        Si cruces_restantes > 0
-            hijo: Vector nuevo vacío
-
-            Si i%2 == 0 y i < m
-                hijo = operador_cruce(p_padres[i], p_padres[i+1])
-            En otro caso
-                hijo = operador_cruce(p_padres[i], p_padres[i-1])
-                cruces_restantes--
-
-            Si hijo no es un cromosoma válido
-                reparar(hijo)
-
-            p_intermedia.push(hijo)
-
-        En otro caso
-            p_intermedia.push(p_padres[i])
-
-// ────────────────────────────────────────────────── MUTACION ─────
-
-    p_hijos = p_intermedia
-    i = 0
-
-    Para _ en 0 .. numero_mutaciones
-        i = aleatorio en rango_m
-
-        loop
-            gen_a_mutar = aleatorio en rango_genes
-
-            antiguo_cluster = p_hijos[i][gen_a_mutar]
-            p_hijos[i][gen_a_mutar] = aleatorio en rango_clusters
-
-            Si p_hijos[i] no es una solución válida
-                p_hijos[i][gen_a_mutar] = antiguo_cluster
-            En otro caso
-                break
-
-// ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
-
-    Si el modelo es el estacionario
         Para i en 0 .. m
-            fitness_poblacion.push(fitness(p_hijos[i]))
-            poblacion.push(p_hijos[i])
-            evaluaciones_fitness++
+           Si cruces_restantes > 0
+               hijo: Vector nuevo vacío
 
-        // Ordenar de menor a mayor
-        Para i en 0 .. fitness_poblacion.len()
-            Para j en 0 .. fitness_poblacion.len() - i - 1
-                Si fitness_poblacion[j+1] < fitness_poblacion[j]
-                    fitness_poblacion.swap(j, j+1)
-                    poblacion.swap(j, j+1)
+               Si i%2 == 0 y i < m
+                   hijo = operador_cruce(p_padres[i], p_padres[i+1])
+               En otro caso
+                   hijo = operador_cruce(p_padres[i], p_padres[i-1])
+                   cruces_restantes--
 
-        Para _ en 0 .. m
-            poblacion.pop()
-            fitness_poblacion.pop()
+               Si hijo no es un cromosoma válido
+                   reparar(hijo)
 
-    Si el modelo es el generacional
-        posicion_mejor = 0
-        mejor_fitness = máximo f64 posible
+               p_intermedia.push(hijo)
 
-        Para (i, valor) en fitness_poblacion.enumerate()
-            Si valor < mejor_fitness
-                mejor_fitness = valor
-                posicion_mejor = i
+           En otro caso
+               p_intermedia.push(p_padres[i])
 
-        mejor_cromosoma_antiguo = poblacion[posicion_mejor]
-        poblacion = p_hijos
+   // ────────────────────────────────────────────────── MUTACION ─────
 
-        Para (i, cromosoma) en poblacion.enumerate()
-            fitness_poblacion[i] = fitness(cromosoma)
+       p_hijos = p_intermedia
+       i = 0
 
-        evaluaciones_fitness = evaluaciones_fitness + m
+       Para _ en 0 .. numero_mutaciones
+           i = aleatorio en rango_m
 
-        posicion_peor = 0
-        peor_fitness = 0.0
+           loop
+               gen_a_mutar = aleatorio en rango_genes
 
-        Para (i, valor) en fitness_poblacion.enumerate()
-            Si valor > peor_fitness
-                peor_fitness = valor
-                posicion_peor = i
+               antiguo_cluster = p_hijos[i][gen_a_mutar]
+               p_hijos[i][gen_a_mutar] = aleatorio en rango_clusters
 
-        poblacion[posicion_peor] = mejor_cromosoma_antiguo
-        fitness[posicion_peor] = mejor_fitness
+               Si p_hijos[i] no es una solución válida
+                   p_hijos[i][gen_a_mutar] = antiguo_cluster
+               En otro caso
+                   break
 
-    t = t+1
+   // ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
 
-posicion_mejor = 0
-mejor_fitness = máximo f64 posible
+       Si el modelo es el estacionario
+           Para i en 0 .. m
+               fitness_poblacion.push(fitness(p_hijos[i]))
+               poblacion.push(p_hijos[i])
+               evaluaciones_fitness++
 
-Para (i, valor) en fitness_poblacion.enumerate()
-    Si valor < mejor_fitness
-        mejor_fitness = valor
-        posicion_mejor = i
+           // Ordenar de menor a mayor
+           Para i en 0 .. fitness_poblacion.len()
+               Para j en 0 .. fitness_poblacion.len() - i - 1
+                   Si fitness_poblacion[j+1] < fitness_poblacion[j]
+                       fitness_poblacion.swap(j, j+1)
+                       poblacion.swap(j, j+1)
 
-cluster.asignar_clusters(poblacion[posicion_mejor])
+           Para _ en 0 .. m
+               poblacion.pop()
+               fitness_poblacion.pop()
 
-cluster
+       Si el modelo es el generacional
+           posicion_mejor = 0
+           mejor_fitness = máximo f64 posible
+
+           Para (i, valor) en fitness_poblacion.enumerate()
+               Si valor < mejor_fitness
+                   mejor_fitness = valor
+                   posicion_mejor = i
+
+           mejor_cromosoma_antiguo = poblacion[posicion_mejor]
+           poblacion = p_hijos
+
+           Para (i, cromosoma) en poblacion.enumerate()
+               fitness_poblacion[i] = fitness(cromosoma)
+
+           evaluaciones_fitness = evaluaciones_fitness + m
+
+           posicion_peor = 0
+           peor_fitness = 0.0
+
+           Para (i, valor) en fitness_poblacion.enumerate()
+               Si valor > peor_fitness
+                   peor_fitness = valor
+                   posicion_peor = i
+
+           poblacion[posicion_peor] = mejor_cromosoma_antiguo
+           fitness[posicion_peor] = mejor_fitness
+
+       t = t+1
+
+   posicion_mejor = 0
+   mejor_fitness = máximo f64 posible
+
+   Para (i, valor) en fitness_poblacion.enumerate()
+       Si valor < mejor_fitness
+           mejor_fitness = valor
+           posicion_mejor = i
+
+   cluster.asignar_clusters(poblacion[posicion_mejor])
+
+   cluster
 ```
 
 ## Algoritmos meméticos
@@ -575,46 +582,45 @@ Para el PAR utilizaremos como optimizador local una búsqueda local suave, descr
 
 ```
 busqueda_local_suave(solucion, cluster, fallos_permitidos):
+   indices_barajados: Vector con sus componentes inicializadas a 0 .. solucion.len()
 
-indices_barajados: Vector con sus componentes inicializadas a 0 .. solucion.len()
+   indices_barajados.shuffle()
 
-indices_barajados.shuffle()
+   fallos = 0
+   evaluaciones_fitness = 0
+   mejora = true
+   i = 0
 
-fallos = 0
-evaluaciones_fitness = 0
-mejora = true
-i = 0
+   Mientras (mejora || fallos < fallos_permitidos) && i < solucion.len()
+       mejora = false
 
-Mientras (mejora || fallos < fallos_permitidos) && i < solucion.len()
-    mejora = false
+       mejor_fitness = fitness(solucion)
+       mejor_cluster = solucion[indices_barajados[i]]
 
-    mejor_fitness = fitness(solucion)
-    mejor_cluster = solucion[indices_barajados[i]]
+       Para c en 1 ..= cluster.num_clusters
+           Si c != mejor_cluster
+               solucion[indices_barajados[i]] = c
 
-    Para c en 1 ..= cluster.num_clusters
-        Si c != mejor_cluster
-            solucion[indices_barajados[i]] = c
+               Si solución es válida
+                   fitness_actual = fitness(solucion)
+                   evaluaciones_fitness++
 
-            Si solución es válida
-                fitness_actual = fitness(solucion)
-                evaluaciones_fitness++
+                   Si fitness_actual < mejor_fitness
+                       mejor_cluster = c
+                       mejor_fitness = fitness_actual
+                       mejora = true
+                   En otro caso
+                       solucion[indices_barajados[i]] = mejor_cluster
+               En otro caso
+                   solucion[indices_barajados[i]] = mejor_cluster
 
-                Si fitness_actual < mejor_fitness
-                    mejor_cluster = c
-                    mejor_fitness = fitness_actual
-                    mejora = true
-                En otro caso
-                    solucion[indices_barajados[i]] = mejor_cluster
-            En otro caso
-                solucion[indices_barajados[i]] = mejor_cluster
+       Si !mejora
+           fallos = fallos + 1
 
-    Si !mejora
-        fallos = fallos + 1
-
-    i++
+       i++
 
 
-solucion
+   solucion
 ```
 
 ### Implementación
@@ -629,7 +635,7 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
     ...
 
     Mientras que evaluaciones < max_evaluaciones_fitness
-        Si t % periodo_generacional == 0
+        Si t % periodo_generacional == 0 && t > 0
             Si solo_a_mejores
                 busquedas_totales = probabilidad * poblacion.len()
 
@@ -648,7 +654,6 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
 
 
 // ───────────────────────────────────────────────── SELECCION ─────
-        // Mismo código que el algoritmo genético
         ...
 ```
 
