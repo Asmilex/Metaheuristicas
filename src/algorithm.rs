@@ -637,16 +637,20 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
         // ───────────────────────────────────────── EXPLORACION LOCAL ─────
 
-        if t % periodo_generacional == 0 {
+        if t % periodo_generacional == 0 && t > 0 {             // Evitamos la primera generación. Creo que merece más la pena explorar más tarde
             if solo_a_mejores {
                 let busquedas_totales = (probabilidad * poblacion.len() as f64).floor() as usize;
 
                 // Necesitamos ordenar de menor a mayor para ver quiénes son los mejores.
                 // Los mejores se encuentran al principio del vector
-                fitness_poblacion.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                poblacion.sort_by(|a, b|
-                    cluster.genetico_fitness_sol(a).partial_cmp(&cluster.genetico_fitness_sol(b)).unwrap()
-                );
+                for i in 0..fitness_poblacion.len() {
+                    for j in 0..fitness_poblacion.len() - i - 1 {
+                        if fitness_poblacion[j + 1] < fitness_poblacion[j] {
+                            fitness_poblacion.swap(j, j + 1);
+                            poblacion.swap(j, j+1);
+                        }
+                    }
+                }
 
                 for i in 0 .. busquedas_totales {
                     let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
