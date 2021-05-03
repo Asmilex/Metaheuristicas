@@ -494,24 +494,21 @@ Mientras que evaluaciones_fitness < max_evaluaciones_fitness
 // ─────────────────────────────────────────── REEMPLAZAMIENTO ─────
 
     Si el modelo es el estacionario
-        posicion_peor = 0
-        peor_fitness = 0.0
+        Para i en 0 .. m
+            fitness_poblacion.push(fitness(p_hijos[i]))
+            poblacion.push(p_hijos[i])
+            evaluaciones_fitness++
 
-        Para (i, valor) en fitness_poblacion.enumerate()
-            Si valor > peor_fitness
-                peor_fitness = valor
-                posicion_peor = i
+        // Ordenar de menor a mayor
+        Para i en 0 .. fitness_poblacion.len()
+            Para j en 0 .. fitness_poblacion.len() - i - 1
+                Si fitness_poblacion[j+1] < fitness_poblacion[j]
+                    fitness_poblacion.swap(j, j+1)
+                    poblacion.swap(j, j+1)
 
-        fitness_0 = fitness(p_hijos[0])
-        fitness_1 = fitness(p_hijos[1])
-        evaluaciones_fitness = evaluaciones_fitness + m
-
-        Si fitness_0 < fitness_1
-            poblacion[posicion_peor] = p_hijos[0]
-            fitness_poblacion[posicion_peor] = fitness_0
-        En otro caso
-            poblacion[posicion_peor] = p_hijos[1]
-            fitness_poblacion[posicion_peor] = fitness_1
+        Para _ en 0 .. m
+            poblacion.pop()
+            fitness_poblacion.pop()
 
     Si el modelo es el generacional
         posicion_mejor = 0
