@@ -397,29 +397,26 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
             ModeloGenetico::Estacionario => {
                 // Hacemos que luchen para ver quién entra. Nos quedamos con el mejor de los dos
                 // En la población, quitaremos de en medio al que peor rendía
-                let mut posicion_peor: usize = 0;
-                let mut peor_fitness = 0.0;
+                for i in 0 .. m {
+                    fitness_poblacion.push(cluster.genetico_fitness_sol(&p_hijos[i]));
+                    poblacion.push(p_hijos[i].clone());
+                    evaluaciones_fitness = evaluaciones_fitness + 1;
+                }
 
-                for (i, valor) in fitness_poblacion.iter().enumerate() {
-                    if *valor > peor_fitness {
-                        peor_fitness = *valor;
-                        posicion_peor = i;
+                // Ordenar atendiendo al fitness
+                for i in 0..fitness_poblacion.len() {
+                    for j in 0..fitness_poblacion.len() - i - 1 {
+                        if fitness_poblacion[j + 1] < fitness_poblacion[j] {
+                            fitness_poblacion.swap(j, j + 1);
+                            poblacion.swap(j, j+1);
+                        }
                     }
                 }
 
-                let fitness_0 = cluster.genetico_fitness_sol(&p_hijos[0]);
-                let fitness_1 = cluster.genetico_fitness_sol(&p_hijos[1]);
-                evaluaciones_fitness = evaluaciones_fitness + m;
-
-
-                if fitness_0 < fitness_1 {
-                    // Fitness más baja => mejor solución => nos quedamos con el 0
-                    poblacion[posicion_peor] = p_hijos[0].clone();
-                    fitness_poblacion[posicion_peor] = fitness_0;
-                }
-                else {
-                    poblacion[posicion_peor] = p_hijos[1].clone();
-                    fitness_poblacion[posicion_peor] = fitness_1;
+                // Quitar los m peores elementos
+                for _ in 0 .. m {
+                    poblacion.pop();
+                    fitness_poblacion.pop();
                 }
             },
             ModeloGenetico::Generacional => {
