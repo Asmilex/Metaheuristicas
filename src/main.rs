@@ -141,7 +141,7 @@ fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Res
 
         let cluster = funcion(&mut cluster, semillas.semilla(i));
 
-        info.tiempo             = now.elapsed();
+        info.tiempo             = now.elapsed().as_millis();
         info.tasa_inf           = cluster.infeasibility();
         info.desviacion_general = cluster.desviacion_general_particion();
         info.agr                = cluster.fitness();
