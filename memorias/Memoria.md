@@ -729,7 +729,7 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
     // Mismos pasos que AGG_UN
     ...
 
-    fallos_maximos = probabilidad * tamano_poblacion
+    fallos_maximos = probabilidad * numero_genes
 
     ...
 
