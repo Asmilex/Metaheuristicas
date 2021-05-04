@@ -239,7 +239,6 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
     let tamano_poblacion = 50;
     let numero_genes = cluster.num_elementos;
-    //let max_generaciones = 100;
     let max_evaluaciones_fitness = 100_000;
     let m = match modelo {    // Sigo notación de las diapositivas
         ModeloGenetico::Estacionario => 2,
@@ -260,7 +259,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
         Operadores::SegmentoFijo => cruce_segmento_fijo
     };
 
-    let probabilidad_mutacion = 1.0/numero_genes as f64;
+    let probabilidad_mutacion = 0.1/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let mut generador = StdRng::seed_from_u64(semilla);
@@ -576,9 +575,8 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
     // ─────────────────────────────────────────────────── DECISION DE PARÁMETROS ─────
 
-    let tamano_poblacion = 10;
+    let tamano_poblacion = 50;
     let numero_genes = cluster.num_elementos;
-    //let max_generaciones = 100;
     let max_evaluaciones_fitness = 100_000;
     let m = tamano_poblacion;
 
@@ -586,10 +584,10 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = cruce_uniforme;
 
-    let probabilidad_mutacion = 1.0/numero_genes as f64;
+    let probabilidad_mutacion = 0.1/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
-    let fallos_maximos = (probabilidad * numero_genes as f64).floor() as usize;
+    let fallos_maximos = (0.1 * numero_genes as f64).floor() as usize;
 
     if probabilidad != 0.1 && solo_a_mejores {
         println!("{}: este algoritmo no está pensado para ejecutarse con estos parámetros de entrada", "WARNING".red());
