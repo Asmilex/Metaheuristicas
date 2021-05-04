@@ -265,5 +265,14 @@ fn main() {
             inicializador_benchmark(Algoritmos::AM_10_01_mejores);
         }
 
+        match analyze() {
+            Ok(_) => {
+                println!("{}", "Se han analizado correctamente todos los benchmarks. Comprueba las carpetas que se encuentran en ./csv".green());
+            },
+            Err(r) => {
+                println!("{}: {}", "Error al procesar los archivos".red(), r);
+
+            }
+        }
     }
 }
