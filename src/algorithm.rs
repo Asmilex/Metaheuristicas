@@ -589,7 +589,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let probabilidad_mutacion = 1.0/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
-    let fallos_maximos = (probabilidad * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
+    let fallos_maximos = (probabilidad * numero_genes as f64).floor() as usize;
 
     if probabilidad != 0.1 && solo_a_mejores {
         println!("{}: este algoritmo no está pensado para ejecutarse con estos parámetros de entrada", "WARNING".red());

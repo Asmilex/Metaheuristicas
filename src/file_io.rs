@@ -14,7 +14,6 @@ use colored::*;
 // ───────────────────────────────────────────────────────── LECTURA DE DATOS ─────
 //
 
-#[allow(dead_code)]     // NOTE En principio no se va a usar, pero por si acaso.
 pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
     let mut vector_path:Vec<PathBuf> = Vec::new();
 
@@ -217,7 +216,7 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
     if args.contains(&String::from("analyze")) {
         match analyze() {
             Ok(_) => {
-                println!("{}", "Se han procesado correctamente todos los archivos. Comprueba las carpetas que se encuentran en ./csv".green());
+                println!("{}", "Se han analizado correctamente todos los benchmarks. Comprueba las carpetas que se encuentran en ./csv".green());
                 std::process::exit(0)
             },
             Err(r) => {
