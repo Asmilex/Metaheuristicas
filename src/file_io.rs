@@ -115,10 +115,12 @@ fn analyze_dataset(path: &str) -> Vec<Datos> {
     let mut datos: Vec<Datos> = Vec::new();
 
     for p in leer_archivos_dir(Path::new(path)).iter() {
-        datos.push( Datos {
-            algoritmo: String::from(p.file_name().unwrap().to_str().unwrap()).replace(".csv", ""),
-            info: hacer_media(p).unwrap()
-        });
+        if !p.file_name().unwrap().to_str().unwrap().contains(&"analisis") {
+            datos.push( Datos {
+                algoritmo: String::from(p.file_name().unwrap().to_str().unwrap()).replace(".csv", ""),
+                info: hacer_media(p).unwrap()
+            });
+        }
     }
 
     datos
