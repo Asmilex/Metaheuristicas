@@ -524,7 +524,7 @@ genetico(cluster, modelo, operador_cruce):
    probabilidad_cruce = 0.7 si modelo == estacionario, 1 si modelo == generacional
    numero_cruces = (probabilidad_cruce * m/2).floor()
 
-   probabilidad_mutacion = 1.0/numero_genes
+   probabilidad_mutacion = 0.1/numero_genes
    numero_mutaciones = (probabilidad_mutacion * m * numero_genes).ceil()
 
    rango_clusters = distribución uniforme en [1, clusters.num_clusters]
@@ -729,7 +729,7 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
     // Mismos pasos que AGG_UN
     ...
 
-    fallos_maximos = probabilidad * numero_genes
+    fallos_maximos = 0.1 * numero_genes
 
     ...
 
