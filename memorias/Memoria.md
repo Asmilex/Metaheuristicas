@@ -7,7 +7,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
 
 # Algoritmos para resolver el problema de agrupación con restricciones
 
-<img src="./img/P2/Portada.jpg" width="808" height="1264" style="zoom:55%;"/>
+<img src="./img/P2/Portada.jpg" width="808" height="1264" style="zoom:50%;"/>
 
 > **Autor**: Andrés Millán
 > **DNI**:
@@ -47,7 +47,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
       - [Cruce uniforme](#cruce-uniforme)
       - [Cruce de segmento fijo](#cruce-de-segmento-fijo)
     - [Operadores de mutación](#operadores-de-mutación)
-- [Otras consideraciones](#otras-consideraciones)
+  - [Otras consideraciones](#otras-consideraciones)
     - [Reparación](#reparación)
     - [Generación aleatoria de la población inicial](#generación-aleatoria-de-la-población-inicial)
   - [Algoritmos genéticos considerados](#algoritmos-genéticos-considerados)
@@ -55,10 +55,17 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
     - [Implementación](#implementación-1)
   - [Algoritmos meméticos](#algoritmos-meméticos)
     - [Búsqueda local suave](#búsqueda-local-suave)
-  - [Implementación](#implementación-2)
+    - [Implementación](#implementación-2)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
+  - [Resultados de cada dataset](#resultados-de-cada-dataset)
+    - [Zoo 10](#zoo-10)
+    - [Zoo 20](#zoo-20)
+    - [Glass 10](#glass-10)
+    - [Glass 20](#glass-20)
+    - [Bupa 10](#bupa-10)
+    - [Bupa 20](#bupa-20)
   - [Síntesis](#síntesis)
 - [Referencias](#referencias)
 
@@ -86,9 +93,9 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
   - Usando `memeticos` se ejecutarán todos los de esta categoría descritos en esta documentación
   - Alternativamente, se pueden especificar a mano: `am_10_1`, `am_10_01`, `am_10_01_mejores`.
 
-Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos.
+Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos. Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
-Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
+Tras ejecutar esta opción, se analizarán automáticamente los resultados, produciendo los archivos correspondientes indicados en la sección [Analizar los archivos csv](#analizar-los-archivos-csv)
 
 #### Ejecutar uno o varios algoritmos para un dataset en particular
 
@@ -96,7 +103,7 @@ Para ejecutar un único algoritmo para un cierto dataset, se debe introducir en 
 
 #### Analizar los archivos `.csv`
 
-Una vez se hayan ejecutado los benchmarks correspondientes, se puede extraer automáticamente la información de los resultados. Para ello, se debe introducir `cargo run --release analyze`. Esto exportará un archivo en las carpetas de los datasets con la media de cada algoritmo.
+Una vez se hayan ejecutado los benchmarks correspondientes, se puede extraer automáticamente la información de los resultados. Para ello, se debe introducir `cargo run --release analyze`. Esto exportará un archivo llamado `analisis.csv` en las carpetas de los datasets con la media de cada algoritmo.
 
 
 * * *
@@ -108,7 +115,7 @@ A lo largo de estas prácticas se resolverá el problema del **agrupamiento con 
 
 Se nos presenta una lista de elementos con un cierto número de atributos. Los representaremos como vectores en $[0, 1]^d$. Debemos agruparlos en un cierto número de categorías, llamados **clústers**, de forma que se minimice la distancia entre estos vectores.
 
-Nuestro matiz consiste en que les pondremos restricciones a los elementos a analizar. De esta forma, forzaremos a que dos vectores deban localizarse en en mismo clúster, o lo contrario; que deban estar en clusters distintos. Por tanto, no solo debemos conseguir una denominada *distancia intraclúster* baja, sino que se debe violar el mínimo número de restricciones posibles.
+Nuestro matiz consiste en que les pondremos restricciones a los elementos a analizar. De esta forma, forzaremos a que dos vectores deban localizarse en en mismo clúster, o lo contrario; que deban estar en clústers distintos. Por tanto, no solo debemos conseguir una denominada *distancia intraclúster* baja, sino que se debe violar el mínimo número de restricciones posibles.
 
 Durante estas prácticas propondremos diferentes algoritmos para resolver este problema.
 
@@ -437,7 +444,7 @@ Este operador elige un cromosoma al azar de la población, y muta un gen aleator
 
 La implementación se verá en el pseudocódigo del algoritmo completo.
 
-## Otras consideraciones
+### Otras consideraciones
 #### Reparación
 
 A veces, los operadores de cruce no generan soluciones válidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
@@ -479,6 +486,8 @@ Para _ en 0 .. tamano_poblacion
     poblacion.push(solucion_inicial)
 ```
 
+* * *
+
 ### Algoritmos genéticos considerados
 
 Implementaremos 4 tipos de algoritmos genéticos en total, que surgirán de combinar operadores y modelos de reemplazamiento. Estos son:
@@ -495,7 +504,7 @@ Todos estos algoritmos dependen de unos determinados parámetros, los cuales son
 - **Probabilidad de cruce**. Depende del esquema de reemplazamiento.
 - **Número de cruces esperado** = `probabilidad del cruce * m / 2`. Consideramos un único cruce al del cromosoma $i$ con $i+1$, así como el del $i+1$ con $i$. Los motivos son de eficiencia, pues en la selección, ya se considera que es aleatoria.
 - **Operador de cruce**.
-- **Probabilidad de mutación** = `1/número de genes`.
+- **Probabilidad de mutación** = `0.1/número de genes`.
 - **Número de mutaciones** = `probabilidad de mutación * m * número de genes`. Mutaremos considerando la población como una matriz, y eligiendo una entrada al azar.
 
 #### Esquemas de reemplazamiento
@@ -505,7 +514,7 @@ El esquema de reemplazamiento refleja cómo se procesa la generación actual, y 
 El **modelo generacional** considera para el desarrollo de una generación el mismo número de cromosomas que el de la población. En nuestro caso, esto significa que `m = tamaño de la población` y que la probabilidad de cruce es de $0.7$.
 
 El **modelo estacionario** toma dos individuos aleatorios y los procesa, reintroduciéndolos finalmente en la población. Se eliminarán los dos peores cromosomas al final de este proceso.
-Por tanto, `m = 2`, y la probabilidad de cruce es de $1$.
+Por tanto, $m = 2$, y la probabilidad de cruce es de $1$.
 
 #### Implementación
 
@@ -515,13 +524,17 @@ En la llamada no se ha tenido en cuenta la semilla.
 
 ```
 genetico(cluster, modelo, operador_cruce):
-
    tamano_poblacion = 50
    numero_genes = cluster.num_elementos
    max_evaluaciones_fitness = 100_000
-   m = 2 si modelo == estacionario, tamano_poblacion si m == generacional
+   m =
+   	2 					  si modelo == estacionario,
+   	tamano_poblacion si m == generacional
 
-   probabilidad_cruce = 0.7 si modelo == estacionario, 1 si modelo == generacional
+   probabilidad_cruce =
+   	0.7 si modelo == estacionario,
+   	1.0 si modelo == generacional
+
    numero_cruces = (probabilidad_cruce * m/2).floor()
 
    probabilidad_mutacion = 0.1/numero_genes
@@ -556,7 +569,8 @@ genetico(cluster, modelo, operador_cruce):
                p_padres.push(poblacion[combate.1])
 
    // ───────────────────────────────────────────────────── CRUCE ─────
-        p_intermedio: Vector nuevo vacío
+
+		  p_intermedio: Vector nuevo vacío
 
         cruces_restantes = numero_cruces
 
@@ -659,6 +673,7 @@ genetico(cluster, modelo, operador_cruce):
    cluster
 ```
 
+
 ### Algoritmos meméticos
 
 Los **algoritmos meméticos** son algoritmos genéticos a los que se les introduce una fase de exploración del entorno cada ciertas generaciones. De esta forma, se optimiza localmente de forma periódica.
@@ -672,8 +687,8 @@ Aparte, debemos considerar algunos nuevos:
 
 Consideraremos las siguientes versiones:
   - **AM_10_1**: `probabilidad = 1`, `solo_a_mejores = false`
-  - **AM_10_01**: `probabilidad = 01`, `solo_a_mejores = false`
-  - **AM_10_01_mejores**: `probabilidad = 01`, `solo_a_mejores = true`
+  - **AM_10_01**: `probabilidad = 0.1`, `solo_a_mejores = false`
+  - **AM_10_01_mejores**: `probabilidad = 0.1`, `solo_a_mejores = true`
 
 #### Búsqueda local suave
 
@@ -719,10 +734,12 @@ busqueda_local_suave(solucion, cluster, fallos_permitidos):
        i++
 
 
-   solucion
+   evaluaciones_fitness
 ```
 
-### Implementación
+Como propuesta de optimización, se podría modificar la devolución para incluir el fitness generado. Por ejemplo, en Rust, se devolvería el par `(evaluaciones_fitness, mejor_fitness)`.
+
+#### Implementación
 
 ```
 memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
@@ -756,21 +773,30 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
         ...
 ```
 
-* * *
+Debemos destacar un aspecto de implementación muy importante: ¿**por qué no aplicamos la BLS después de mutar**? Esta decisión se ha tomado debido al algoritmo que hay de base: el genético generacional.
 
+En él, tras aplicar la mutación, se produce el reemplazamiento. Esta fase sustituye todo lo que se encuentre en la generación $t$ para pasar a la generación $t+1$, calculando justo después el fitness de todos los miembros. Antes del reemplazamiento, se elige al mejor miembro de la generación $t$ y se elimina al peor que han producido los hijos.
+
+La diferencia entre aplicar la BLS antes o después del reemplazamiento es que se optimice o no el mejor de la generación $t$. En la práctica, este método va a producir diferencias insignificativas. Además, personalmente me parece más intuitivo y sencillo de programar al hacerlo al inicio de la generación.
+
+Si el algoritmo de base fuera el genético estacionario, esta decisión no tendría sentido, pues deberíamos tratar únicamente los hijos que se están desarrollando. Sin embargo, no es el caso.
+
+Siguiendo la propuesta de la sección anterior, se podría modificar la implementación para tener en cuenta el fitness que produce la búsqueda local suave. No obstante, la convergencia es suficientemente rápida como para que esto no afecte en gran medida.
 
 ## Análisis de resultados
 
-En esta sección discutiremos los resultados obtenidos por ambos algoritmos. Presentaremos los parámetros de los datasets utilizados, las distancias óptimas generadas por el Greedy suponiendo que no hay restricciones, y, lo más importante, **cómo rinden nuestros algoritmos**.
+En esta sección discutiremos los resultados obtenidos por todos algoritmos. Presentaremos los parámetros de los datasets utilizados, las distancias óptimas generadas por el Greedy suponiendo que no hay restricciones, y, lo más importante, **cómo rinden nuestros algoritmos**.
+
+Recordamos que los resultados se pueden obtener en cualquier momento ejecutando `cargo run --release benchmark`. Para más información, consultar la sección [Benchmark de uno o más algoritmos](#benchmark-de-uno-o-más-algoritmos)
 
 ### Descripción de los casos del problema empleados
 
 Los datasets usados reciben el nombre de `Zoo`, `Glass`, y `Bupa`. Los dos primeros presentan una dificultad similar, mientras que el último requiere de un mayor tiempo de cómputo.
 
 |                                          |  **Zoo** | **Glass** |   **Bupa** |
-| ---------------------------------------- | -------: | --------: | ---------: |
+|------------------------------------------|---------:|----------:|-----------:|
 | **Atributos**                            |     `16` |       `9` |        `5` |
-| **Clusters**                             |      `7` |       `7` |       `16` |
+| **Clústers**                             |      `7` |       `7` |       `16` |
 | **Instancias**                           |    `101` |     `214` |      `345` |
 | **Distancia óptima generada por Greedy** | `0.9048` | `0.36429` | `0.229248` |
 
@@ -787,11 +813,163 @@ Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 
 
 Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas así como la velocidad base de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo).
 
+Todos los resultados han sido ordenados de menor a mayor fitness, por lo que resultará más fácil distinguir cuáles son los algoritmos que mejor rinden.
+
+
+* * *
+
+### Resultados de cada dataset
+
+Únicamente consideraremos la media de cada algoritmo en estas tablas. Si se desea consultar toda la información, se encuentran en la carpeta `./data/csv/[dataset]/[algoritmo]`.
+
+#### Zoo 10
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| am_10_01_mejores |               `8` |                         `0.59921` |   `0.65983` |          `3512` |
+| am_10_1          |               `7` |                         `0.65485` |   `0.70335` |          `3243` |
+| bl               |              `12` |                         `0.63444` |   `0.72082` |           `131` |
+| am_10_01         |               `9` |                         `0.67180` |   `0.73697` |          `2283` |
+| agg_un           |              `13` |                         `0.66746` |   `0.76597` |          `2293` |
+| age_sf           |              `10` |                         `0.69406` |   `0.76983` |          `2634` |
+| agg_sf           |              `12` |                         `0.69145` |   `0.78239` |          `2351` |
+| age_un           |              `13` |                         `0.69109` |   `0.78657` |          `2342` |
+| greedy           |               `2` |                         `0.94421` |   `0.95330` |             `1` |
+
+#### Zoo 20
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| am_10_1          |              `17` |                         `0.68887` |   `0.75590` |          `3232` |
+| am_10_01         |              `14` |                         `0.71040` |   `0.76612` |          `2450` |
+| am_10_01_mejores |              `14` |                         `0.73101` |   `0.78674` |          `2910` |
+| agg_sf           |              `24` |                         `0.70817` |   `0.80266` |          `2516` |
+| bl               |              `23` |                         `0.71965` |   `0.81010` |           `104` |
+| agg_un           |              `22` |                         `0.73430` |   `0.82233` |          `2354` |
+| age_sf           |              `24` |                         `0.73092` |   `0.82460` |          `2769` |
+| age_un           |              `24` |                         `0.72944` |   `0.82474` |          `2537` |
+| greedy           |               `2` |                         `0.98711` |   `0.99519` |             `1` |
+
+* * *
+
+#### Glass 10
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| am_10_01         |              `50` |                         `0.19115` |   `0.23956` |          `6190` |
+| am_10_01_mejores |              `39` |                         `0.21122` |   `0.24881` |         `10067` |
+| age_un           |              `48` |                         `0.20197` |   `0.24901` |          `6438` |
+| age_sf           |              `52` |                         `0.20031` |   `0.25069` |          `7208` |
+| bl               |              `36` |                         `0.21812` |   `0.25276` |           `424` |
+| am_10_1          |              `35` |                         `0.21962` |   `0.25406` |          `7811` |
+| agg_un           |              `47` |                         `0.22859` |   `0.27405` |          `6380` |
+| agg_sf           |              `69` |                         `0.24371` |   `0.31102` |          `7261` |
+| greedy           |               `4` |                         `0.37869` |   `0.38262` |             `2` |
+
+#### Glass 20
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| am_10_01         |              `81` |                         `0.21930` |   `0.26126` |          `8869` |
+| am_10_1          |              `79` |                         `0.22282` |   `0.26374` |          `9483` |
+| age_un           |              `50` |                         `0.24254` |   `0.26857` |          `7762` |
+| age_sf           |              `58` |                         `0.23903` |   `0.26891` |          `8608` |
+| am_10_01_mejores |              `55` |                         `0.24246` |   `0.27088` |         `10811` |
+| agg_un           |              `45` |                         `0.24809` |   `0.27141` |          `8029` |
+| bl               |              `57` |                         `0.24204` |   `0.27151` |           `374` |
+| agg_sf           |             `125` |                         `0.23334` |   `0.29821` |          `8249` |
+| greedy           |               `1` |                         `0.34667` |   `0.34677` |             `2` |
+
 
 * * *
 
 
+#### Bupa 10
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| bl               |             `133` |                         `0.11054` |   `0.14618` |          `6039` |
+| am_10_01_mejores |             `140` |                         `0.11622` |   `0.15352` |         `18042` |
+| age_un           |             `136` |                         `0.11994` |   `0.15639` |         `14165` |
+| am_10_01         |             `140` |                         `0.12113` |   `0.15859` |         `16888` |
+| age_sf           |             `196` |                         `0.12354` |   `0.17590` |         `16229` |
+| am_10_1          |             `261` |                         `0.15718` |   `0.22707` |         `16457` |
+| greedy           |              `29` |                         `0.22779` |   `0.23546` |            `16` |
+| agg_un           |             `617` |                         `0.16441` |   `0.32955` |         `14505` |
+| agg_sf           |             `695` |                         `0.16744` |   `0.35353` |         `14975` |
+
+#### Bupa 20
+
+| **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:-----------------|------------------:|----------------------------------:|------------:|----------------:|
+| bl               |             `211` |                         `0.11492` |   `0.14434` |          `4414` |
+| am_10_01_mejores |             `214` |                         `0.11815` |   `0.14793` |         `22189` |
+| am_10_01         |             `248` |                         `0.11787` |   `0.15237` |         `22598` |
+| age_un           |             `268` |                         `0.11819` |   `0.15556` |         `18146` |
+| age_sf           |             `282` |                         `0.12199` |   `0.16120` |         `20199` |
+| am_10_1          |             `465` |                         `0.14550` |   `0.21023` |         `20298` |
+| greedy           |              `10` |                         `0.23299` |   `0.23427` |             `6` |
+| agg_un           |            `1179` |                         `0.16472` |   `0.32901` |         `18233` |
+| agg_sf           |            `1264` |                         `0.16978` |   `0.34600` |         `18866` |
+
+
+* * *
+
 ### Síntesis
+
+Puesto que ya tenemos todas las tablas sintetizadas, es hora de sintetizar los valores que nos han salido.
+
+Claramente podemos observar que los **algoritmos meméticos producen los mejores resultados**. En 4 de los 6 casos, un memético ha producido el menor fitness. Debemos notar que los distintos parámetros afectan de forma diferente a cada dataset. Por ejemplo, **AM_10_01 genera mejores resultados en Glass**, mientras que en **Zoo funcionan bien tanto AM_10_1 como AM_10_01_mejores**.
+
+Este gran rendimiento viene acompañado de un incremento en los tiempos de ejecución. Además, **AM_10_01_mejores tarda considerablemente más que el resto de meméticos**. Esto podría ser debido a la reordenación de la población. Como en la implementación se ha usado un bubble sort, podríamos usar uno más eficientes para acelerar esta función.
+
+Hablemos ahora de los algoritmos genéticos. Lo primero que resulta evidente es que **el modelo generacional rinde particularmente mal**. Tanto AGG_UN como AGG_SF suelen encontrarse por la parte baja de la tabla, a excepción del dataset Zoo. En particular, en Bupa rinden peor que Greedy; hasta 0.12 puntos mayor. Por contrapartida, el **modelo estacionario bastante bien**. Excepto en Zoo, se posiciona mejor que la búsqueda local.
+
+**Búsqueda local sigue siendo muy consistente entre todos los datasets**. Esto podría deberse a cómo se han organizado los datos: dado que son conjuntos preparados, lo normal es que los mínimos locales se encuentren agrupados en zonas habituales del espacio. En estos casos, un optimizador local haya soluciones de manera eficiente.
+
+Por último, **Greedy K-Medias es el algoritmo que peor rinde de todos en relación al fitness**. Aunque es rapidísimo, sus resultados suelen encontrarse por la parte baja. No obstante, por su construcción, se encarga de minimizar primero el número de restricciones violadas. Por lo que en los casos particulares en los que interese tanto rapidez de ejecución como minimización de infeasibility, podría considerarse una elección sólida.
+
+Hasta ahora nos hemos centrado únicamente en el fitness. Mirando el infeasibility, podemos ver que sale un alto número de violaciones en general comparado con Greedy. Por ejemplo, en Bupa 10:
+
+| **Algoritmo** | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
+|:--------------|------------------:|----------------------------------:|------------:|----------------:|
+| bl            |             `133` |                         `0.11054` |   `0.14618` |          `6039` |
+| ...           |                   |                                   |             |                 |
+| greedy        |              `29` |                         `0.22779` |   `0.23546` |            `16` |
+
+Esto nos induce a pensar que **resulta más beneficioso tener clústers cohesionados que intentar minimizar las violaciones**. Esto explicaría el mal rendimiento en general de Greedy, atendiendo a nuestra definición de la función fitness.
+
+Para mejorar el rendimiento de los algoritmos genéticos generacionales, se puede cambiar el parámetro que controla la probabilidad de mutación. **Usando ${1}/\text{(número de genes)}$ en vez de $0.1/\text{(número de genes)}$** arroja los siguientes resultados en Bupa 10:
+
+* * *
+
+| **Algoritmo** | **Fitness con probabilidad `1/número de genes`** | **Fitness con probabilidad `0.1/número de genes`** |
+|:--------------|-------------------------------------------------:|---------------------------------------------------:|
+| age_un        |                                         `0.1678` |                                          `0.15639` |
+| age_sf        |                                         `0.1816` |                                          `0.16120` |
+| agg_un        |                                         `0.2744` |                                          `0.32955` |
+| agg_sf        |                                         `0.2770` |                                          `0.35353` |
+
+Claramente vemos cómo todos los genéticos consiguen un fitness considerablemente menor. Esto se mantiene para todos los datasets.
+
+Por último, debemos destacar la rápida convergencia del límite inferior de la sucesión de fitness. Aunque no se estudiará de manera explícita, merece la pena mencionarlo. Estudiando la sucesión de máximo y mínimo fitness de todos los algoritmos genéticos, vemos que tras un cierto número de generaciones, el resultado se estabiliza. Esto nos indica que el número de evaluaciones del fitness es más que suficiente para garantizar la convergencia. Usando AGG_Un para Bupa 10, y tomando puntos aleatorios:
+
+| **Generación**             | **Peor fitness** | **Mejor fitness** |
+|----------------------------|------------------|-------------------|
+| `51`                       | `0.5014`         | `0.4993`          |
+| `596`                      | `0.4206`         | `0.4192`          |
+| `1058`                     | `0.3853`         | `0.3842`          |
+| `1577`                     | `0.3619`         | `0.3599`          |
+| `1999` (última generación) | `0.3455`         | `0.3368`          |
+
+Podemos ver que, conforme avanzan las generaciones, la mejora se reduce. Aunque depende del algoritmo y del dataset, la mejora que obtendríamos al aumentar el número de evaluaciones podría ser incluso nula. Por ello, podemos asegurar que no desperdiciamos tiempo de procesamiento.
+
+Esto concluye el desarrollo de la práctica 2. Llegados a este punto, y tras hacer un estudio de todos nuestros algoritmos, **resulta difícil quedarnos con únicamente uno**. Todos tienen sus ventajas e inconvenientes, y se comportan de forma distinta en nuestros datasets. Sin embargo, es digno mencionar la consistencia de los meméticos. Ajustando parámetros, hemos conseguido que rindan mejor que ninguno, aunque a veces la diferencia sea ínfima.
+
+En la siguiente práctica, introduciremos enfriamiento simulado y multiarranque. ¡Quedarnos con únicamente uno podría ser incluso más difícil!
+
+
+* * *
 
 
 ## Referencias
