@@ -251,8 +251,6 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     };
 
     // NOTE contamos el cruce de i, i+1 e i+1, i como uno solo
-    // En serio un poco hasta las narices de que nos den parámetros confusos, eh?
-
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = match op_cruce_a_usar {
         Operadores::Uniforme => cruce_uniforme,
