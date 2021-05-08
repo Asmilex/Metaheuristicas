@@ -59,24 +59,20 @@ pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador
         copias = copias + 1;
     }
 
-    // Mezclar el vector resultante que se queda entre medias de forma aleatoria como hacemos en el cruce uniforme
-    let inicio = min((inicio_segmento + 1)%padre_1.len(), (inicio_segmento + tamano_segmento + 1)%padre_1.len());
-    let fin = max((inicio_segmento + 1)%padre_1.len(), (inicio_segmento + tamano_segmento + 1)%padre_1.len());
+    let copias_restantes = descendencia.len() - tamano_segmento;
 
     let mut genes_a_copiar = Vec::new();
 
-    let rango_nuevo = Uniform::new_inclusive(inicio, fin);
-    for _ in 0 .. fin - inicio + 1 {
+    for _ in 0 .. copias_restantes/2 {
         loop {
-            let pos_gen = generador.sample(rango_nuevo);
+            let pos_gen = generador.sample(rango);
 
-            if !genes_a_copiar.contains(&pos_gen) {
+            if !genes_a_copiar.contains(&pos_gen) && descendencia[pos_gen] == 0 {
                 genes_a_copiar.push(pos_gen);
                 break;
             }
         }
     }
-
 
     for i in genes_a_copiar.iter() {
         descendencia[*i] = padre_1[*i];
