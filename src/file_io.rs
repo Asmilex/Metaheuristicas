@@ -1,4 +1,4 @@
-use std::fs::*;
+use std::{fs::*};
 use std::path::{Path, PathBuf};
 use std::io::{BufReader, BufRead};
 use std::error::Error;
@@ -14,7 +14,6 @@ use colored::*;
 // ───────────────────────────────────────────────────────── LECTURA DE DATOS ─────
 //
 
-#[allow(dead_code)]     // NOTE En principio no se va a usar, pero por si acaso.
 pub fn leer_archivos_dir (directorio: &Path) -> Vec<PathBuf> {
     let mut vector_path:Vec<PathBuf> = Vec::new();
 
@@ -107,8 +106,127 @@ pub fn leer_archivo_PAR (parametros: &ParametrosDataset, restricciones_a_usar: &
     cluster
 }
 
+struct Datos {
+    algoritmo: String,
+    info: InfoEjecucion
+}
+
+fn analyze_dataset(path: &str) -> Vec<Datos> {
+    let mut datos: Vec<Datos> = Vec::new();
+
+    for p in leer_archivos_dir(Path::new(path)).iter() {
+        if !p.file_name().unwrap().to_str().unwrap().contains(&"analisis") {
+            datos.push( Datos {
+                algoritmo: String::from(p.file_name().unwrap().to_str().unwrap()).replace(".csv", ""),
+                info: hacer_media(p).unwrap()
+            });
+        }
+    }
+
+    datos
+}
+
+pub fn analyze() -> Result<(), Box<dyn Error>> {
+    let cabeceras = [
+        "algoritmo", "tasa_inf", "desviacion_general", "agr", "tiempo",
+    ];
+
+    let escribir = |datos: Vec<Datos>, wtr: &mut csv::Writer<File>| -> Result<(), Box<dyn Error>> {
+        wtr.write_record(&cabeceras)?;
+
+        let mut record: Vec<String>;
+        for d in datos.iter() {
+            record = Vec::from([
+                d.algoritmo.clone(),
+                d.info.tasa_inf.to_string(),
+                d.info.desviacion_general.to_string(),
+                d.info.agr.to_string(),
+                d.info.tiempo.to_string()
+            ]);
+
+            wtr.write_record(&record)?;
+        }
+
+        wtr.flush()?;
+
+        Ok(())
+    };
+
+    // ─────────────────────────────────────────────────────────────────── ZOO 10 ─────
+
+    let datos = analyze_dataset("./data/csv/zoo_10");
+    let mut wtr = csv::Writer::from_path("./data/csv/zoo_10/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+    // ─────────────────────────────────────────────────────────────────── ZOO 20 ─────
+
+    let datos = analyze_dataset("./data/csv/zoo_20");
+    let mut wtr = csv::Writer::from_path("./data/csv/zoo_20/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+    // ───────────────────────────────────────────────────────────────── GLASS 10 ─────
+
+    let datos = analyze_dataset("./data/csv/glass_10");
+    let mut wtr = csv::Writer::from_path("./data/csv/glass_10/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+    // ───────────────────────────────────────────────────────────────── GLASS 20 ─────
+
+    let datos = analyze_dataset("./data/csv/glass_20");
+    let mut wtr = csv::Writer::from_path("./data/csv/glass_20/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+    // ────────────────────────────────────────────────────────────────── BUPA 10 ─────
+
+    let datos = analyze_dataset("./data/csv/bupa_10");
+    let mut wtr = csv::Writer::from_path("./data/csv/bupa_10/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+    // ────────────────────────────────────────────────────────────────── BUPA 20 ─────
+
+    let datos = analyze_dataset("./data/csv/bupa_20");
+    let mut wtr = csv::Writer::from_path("./data/csv/bupa_20/analisis.csv")?;
+    escribir(datos, &mut wtr)?;
+
+
+    Ok(())
+}
+
+
+pub fn hacer_media(archivo: &PathBuf) -> Result<InfoEjecucion, Box<dyn Error>> {
+    let mut resultados: Vec<InfoEjecucion> = Vec::new();
+    let mut reader = csv::Reader::from_path(archivo).unwrap();
+
+    for result in reader.deserialize() {
+        let record = result?;
+        resultados.push(record);
+    }
+
+    let resultado = InfoEjecucion {
+        agr: resultados.iter().fold(0.0, |suma: f64, valor| suma + valor.agr) * 1.0/resultados.len() as f64,
+        desviacion_general: resultados.iter().fold(0.0, |suma: f64, valor| suma + valor.desviacion_general) * 1.0/resultados.len() as f64,
+        tasa_inf: (resultados.iter().fold(0, |suma: u32, valor| suma + valor.tasa_inf) as f64 * 1.0/resultados.len() as f64).ceil() as u32,
+        tiempo: (resultados.iter().fold(0, |suma: u128, valor| suma + valor.tiempo) as f64 * 1.0/resultados.len() as f64).ceil() as u128
+    };
+
+
+    Ok(resultado)
+}
+
 
 pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>, Option<Restricciones>, AlgoritmosAEjecutar), &'static str> {
+    if args.contains(&String::from("analyze")) {
+        match analyze() {
+            Ok(_) => {
+                println!("{}", "Se han analizado correctamente todos los benchmarks. Comprueba las carpetas que se encuentran en ./csv".green());
+                std::process::exit(0)
+            },
+            Err(r) => {
+                println!("{}: {}", "Error al procesar los archivos".red(), r);
+                std::process::exit(1)
+            }
+        }
+    }
 
     // ─────────────────────────────────────────────────────────────── ALGORITMOS ─────
 
@@ -237,7 +355,7 @@ pub fn export_to_csv (info: &Vec<InfoEjecucion>, path: &str) ->  Result<(), Box<
     // When writing records without Serde, the header record is written just
     // like any other record.
     wtr.write_record(&[
-        "Tasa infeasibility", "Desviación general", "Agregado", "Tiempo de ejecución (ms)",
+        "tasa_inf", "desviacion_general", "agr", "tiempo",
     ])?;
 
     let mut record: Vec<String>;
@@ -246,7 +364,7 @@ pub fn export_to_csv (info: &Vec<InfoEjecucion>, path: &str) ->  Result<(), Box<
             bench.tasa_inf.to_string(),
             bench.desviacion_general.to_string(),
             bench.agr.to_string(),
-            bench.tiempo.as_millis().to_string()
+            bench.tiempo.to_string()
         ]);
 
         wtr.write_record(&record)?;

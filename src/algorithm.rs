@@ -239,7 +239,6 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
     let tamano_poblacion = 50;
     let numero_genes = cluster.num_elementos;
-    //let max_generaciones = 100;
     let max_evaluaciones_fitness = 100_000;
     let m = match modelo {    // Sigo notación de las diapositivas
         ModeloGenetico::Estacionario => 2,
@@ -252,15 +251,13 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
     };
 
     // NOTE contamos el cruce de i, i+1 e i+1, i como uno solo
-    // En serio un poco hasta las narices de que nos den parámetros confusos, eh?
-
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = match op_cruce_a_usar {
         Operadores::Uniforme => cruce_uniforme,
         Operadores::SegmentoFijo => cruce_segmento_fijo
     };
 
-    let probabilidad_mutacion = 1.0/numero_genes as f64;
+    let probabilidad_mutacion = 0.1/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
     let mut generador = StdRng::seed_from_u64(semilla);
@@ -397,29 +394,26 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
             ModeloGenetico::Estacionario => {
                 // Hacemos que luchen para ver quién entra. Nos quedamos con el mejor de los dos
                 // En la población, quitaremos de en medio al que peor rendía
-                let mut posicion_peor: usize = 0;
-                let mut peor_fitness = 0.0;
+                for i in 0 .. m {
+                    fitness_poblacion.push(cluster.genetico_fitness_sol(&p_hijos[i]));
+                    poblacion.push(p_hijos[i].clone());
+                    evaluaciones_fitness = evaluaciones_fitness + 1;
+                }
 
-                for (i, valor) in fitness_poblacion.iter().enumerate() {
-                    if *valor > peor_fitness {
-                        peor_fitness = *valor;
-                        posicion_peor = i;
+                // Ordenar atendiendo al fitness
+                for i in 0..fitness_poblacion.len() {
+                    for j in 0..fitness_poblacion.len() - i - 1 {
+                        if fitness_poblacion[j + 1] < fitness_poblacion[j] {
+                            fitness_poblacion.swap(j, j + 1);
+                            poblacion.swap(j, j+1);
+                        }
                     }
                 }
 
-                let fitness_0 = cluster.genetico_fitness_sol(&p_hijos[0]);
-                let fitness_1 = cluster.genetico_fitness_sol(&p_hijos[1]);
-                evaluaciones_fitness = evaluaciones_fitness + m;
-
-
-                if fitness_0 < fitness_1 {
-                    // Fitness más baja => mejor solución => nos quedamos con el 0
-                    poblacion[posicion_peor] = p_hijos[0].clone();
-                    fitness_poblacion[posicion_peor] = fitness_0;
-                }
-                else {
-                    poblacion[posicion_peor] = p_hijos[1].clone();
-                    fitness_poblacion[posicion_peor] = fitness_1;
+                // Quitar los m peores elementos
+                for _ in 0 .. m {
+                    poblacion.pop();
+                    fitness_poblacion.pop();
                 }
             },
             ModeloGenetico::Generacional => {
@@ -579,9 +573,8 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
     // ─────────────────────────────────────────────────── DECISION DE PARÁMETROS ─────
 
-    let tamano_poblacion = 10;
+    let tamano_poblacion = 50;
     let numero_genes = cluster.num_elementos;
-    //let max_generaciones = 100;
     let max_evaluaciones_fitness = 100_000;
     let m = tamano_poblacion;
 
@@ -589,10 +582,10 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
     let numero_cruces:i32 = (probabilidad_cruce * m as f64/2.0).floor() as i32;
     let operador_cruce = cruce_uniforme;
 
-    let probabilidad_mutacion = 1.0/numero_genes as f64;
+    let probabilidad_mutacion = 0.1/numero_genes as f64;
     let numero_mutaciones = (probabilidad_mutacion * m as f64 * numero_genes as f64).ceil() as i64;
 
-    let fallos_maximos = (probabilidad * tamano_poblacion as f64).floor() as usize;      // FIXME n == tamaño de la población?
+    let fallos_maximos = (0.1 * numero_genes as f64).floor() as usize;
 
     if probabilidad != 0.1 && solo_a_mejores {
         println!("{}: este algoritmo no está pensado para ejecutarse con estos parámetros de entrada", "WARNING".red());
@@ -640,16 +633,20 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
         // ───────────────────────────────────────── EXPLORACION LOCAL ─────
 
-        if t % periodo_generacional == 0 {
+        if t % periodo_generacional == 0 && t > 0 {             // Evitamos la primera generación. Creo que merece más la pena explorar más tarde
             if solo_a_mejores {
                 let busquedas_totales = (probabilidad * poblacion.len() as f64).floor() as usize;
 
                 // Necesitamos ordenar de menor a mayor para ver quiénes son los mejores.
                 // Los mejores se encuentran al principio del vector
-                fitness_poblacion.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                poblacion.sort_by(|a, b|
-                    cluster.genetico_fitness_sol(a).partial_cmp(&cluster.genetico_fitness_sol(b)).unwrap()
-                );
+                for i in 0..fitness_poblacion.len() {
+                    for j in 0..fitness_poblacion.len() - i - 1 {
+                        if fitness_poblacion[j + 1] < fitness_poblacion[j] {
+                            fitness_poblacion.swap(j, j + 1);
+                            poblacion.swap(j, j+1);
+                        }
+                    }
+                }
 
                 for i in 0 .. busquedas_totales {
                     let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);

@@ -1,6 +1,7 @@
 use nalgebra::*;
 use std::path::{PathBuf};
-use std::time;
+
+use serde::Deserialize;
 
 //
 // ───────────────────────────────────────────────────── TIPOS PERSONALIZADOS ─────
@@ -138,11 +139,12 @@ use std::time;
     // ────────────────────────────────────────────────────────────────────────────────
 
     #[allow(non_camel_case_types)]
+    #[derive(Debug, Deserialize)]
     pub struct InfoEjecucion {
         pub tasa_inf: u32,
         pub desviacion_general: f64,
         pub agr: f64,
-        pub tiempo: std::time::Duration,
+        pub tiempo: u128,
     }
 
     impl InfoEjecucion {
@@ -151,7 +153,7 @@ use std::time;
                 tasa_inf: 0,
                 desviacion_general: 0.0,
                 agr: 0.0,
-                tiempo: time::Duration::new(0, 0),
+                tiempo: 0,
             }
         }
     }
