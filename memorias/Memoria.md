@@ -409,22 +409,14 @@ cruce_segmento_fijo (p1, p2):
         i = (i+1) % p1.len()
         copias = copias + 1
 
-    inicio = min (
-        (inicio_segmento + 1)%p1.len(),
-        (inicio_segmento + tamano_segmento + 1)%p1.len()
-    )
-    fin = max (
-        (inicio_segmento + 1)%p1.len(),
-        (inicio_segmento + tamano_segmento + 1)%p1.len()
-    )
+    copias_restantes = desdendencia.len() - tamano_segmento
+    genes_a_copiar: Vector nuevo vacío
 
-    genes_a_copiar: Vector vacío
-
-    Para _ en 0 .. fin - inicio + 1
+    Para _ en 0 .. copias_restantes/2
         loop
-            pos_gen = aleatorio en [inicio, fin]
+            pos_gen = aleatorio en [0, descendencia.len())
 
-            Si genes_a_copiar no contiene a pos_gen
+            Si genes_a_copiar no contiene a pos_gen y descendencia[pos_ten] == 0
                 genes_a_copiar.push(pos_gen)
                 break
 
@@ -833,10 +825,10 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_1          |               `7` |                         `0.65485` |   `0.70335` |          `3243` |
 | bl               |              `12` |                         `0.63444` |   `0.72082` |           `131` |
 | am_10_01         |               `9` |                         `0.67180` |   `0.73697` |          `2283` |
+| age_sf           |              `10` |                         `0.69406` |   `0.75109` |          `2999` |
 | agg_un           |              `13` |                         `0.66746` |   `0.76597` |          `2293` |
-| age_sf           |              `10` |                         `0.69406` |   `0.76983` |          `2634` |
-| agg_sf           |              `12` |                         `0.69145` |   `0.78239` |          `2351` |
 | age_un           |              `13` |                         `0.69109` |   `0.78657` |          `2342` |
+| agg_sf           |              `12` |                         `0.69145` |   `0.84272` |          `2512` |
 | greedy           |               `2` |                         `0.94421` |   `0.95330` |             `1` |
 
 #### Zoo 20
@@ -846,10 +838,10 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_1          |              `17` |                         `0.68887` |   `0.75590` |          `3232` |
 | am_10_01         |              `14` |                         `0.71040` |   `0.76612` |          `2450` |
 | am_10_01_mejores |              `14` |                         `0.73101` |   `0.78674` |          `2910` |
-| agg_sf           |              `24` |                         `0.70817` |   `0.80266` |          `2516` |
+| agg_sf           |              `24` |                         `0.70817` |   `0.88027` |          `2648` |
+| age_sf           |              `24` |                         `0.73092` |   `0.80093` |          `3043` |
 | bl               |              `23` |                         `0.71965` |   `0.81010` |           `104` |
 | agg_un           |              `22` |                         `0.73430` |   `0.82233` |          `2354` |
-| age_sf           |              `24` |                         `0.73092` |   `0.82460` |          `2769` |
 | age_un           |              `24` |                         `0.72944` |   `0.82474` |          `2537` |
 | greedy           |               `2` |                         `0.98711` |   `0.99519` |             `1` |
 
@@ -862,10 +854,10 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_01         |              `50` |                         `0.19115` |   `0.23956` |          `6190` |
 | am_10_01_mejores |              `39` |                         `0.21122` |   `0.24881` |         `10067` |
 | age_un           |              `48` |                         `0.20197` |   `0.24901` |          `6438` |
-| age_sf           |              `52` |                         `0.20031` |   `0.25069` |          `7208` |
 | bl               |              `36` |                         `0.21812` |   `0.25276` |           `424` |
 | am_10_1          |              `35` |                         `0.21962` |   `0.25406` |          `7811` |
-| agg_un           |              `47` |                         `0.22859` |   `0.27405` |          `6380` |
+| age_sf           |              `52` |                         `0.20031` |   `0.26164` |          `8106` |
+| agg_un           |              `47` |                         `0.22859` |   `0.29949` |          `6380` |
 | agg_sf           |              `69` |                         `0.24371` |   `0.31102` |          `7261` |
 | greedy           |               `4` |                         `0.37869` |   `0.38262` |             `2` |
 
@@ -876,11 +868,11 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_01         |              `81` |                         `0.21930` |   `0.26126` |          `8869` |
 | am_10_1          |              `79` |                         `0.22282` |   `0.26374` |          `9483` |
 | age_un           |              `50` |                         `0.24254` |   `0.26857` |          `7762` |
-| age_sf           |              `58` |                         `0.23903` |   `0.26891` |          `8608` |
 | am_10_01_mejores |              `55` |                         `0.24246` |   `0.27088` |         `10811` |
 | agg_un           |              `45` |                         `0.24809` |   `0.27141` |          `8029` |
 | bl               |              `57` |                         `0.24204` |   `0.27151` |           `374` |
-| agg_sf           |             `125` |                         `0.23334` |   `0.29821` |          `8249` |
+| age_sf           |              `58` |                         `0.23903` |   `0.27167` |          `9127` |
+| agg_sf           |             `125` |                         `0.23334` |   `0.27668` |          `8757` |
 | greedy           |               `1` |                         `0.34667` |   `0.34677` |             `2` |
 
 
@@ -895,11 +887,11 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_01_mejores |             `140` |                         `0.11622` |   `0.15352` |         `18042` |
 | age_un           |             `136` |                         `0.11994` |   `0.15639` |         `14165` |
 | am_10_01         |             `140` |                         `0.12113` |   `0.15859` |         `16888` |
-| age_sf           |             `196` |                         `0.12354` |   `0.17590` |         `16229` |
+| age_sf           |             `196` |                         `0.12354` |   `0.16398` |         `16167` |
 | am_10_1          |             `261` |                         `0.15718` |   `0.22707` |         `16457` |
 | greedy           |              `29` |                         `0.22779` |   `0.23546` |            `16` |
 | agg_un           |             `617` |                         `0.16441` |   `0.32955` |         `14505` |
-| agg_sf           |             `695` |                         `0.16744` |   `0.35353` |         `14975` |
+| agg_sf           |             `695` |                         `0.16744` |   `0.33208` |         `17053` |
 
 #### Bupa 20
 
@@ -909,11 +901,11 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_01_mejores |             `214` |                         `0.11815` |   `0.14793` |         `22189` |
 | am_10_01         |             `248` |                         `0.11787` |   `0.15237` |         `22598` |
 | age_un           |             `268` |                         `0.11819` |   `0.15556` |         `18146` |
-| age_sf           |             `282` |                         `0.12199` |   `0.16120` |         `20199` |
+| age_sf           |             `282` |                         `0.12199` |   `0.15975` |         `24171` |
 | am_10_1          |             `465` |                         `0.14550` |   `0.21023` |         `20298` |
 | greedy           |              `10` |                         `0.23299` |   `0.23427` |             `6` |
+| agg_sf           |            `1264` |                         `0.16978` |   `0.31901` |         `22820` |
 | agg_un           |            `1179` |                         `0.16472` |   `0.32901` |         `18233` |
-| agg_sf           |            `1264` |                         `0.16978` |   `0.34600` |         `18866` |
 
 
 * * *
@@ -942,18 +934,18 @@ Hasta ahora nos hemos centrado únicamente en el fitness. Mirando el infeasibili
 
 Esto nos induce a pensar que **resulta más beneficioso tener clústers cohesionados que intentar minimizar las violaciones**. Esto explicaría el mal rendimiento en general de Greedy, atendiendo a nuestra definición de la función fitness.
 
-Para mejorar el rendimiento de los algoritmos genéticos generacionales, se puede cambiar el parámetro que controla la probabilidad de mutación. **Usando ${1}/\text{(número de genes)}$ en vez de $0.1/\text{(número de genes)}$** arroja los siguientes resultados en Bupa 10:
+Para mejorar el rendimiento de los algoritmos genéticos generacionales, se puede cambiar el parámetro que controla la probabilidad de mutación. **Usando ${1}/\text{(número de genes)}$ en vez de $0.1/\text{(número de genes)}$**, se consiguen los siguientes resultados en Bupa 10:
 
 * * *
 
 | **Algoritmo** | **Fitness con probabilidad `1/número de genes`** | **Fitness con probabilidad `0.1/número de genes`** |
 |:--------------|-------------------------------------------------:|---------------------------------------------------:|
 | age_un        |                                         `0.1678` |                                          `0.15639` |
-| age_sf        |                                         `0.1816` |                                          `0.16120` |
+| age_sf        |                                         `0.1816` |                                          `0.16398` |
 | agg_un        |                                         `0.2744` |                                          `0.32955` |
-| agg_sf        |                                         `0.2770` |                                          `0.35353` |
+| agg_sf        |                                         `0.2770` |                                          `0.33208` |
 
-Claramente vemos cómo todos los genéticos consiguen un fitness considerablemente menor. Esto se mantiene para todos los datasets.
+Claramente vemos cómo todos los genéticos generacional consiguen un fitness considerablemente menor. Esta tendencia se puede apreciar en todos los datasets.
 
 Por último, debemos destacar la rápida convergencia del límite inferior de la sucesión de fitness. Aunque no se estudiará de manera explícita, merece la pena mencionarlo. Estudiando la sucesión de máximo y mínimo fitness de todos los algoritmos genéticos, vemos que tras un cierto número de generaciones, el resultado se estabiliza. Esto nos indica que el número de evaluaciones del fitness es más que suficiente para garantizar la convergencia. Usando AGG_Un para Bupa 10, y tomando puntos aleatorios:
 
