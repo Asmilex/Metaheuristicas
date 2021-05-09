@@ -75,7 +75,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
 
 ## Sobre esta memoria
 
-En esta memoria se recoge toda la información necesaria para resolver el problema del **agrupamiento con restricciones**, así como la documentación y el desarrollo de la práctica 2 de la asignatura Metaheurísticas.
+En esta memoria se recoge toda la información necesaria para resolver el problema del **agrupamiento con restricciones**, así como la documentación y el desarrollo de las prácticas de la asignatura Metaheurísticas.
 
 Todo el código está subido en el repositorio de Github https://github.com/Asmilex/Metaheuristicas. Para ejecutarlo, es necesario [tener instalado Rust](https://www.rust-lang.org/tools/install). El comprimido de la entrega contendrá los mismos archivos que se encuentran en el repositorio. El único cambio será la fecha de la versión y la localización del PDF generado a partir de este archivo.
 
@@ -87,7 +87,7 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
 - `greedy`.
 - `bl`.
 - Algoritmos genéticos
-  - Se puede introducir `geneticos` para ejecutarlos todos
+  - Se puede introducir `geneticos` para ejecutarlos todos.
   - Alternativamente, se pueden especificar a mano: `agg_un`, `agg_sf`, `age_un` o `age_sf`.
 - Algoritmos meméticos:
   - Usando `memeticos` se ejecutarán todos los de esta categoría descritos en esta documentación
@@ -95,11 +95,13 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
 
 Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos. Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
-Tras ejecutar esta opción, se analizarán automáticamente los resultados, produciendo los archivos correspondientes indicados en la sección [Analizar los archivos csv](#analizar-los-archivos-csv)
+Tras ejecutar esta opción, se analizarán automáticamente los resultados, produciendo los archivos correspondientes indicados en la sección [Analizar los archivos csv](#analizar-los-archivos-csv).
 
 #### Ejecutar uno o varios algoritmos para un dataset en particular
 
 Para ejecutar un único algoritmo para un cierto dataset, se debe introducir en la línea de comandos `cargo run --release [dataset] {10, 20} [algoritmos]`, donde `[dataset]` puede valer `bupa`, `glass` o `zoo`, eligiendo qué conjunto de restricciones usar (`10` o `20`). La lista de algoritmos funciona de la misma manera que en el apartado anterior.
+
+Este modo resulta cómodo a la hora de comprobar el funcionamiento de un algoritmo en concreto, y verificar que se ejecuta correctamente.
 
 #### Analizar los archivos `.csv`
 
@@ -187,7 +189,7 @@ Una solución solo se considerará válida si todo clúster tiene al menos un el
 #### Restricciones
 
 Representaremos las restricciones de dos formas distintas:
-1. La primera de ellas es mediante una matriz dinámica de *Nalgebra* (`restricciones`) con entradas que toman valores en ${0, 1, -1}$. Para una cierta entrada $[(i, j)]$, si su valor es $0$, no hay ninguna restricción aplicada del vector con posición $i$ y el vector $j$. Si es $1$, entonces es una restricción del tipo `Must-Link`; esto es, deben ir agrupadas en el mismo clúster. Si su entrada es $-1$, ocurre lo contrario al caso anterior: estos dos vectores tienen una restricción del tipo `Cannot-Link`, y deben ir en clústers distintos. Esta estructura de datos nos resultará útil cuando queramos calcular el infeasibility de todo el sistema.
+1. La primera de ellas es mediante una matriz dinámica de *Nalgebra* (`restricciones`) con entradas que toman valores en $\{0, 1, -1\}$. Para una cierta entrada $[(i, j)]$, si su valor es $0$, no hay ninguna restricción aplicada del vector con posición $i$ y el vector $j$. Si es $1$, entonces es una restricción del tipo `Must-Link`; esto es, deben ir agrupadas en el mismo clúster. Si su entrada es $-1$, ocurre lo contrario al caso anterior: estos dos vectores tienen una restricción del tipo `Cannot-Link`, y deben ir en clústers distintos. Esta estructura de datos nos resultará útil cuando queramos calcular el infeasibility de todo el sistema.
 2. La segunda es un *hashmap* para cada tipo de restricción. Dado un cierto índice $i$, los hashmaps `restricciones_ML` y `restricciones_CL` devuelven todos los índices con los que tienen restricciones. Aceleran muchísimo el cálculo del infeasibility generado por la asignación de un clúster a un cierto elemento.
 
 El número de restricciones se guarda al crear la matriz de restricciones.
@@ -287,22 +289,23 @@ El concepto de *mejor solución* es el que proporciona el fitness. Es decir, en 
 El pseudocódigo del algoritmo es el siguiente:
 
 ```
-Generar una solución válida inicial.
+busqueda_local():
+    Generar una solución válida inicial.
 
-Hasta que no se haya alcanzado un óptimo local
-├ Guardar la información de la solución actual relevante: fitness, infeasibility,
-├ Barajar los índices {0, ..., num_elementos}
-│
-├ Para i en los índices barajados
-│  ├ Barajar los clústers {1, ..., num_clusters}
-│  │
-│  ├ Para c en los clústers barajados
-│  │  ├ Si el clúster del i-ésimo elemento no es c
-│  │  │  ├ Comprobar si el vecino nuevo es válido
-│  │  │  ├ En ese caso, comprobar si tiene un fitness menor.
-│  │  │  └ Si es así, reexplorar todos los índices de nuevo y actualizar la información de la solución nueva.
-│  │  │
-└  └  └─ Si se ha encontrado una nueva solución, ignorar el resto de índices.
+    Hasta que no se haya alcanzado un óptimo local
+        Guardar la información de la solución actual relevante: fitness, infeasibility,
+        Barajar los índices {0, ..., num_elementos}
+
+        Para i en los índices barajados
+            Barajar los clústers {1, ..., num_clusters}
+
+            Para c en los clústers barajados
+                Si el clúster del i-ésimo elemento no es c
+                   Comprobar si el vecino nuevo es válido
+                   En ese caso, comprobar si tiene un fitness menor.
+                Si es así, reexplorar todos los índices de nuevo y actualizar la información de la solución nueva.
+
+           Si se ha encontrado una nueva solución, ignorar el resto de índices.
 ```
 
 Las operaciones más relevantes de este algoritmo las realizamos en la función `bl_fitness_posible_sol(i, c, antiguo_infeasibility)`. Por cómo está gestionado internamente el clúster, es mucho más rápido verificar que la solución es válida dentro del propio clúster, y no fuera. Esta función se encarga de asignar temporalmente el vecino, comprobar si es válido, y en caso de serlo, devolver qué fitness produciría. El motivo de que necesite el antiguo infeasibility es por eficiencia. En vez de calcular todo el sistema para cada vecino nuevo, se calcula de la siguiente manera:
@@ -315,7 +318,6 @@ Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta e
 ![Ejemplo de ejecución de búsqueda local](./img/P1/BL_ejemplo.png)
 
 
-
 * * *
 
 
@@ -323,7 +325,7 @@ Como mencionamos en uno de los apartados anteriores, el cálculo de esta delta e
 
 ### Conceptos básicos de los algoritmos genéticos y meméticos
 
-En esta segunda práctica, realizaremos una versión adaptada de los algoritmos **genéticos** y **meméticos**. Los meméticos tienen como base un algoritmo genético al que se le introduce una fase de mejora de las soluciones presentes en cada generación. Por tanto, presentaremos primero los conceptos básicos para ambos.
+En esta segunda práctica, realizaremos una versión adaptada de los algoritmos **genéticos** y **meméticos**. Los meméticos tienen como base un algoritmo genético al que se le introduce una fase de mejora de las soluciones cada ciertas generaciones. Por tanto, presentaremos primero los conceptos básicos para ambos.
 
 Los genéticos introducen un conjunto de soluciones llamadas **cromosomas**. Cada componente de un cromosoma se denomina **gen**. Al conjunto de todos los cromosomas se le conoce como **población**.
 
@@ -342,7 +344,7 @@ En la implementación, únicamente los operadores de cruce se han separado. El r
 
 El operador de selección será un **torneo binario**. Enfrentaremos dos cromosomas para ver quién tiene mejor fitness, y nos quedaremos con ese.
 
-La selección tendrá un componente de aleatoriedad en todos los algoritmos genéticos. Elegiremos cierto número de cromosomas dependiendo del modelo en el que nos encontremos, y los emparejaremos al azar.
+La selección tendrá un componente de aleatoriedad en todos los algoritmos genéticos. Elegiremos cierto número de cromosomas dependiendo del modelo en el que nos encontremos, y los emparejaremos al azar. Esto implica que un cromosoma podría elegirse más de una vez.
 
 El pseudocódigo es el siguiente:
 
@@ -390,7 +392,7 @@ cruce_uniforme(p1, p2):
 
 El operador de cruce de segmento fijo determina un fragmento de tamaño aleatorio y un inicio, de forma que copia los genes de p1 desde el inicio hacia delante, *dando la vuelta* por el principio del cromosoma si fuera necesario.
 
-Para el resto de genes todavía no determinados, se procede de manera análoga al cruce uniforme: se coge la mitad de los genes de un padre, la otra mitad del otro, y se traspasan.
+Para el resto de genes indeterminados, se procede de manera análoga al cruce uniforme: se coge la mitad de los genes de un padre, la otra mitad del otro, y se traspasan.
 
 Debemos destacar que este operador está claramente sesgado, pues siempre se copian más genes del primer cromosoma que del segundo.
 
@@ -430,16 +432,18 @@ cruce_segmento_fijo (p1, p2):
     descendencia
 ```
 
+Debemos notar que la implementación no es eficiente. Aunque en la práctica no afecta demasiado, la generación de los aleatorios de `pos_gen` podría optimizarse.
+
 #### Operadores de mutación
 
-Este operador elige un cromosoma al azar de la población, y muta un gen aleatorio manteniendo la validez de la solución. No obstante, esto es únicamente el operador. La elección de cuántas mutaciones se deben hacer en la población total dependen de una serie de parámetros.
+Este operador elige un cromosoma al azar de la población, y muta un gen aleatorio, manteniendo siempre la validez de la solución. La elección de cuántas mutaciones se deben hacer en la población total, pues dependen de una serie de parámetros.
 
 La implementación se verá en el pseudocódigo del algoritmo completo.
 
 ### Otras consideraciones
 #### Reparación
 
-A veces, los operadores de cruce no generan soluciones válidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
+A veces, los operadores de cruce generan soluciones inválidas, debido a que se pueden dejar clústers vacíos. Para ello, se le aplica una reparación, descrita por el siguiente pseudocódigo:
 
 ```
 reparar (hijo, k):
@@ -459,13 +463,11 @@ reparar (hijo, k):
                     recuento[indice]++
                     break
 ```
-
 Recordemos que los clústers toman valores en $[1, k]$.
-
 
 #### Generación aleatoria de la población inicial
 
-La mayor parte de los algoritmos requieren generar una población aleatoria inicial. Para ello, hacemos lo siguiente:
+La mayor parte de los algoritmos requieren generar una población aleatoria inicial. Se procede de la siguiente manera:
 
 ```
 Para _ en 0 .. tamano_poblacion
@@ -506,7 +508,7 @@ El esquema de reemplazamiento refleja cómo se procesa la generación actual, y 
 El **modelo generacional** considera para el desarrollo de una generación el mismo número de cromosomas que el de la población. En nuestro caso, esto significa que `m = tamaño de la población` y que la probabilidad de cruce es de $0.7$.
 
 El **modelo estacionario** toma dos individuos aleatorios y los procesa, reintroduciéndolos finalmente en la población. Se eliminarán los dos peores cromosomas al final de este proceso.
-Por tanto, $m = 2$, y la probabilidad de cruce es de $1$.
+Los parámetros son $m = 2$, y la probabilidad de cruce es de $1$.
 
 #### Implementación
 
@@ -520,7 +522,7 @@ genetico(cluster, modelo, operador_cruce):
    numero_genes = cluster.num_elementos
    max_evaluaciones_fitness = 100_000
    m =
-   	2 					  si modelo == estacionario,
+   	2                si modelo == estacionario,
    	tamano_poblacion si m == generacional
 
    probabilidad_cruce =
@@ -562,7 +564,7 @@ genetico(cluster, modelo, operador_cruce):
 
    // ───────────────────────────────────────────────────── CRUCE ─────
 
-		  p_intermedio: Vector nuevo vacío
+        p_intermedio: Vector nuevo vacío
 
         cruces_restantes = numero_cruces
 
@@ -623,6 +625,7 @@ genetico(cluster, modelo, operador_cruce):
                fitness_poblacion.pop()
 
        Si el modelo es el generacional
+           // Guardar el mejor cromosoma para reemplazarlo por el peor
            posicion_mejor = 0
            mejor_fitness = máximo f64 posible
 
@@ -652,6 +655,7 @@ genetico(cluster, modelo, operador_cruce):
 
        t = t+1
 
+   // Termina el bucle; seleccionar el mejor cromosoma resultante.
    posicion_mejor = 0
    mejor_fitness = máximo f64 posible
 
@@ -670,9 +674,7 @@ genetico(cluster, modelo, operador_cruce):
 
 Los **algoritmos meméticos** son algoritmos genéticos a los que se les introduce una fase de exploración del entorno cada ciertas generaciones. De esta forma, se optimiza localmente de forma periódica.
 
-De base utilizaremos el algoritmo genético generacional con operador de cruce uniforme. Por tanto, los parámetros serán los mismos.
-
-Aparte, debemos considerar algunos nuevos:
+De base utilizaremos el algoritmo genético generacional con operador de cruce uniforme. Por tanto, los parámetros serán los mismos. Aparte de los del propio genético, debemos considerar algunos nuevos:
 - **Periodo generacional**: cada cuántas generaciones se aplica el optimizador local. Valdrá $10$.
 - **Probabilidad**: para cada cromosoma, cuál es la probabilidad de que se le aplique el optimizador.
 - **Solo a mejores**: si este parámetro está activo, únicamente se aplicará a los `probabilidad * número de cromosomas` mejores soluciones de la población.
@@ -765,15 +767,17 @@ memetico(cluster, periodo_generacional, probabilidad, solo_a_mejores):
         ...
 ```
 
-Debemos destacar un aspecto de implementación muy importante: ¿**por qué no aplicamos la BLS después de mutar**? Esta decisión se ha tomado debido al algoritmo que hay de base: el genético generacional.
+Debemos destacar un aspecto de la implementación muy importante: ¿**por qué no aplicamos la BLS después de mutar**? Esta decisión se ha tomado debido al algoritmo que hay de base (AGG_UN).
 
 En él, tras aplicar la mutación, se produce el reemplazamiento. Esta fase sustituye todo lo que se encuentre en la generación $t$ para pasar a la generación $t+1$, calculando justo después el fitness de todos los miembros. Antes del reemplazamiento, se elige al mejor miembro de la generación $t$ y se elimina al peor que han producido los hijos.
 
-La diferencia entre aplicar la BLS antes o después del reemplazamiento es que se optimice o no el mejor de la generación $t$. En la práctica, este método va a producir diferencias insignificativas. Además, personalmente me parece más intuitivo y sencillo de programar al hacerlo al inicio de la generación.
+La diferencia entre aplicar la BLS antes o después del reemplazamiento es decidir cuál de los extremos se mejora. Es decir: aplicándolo antes de reemplazar, podríamos optimizar el peor de los hijos, mientras que aplicándolo después, podríamos mejoramos el mejor de la generación $t$.
+En la práctica, este método va a producir diferencias insignificativas. Además, personalmente me parece más intuitivo y sencillo de programar al hacerlo al inicio de la generación.
 
 Si el algoritmo de base fuera el genético estacionario, esta decisión no tendría sentido, pues deberíamos tratar únicamente los hijos que se están desarrollando. Sin embargo, no es el caso.
 
 Siguiendo la propuesta de la sección anterior, se podría modificar la implementación para tener en cuenta el fitness que produce la búsqueda local suave. No obstante, la convergencia es suficientemente rápida como para que esto no afecte en gran medida.
+
 
 * * *
 
@@ -806,7 +810,7 @@ Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 
 - **Agregado**: el fitness de la solución. Cuanto más bajo, mejor.
 - **Tiempo de ejecución** (ms).
 
-Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas así como la velocidad base de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo).
+Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas, así como la velocidad turbo de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo). El 8250U nunca llega a sufrir thermal throttling, así que el turbo debería mantenerse al máximo durante la ejecución.
 
 Todos los resultados han sido ordenados de menor a mayor fitness, por lo que resultará más fácil distinguir cuáles son los algoritmos que mejor rinden.
 
@@ -838,11 +842,11 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | am_10_1          |              `17` |                         `0.68887` |   `0.75590` |          `3232` |
 | am_10_01         |              `14` |                         `0.71040` |   `0.76612` |          `2450` |
 | am_10_01_mejores |              `14` |                         `0.73101` |   `0.78674` |          `2910` |
-| agg_sf           |              `24` |                         `0.70817` |   `0.88027` |          `2648` |
 | age_sf           |              `24` |                         `0.73092` |   `0.80093` |          `3043` |
 | bl               |              `23` |                         `0.71965` |   `0.81010` |           `104` |
 | agg_un           |              `22` |                         `0.73430` |   `0.82233` |          `2354` |
 | age_un           |              `24` |                         `0.72944` |   `0.82474` |          `2537` |
+| agg_sf           |              `24` |                         `0.70817` |   `0.88027` |          `2648` |
 | greedy           |               `2` |                         `0.98711` |   `0.99519` |             `1` |
 
 * * *
@@ -914,15 +918,15 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 
 Puesto que ya tenemos todas las tablas sintetizadas, es hora de sintetizar los valores que nos han salido.
 
-Claramente podemos observar que los **algoritmos meméticos producen los mejores resultados**. En 4 de los 6 casos, un memético ha producido el menor fitness. Debemos notar que los distintos parámetros afectan de forma diferente a cada dataset. Por ejemplo, **AM_10_01 genera mejores resultados en Glass**, mientras que en **Zoo funcionan bien tanto AM_10_1 como AM_10_01_mejores**.
+Claramente podemos observar que los **algoritmos meméticos producen los mejores resultados**. En 4 de los 6 casos, un memético ha producido el menor fitness. Y en todos los datasets, siempre se posicionan entre los mejores. Debemos notar que los distintos parámetros afectan de forma diferente a cada dataset. Por ejemplo, **AM_10_01 genera mejores resultados en Glass**, mientras que en **Zoo funcionan bien tanto AM_10_1 como AM_10_01_mejores**.
 
 Este gran rendimiento viene acompañado de un incremento en los tiempos de ejecución. Además, **AM_10_01_mejores tarda considerablemente más que el resto de meméticos**. Esto podría ser debido a la reordenación de la población. Como en la implementación se ha usado un bubble sort, podríamos usar uno más eficientes para acelerar esta función.
 
-Hablemos ahora de los algoritmos genéticos. Lo primero que resulta evidente es que **el modelo generacional rinde particularmente mal**. Tanto AGG_UN como AGG_SF suelen encontrarse por la parte baja de la tabla, a excepción del dataset Zoo. En particular, en Bupa rinden peor que Greedy; hasta 0.12 puntos mayor. Por contrapartida, el **modelo estacionario bastante bien**. Excepto en Zoo, se posiciona mejor que la búsqueda local.
+Hablemos ahora de los algoritmos genéticos. Lo primero que resulta evidente es que **el modelo generacional rinde particularmente mal**. Tanto AGG_UN como AGG_SF funcionan peor que Greedy, a excepción del dataset Zoo. En contrapartida, el **modelo estacionario bastante bien**. Excepto en Zoo, se posiciona mejor que la búsqueda local.
 
 **Búsqueda local sigue siendo muy consistente entre todos los datasets**. Esto podría deberse a cómo se han organizado los datos: dado que son conjuntos preparados, lo normal es que los mínimos locales se encuentren agrupados en zonas habituales del espacio. En estos casos, un optimizador local haya soluciones de manera eficiente.
 
-Por último, **Greedy K-Medias es el algoritmo que peor rinde de todos en relación al fitness**. Aunque es rapidísimo, sus resultados suelen encontrarse por la parte baja. No obstante, por su construcción, se encarga de minimizar primero el número de restricciones violadas. Por lo que en los casos particulares en los que interese tanto rapidez de ejecución como minimización de infeasibility, podría considerarse una elección sólida.
+Por último, **Greedy K-Medias es el algoritmo que peor rinde de todos en relación al fitness junto con los generacionales**. Aunque es rapidísimo, sus resultados suelen encontrarse por la parte baja. No obstante, por su construcción, se encarga de minimizar primero el número de restricciones violadas. Por lo que en los casos particulares en los que interese tanto rapidez de ejecución como minimización de infeasibility, podría considerarse una elección sólida.
 
 Hasta ahora nos hemos centrado únicamente en el fitness. Mirando el infeasibility, podemos ver que sale un alto número de violaciones en general comparado con Greedy. Por ejemplo, en Bupa 10:
 
@@ -947,7 +951,7 @@ Para mejorar el rendimiento de los algoritmos genéticos generacionales, se pued
 
 Claramente vemos cómo todos los genéticos generacional consiguen un fitness considerablemente menor. Esta tendencia se puede apreciar en todos los datasets.
 
-Por último, debemos destacar la rápida convergencia del límite inferior de la sucesión de fitness. Aunque no se estudiará de manera explícita, merece la pena mencionarlo. Estudiando la sucesión de máximo y mínimo fitness de todos los algoritmos genéticos, vemos que tras un cierto número de generaciones, el resultado se estabiliza. Esto nos indica que el número de evaluaciones del fitness es más que suficiente para garantizar la convergencia. Usando AGG_Un para Bupa 10, y tomando puntos aleatorios:
+Por último, debemos destacar la rápida convergencia del límite inferior de la sucesión de fitness. Aunque no se estudiará de manera explícita, merece la pena mencionarlo. Mirando la sucesión de máximos y mínimos fitness de todos los algoritmos genéticos, vemos que tras un cierto número de generaciones, el resultado se estabiliza. Esto nos indica que el número de evaluaciones del fitness es más que suficiente para garantizar la convergencia. Usando AGG_Un para Bupa 10, y tomando puntos aleatorios:
 
 | **Generación**             | **Peor fitness** | **Mejor fitness** |
 |----------------------------|------------------|-------------------|
@@ -959,9 +963,9 @@ Por último, debemos destacar la rápida convergencia del límite inferior de la
 
 Podemos ver que, conforme avanzan las generaciones, la mejora se reduce. Aunque depende del algoritmo y del dataset, la mejora que obtendríamos al aumentar el número de evaluaciones podría ser incluso nula. Por ello, podemos asegurar que no desperdiciamos tiempo de procesamiento.
 
-Esto concluye el desarrollo de la práctica 2. Llegados a este punto, y tras hacer un estudio de todos nuestros algoritmos, **resulta difícil quedarnos con únicamente uno**. Todos tienen sus ventajas e inconvenientes, y se comportan de forma distinta en nuestros datasets. Sin embargo, es digno mencionar la consistencia de los meméticos. Ajustando parámetros, hemos conseguido que rindan mejor que ninguno, aunque a veces la diferencia sea ínfima.
+Esto concluye el desarrollo de la práctica 2. Llegados a este punto, y tras hacer un estudio de todos nuestros algoritmos, **resulta difícil quedarnos con únicamente uno**. Todos tienen sus ventajas e inconvenientes, y se comportan de forma distinta en nuestros datasets. Sin embargo, es necesario mencionar **la consistencia de los meméticos**. Ajustando parámetros, hemos conseguido que rindan mejor que ninguno, aunque a veces la diferencia sea ínfima.
 
-En la siguiente práctica, introduciremos enfriamiento simulado y multiarranque. ¡Quedarnos con únicamente uno podría ser incluso más difícil!
+En la siguiente práctica, introduciremos enfriamiento simulado y multiarranque. ¡Seleccionar únicamente uno podría ser incluso más difícil!
 
 
 * * *
