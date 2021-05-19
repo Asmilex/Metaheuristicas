@@ -92,6 +92,9 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
 - Algoritmos meméticos:
   - Usando `memeticos` se ejecutarán todos los de esta categoría descritos en esta documentación
   - Alternativamente, se pueden especificar a mano: `am_10_1`, `am_10_01`, `am_10_01_mejores`.
+- Para los algoritmos de la práctica 3, los parámetros de ejecución son:
+  - `es` para enfriamiento simulado, `bmb` para la búsqueda multiarranque básica, `ils` para la búsqueda local reiterada, y `ils-es` para el híbrido entre estas dos últimas.
+  - `p3` si se quieren ejecutar todos
 
 Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos. Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
