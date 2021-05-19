@@ -90,13 +90,20 @@ use serde::Deserialize;
     pub enum Algoritmos {
         Greedy,
         BL,
+
         AGG_UN,
         AGG_SF,
         AGE_UN,
         AGE_SF,
+
         AM_10_1,
         AM_10_01,
-        AM_10_01_mejores
+        AM_10_01_mejores,
+
+        ES,
+        BMB,
+        ILS,
+        ILS_ES
     }
 
     #[allow(non_snake_case)]
@@ -112,6 +119,11 @@ use serde::Deserialize;
         pub am_10_1: bool,
         pub am_10_01: bool,
         pub am_10_01_mejores: bool,
+
+        pub es: bool,
+        pub bmb: bool,
+        pub ils: bool,
+        pub ils_es: bool,
 
         pub benchmark: bool,
     }
@@ -130,6 +142,11 @@ use serde::Deserialize;
                 am_10_1: false,
                 am_10_01: false,
                 am_10_01_mejores: false,
+
+                es: false,
+                bmb: false,
+                ils: false,
+                ils_es: false,
 
                 benchmark: false
             }
@@ -243,6 +260,38 @@ use serde::Deserialize;
                     glass_20: String:: from("./data/csv/glass_20/am_10_01_mejores.csv"),
                     bupa_10 : String:: from("./data/csv/bupa_10/am_10_01_mejores.csv"),
                     bupa_20 : String:: from("./data/csv/bupa_20/am_10_01_mejores.csv"),
+                },
+                Algoritmos::ES => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/es.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/es.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/es.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/es.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/es.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/es.csv"),
+                },
+                Algoritmos::BMB => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/bmb.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/bmb.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/bmb.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/bmb.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/bmb.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/bmb.csv"),
+                },
+                Algoritmos::ILS => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/ils.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/ils.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/ils.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/ils.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/ils.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/ils.csv"),
+                },
+                Algoritmos::ILS_ES => RutasCSV {
+                    zoo_10  : String:: from("./data/csv/zoo_10/ils_es.csv"),
+                    zoo_20  : String:: from("./data/csv/zoo_20/ils_es.csv"),
+                    glass_10: String:: from("./data/csv/glass_10/ils_es.csv"),
+                    glass_20: String:: from("./data/csv/glass_20/ils_es.csv"),
+                    bupa_10 : String:: from("./data/csv/bupa_10/ils_es.csv"),
+                    bupa_20 : String:: from("./data/csv/bupa_20/ils_es.csv"),
                 }
             }
         }

@@ -241,7 +241,9 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
         &&  !args.contains(&String::from("agg_un")) && !args.contains(&String::from("agg_sf")) && !args.contains(&String::from("age_un")) && !args.contains(&String::from("age_sf"))
         &&  !args.contains(&String::from("geneticos"))
         &&  !args.contains(&String::from("memeticos"))
-        &&  !args.contains(&String::from("am_10_1")) && !args.contains(&String::from("am_10_01")) && !args.contains(&String::from("am_10_01_mejores")) {
+        &&  !args.contains(&String::from("am_10_1")) && !args.contains(&String::from("am_10_01")) && !args.contains(&String::from("am_10_01_mejores"))
+        &&  !args.contains(&String::from("p3"))
+        &&  !args.contains(&String::from("es")) && !args.contains(&String::from("bmb")) && !args.contains(&String::from("ils")) && !args.contains(&String::from("ils-es")) {
 
         algoritmos.greedy = true;
         algoritmos.BL     = true;
@@ -254,6 +256,11 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
         algoritmos.am_10_1          = true;
         algoritmos.am_10_01         = true;
         algoritmos.am_10_01_mejores = true;
+
+        algoritmos.es = true;
+        algoritmos.bmb = true;
+        algoritmos.ils = true;
+        algoritmos.ils_es = true;
     }
     else if args.contains(&String::from("geneticos")) {
         algoritmos.age_sf = true;
@@ -265,6 +272,12 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
         algoritmos.am_10_1          = true;
         algoritmos.am_10_01         = true;
         algoritmos.am_10_01_mejores = true;
+    }
+    else if args.contains(&String::from("p3")) {
+        algoritmos.es = true;
+        algoritmos.bmb = true;
+        algoritmos.ils = true;
+        algoritmos.ils_es = true;
     }
     else {
         // En caso contrario, seleccionar aquellos que sí que se usarán
@@ -301,6 +314,22 @@ pub fn parse_arguments(args: &Vec<String>) -> Result<(Option<ParametrosDataset>,
 
         if args.contains(&String::from("am_10_01_mejores")) {
             algoritmos.am_10_01_mejores = true;
+        }
+
+        if args.contains(&String::from("es")) {
+            algoritmos.es = true;
+        }
+
+        if args.contains(&String::from("bmb")) {
+            algoritmos.bmb = true;
+        }
+
+        if args.contains(&String::from("ils")) {
+            algoritmos.ils = true;
+        }
+
+        if args.contains(&String::from("ils-es")) {
+            algoritmos.ils_es = true;
         }
     }
 

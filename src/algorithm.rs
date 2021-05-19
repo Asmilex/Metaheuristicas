@@ -825,3 +825,77 @@ pub fn am_10_01 (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 pub fn am_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     memetico(cluster, 10, 0.1, true, semilla)
 }
+
+
+//
+// ──────────────────────────────────────────────────────────── III ──────────
+//   :::::: P R A C T I C A   3 : :  :   :    :     :        :          :
+// ──────────────────────────────────────────────────────────────────────
+//
+
+
+pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    //
+    // ─────────────────────────────────────────────────────────────── PARAMETROS ─────
+    //
+
+    let mut generador = StdRng::seed_from_u64(semilla);
+
+    let mejor_solucion = cluster.generar_solucion_aleatoria(&mut generador);
+
+    let max_vecinos = 10 * cluster.num_elementos;   // NOTE: esperar al guión actualizado
+    let max_exitos = (0.1 * max_vecinos as f64).ceil() as usize;
+
+    let mu: f64 = 0.3;
+    let Phi: f64 = 0.3;
+
+    let T0 = mu * cluster.fitness_externa(&mejor_solucion)/-Phi.ln();
+    let Tf = 0.001;
+
+    let M = 100_000/max_vecinos;
+
+    //
+    // ────────────────────────────────────────────────────────── BUCLE PRINCIPAL ─────
+    //
+
+
+
+
+    cluster
+}
+
+/// # Esquema de enfriamiento
+/// Actualmente, se utiliza el de Cauchy.
+pub fn enfriar(T: f64, M: usize, T0: f64, Tf: f64) -> f64 {
+    let beta = (T0 - Tf)/(M as f64 * T0 * Tf);
+
+    T/(1.0 + beta * T)
+}
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+
+pub fn busqueda_multiarranque_basica(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+
+
+    cluster
+}
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+
+pub fn busqueda_local_reiterada(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+
+    cluster
+}
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+
+pub fn hibrido_ils_es(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+
+    cluster
+}

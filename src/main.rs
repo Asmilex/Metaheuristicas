@@ -129,6 +129,10 @@ fn benchmark(algoritmo: Algoritmos, dataset: ParametrosDataset, restriccion: Res
         Algoritmos::AM_10_1 => am_10_1,
         Algoritmos::AM_10_01 => am_10_01,
         Algoritmos::AM_10_01_mejores => am_10_01_mejores,
+        Algoritmos::ES => enfriamiento_simulado,
+        Algoritmos::BMB => busqueda_multiarranque_basica,
+        Algoritmos::ILS => busqueda_local_reiterada,
+        Algoritmos::ILS_ES => hibrido_ils_es
     };
 
     let mut ejecuciones: Vec<InfoEjecucion> = Vec::new();
@@ -227,6 +231,34 @@ fn main() {
             println!("Fitness: {}", &mi_cluster.fitness());
             println!("Algoritmo memético AM_10_01_mejores calculado en {:?}\n", now.elapsed().as_millis());
         }
+        else if algoritmos.es {
+            let now = Instant::now();
+            let mi_cluster = algorithm::enfriamiento_simulado(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
+            println!("Algoritmo ES calculado en {:?}\n", now.elapsed().as_millis());
+        }
+        else if algoritmos.bmb {
+            let now = Instant::now();
+            let mi_cluster = algorithm::busqueda_multiarranque_basica(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
+            println!("Algoritmo BMB calculado en {:?}\n", now.elapsed().as_millis());
+        }
+        else if algoritmos.ils {
+            let now = Instant::now();
+            let mi_cluster = algorithm::busqueda_local_reiterada(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
+            println!("Algoritmo ILS calculado en {:?}\n", now.elapsed().as_millis());
+        }
+        else if algoritmos.ils_es {
+            let now = Instant::now();
+            let mi_cluster = algorithm::hibrido_ils_es(&mut mi_cluster, utils::Semillas::new().semilla(0));
+            println!("{}", &mi_cluster);
+            println!("Fitness: {}", &mi_cluster.fitness());
+            println!("Algoritmo ILS-ES calculado en {:?}\n", now.elapsed().as_millis());
+        }
     }
     else {
         if algoritmos.greedy {
@@ -263,6 +295,22 @@ fn main() {
 
         if algoritmos.am_10_01_mejores {
             inicializador_benchmark(Algoritmos::AM_10_01_mejores);
+        }
+
+        if algoritmos.es {
+            inicializador_benchmark(Algoritmos::ES);
+        }
+
+        if algoritmos.bmb {
+            inicializador_benchmark(Algoritmos::BMB);
+        }
+
+        if algoritmos.ils {
+            inicializador_benchmark(Algoritmos::ILS);
+        }
+
+        if algoritmos.ils_es {
+            inicializador_benchmark(Algoritmos::ILS_ES);
         }
 
         match analyze() {
