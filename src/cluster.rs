@@ -2,6 +2,7 @@ use crate::utils::*;
 
 use nalgebra::*;
 use multimap::MultiMap;
+use rand::{rngs::StdRng, distributions::Uniform};
 
 use std::fmt;
 
@@ -106,6 +107,22 @@ impl Clusters {
     // ──────────────────────────────────────────────────────────── RESTRICCIONES ─────
     //
 
+    /// Comprueba si la solución interna es válida
+    pub fn solucion_valida(&self) -> bool {
+        !self.recuento_clusters.iter().any(|&valor| valor == 0)
+    }
+
+    /// Comprueba si la solución pasada es válida
+    pub fn solucion_valida_externa(&self, s: &Vec<usize>) -> bool {
+        for c in 1..= self.num_clusters {
+            if !s.iter().any(|&valor| valor == c) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     /*
         NOTE: consume el vector, dejándolo inutilizado para el resto del programa
     */
@@ -167,22 +184,6 @@ impl Clusters {
         self.lista_clusters = vec![0; self.num_elementos];
         self.recuento_clusters = vec![0; self.num_clusters];
         self.centroides =  vec![DVector::zeros(self.dim_vectores); self.num_clusters];
-    }
-
-
-    /// Comprueba si la solución interna es válida
-    pub fn solucion_valida(&self) -> bool {
-        !self.recuento_clusters.iter().any(|&valor| valor == 0)
-    }
-
-    /// Comprueba si la solución pasada es válida
-    pub fn solucion_valida_externa(&self, s: &Vec<usize>) -> bool {
-        for c in 1..= self.num_clusters {
-            if !s.iter().any(|&valor| valor == c) {
-                return false;
-            }
-        }
-        return true;
     }
 
 
@@ -455,6 +456,22 @@ impl Clusters {
         self.recuento_clusters = antiguo_recuento;
 
         fitness
+    }
+
+
+    /// Genera una solución aleatoria que cumple las restricciones
+
+    pub fn generar_solucion_aleatoria(&self, generador: &mut StdRng) -> Vec<usize> {
+        let mut solucion: Vec<usize> = vec![0; self.num_elementos];
+        let rango_clusters = Uniform::new_inclusive(1, self.num_clusters);
+
+        while !self.solucion_valida_externa(&solucion) {
+            for c in solucion.iter_mut() {
+                *c = generador.sample(rango_clusters);
+            }
+        }
+
+        solucion
     }
 }
 
