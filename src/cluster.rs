@@ -438,7 +438,7 @@ impl Clusters {
 
 
     /// Dada una nueva solución, calcula su fitness
-    pub fn genetico_fitness_sol(&mut self, solucion: &Vec<usize>) -> f64 {
+    pub fn fitness_externa(&mut self, solucion: &Vec<usize>) -> f64 {
         assert_eq!(solucion.len(), self.lista_clusters.len());
 
         // Guardar valores antiguos

@@ -287,7 +287,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
             }
         }
 
-        fitness_poblacion.push(cluster.genetico_fitness_sol(&solucion_inicial));
+        fitness_poblacion.push(cluster.fitness_externa(&solucion_inicial));
         poblacion.push(solucion_inicial);
     }
 
@@ -395,7 +395,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
                 // Hacemos que luchen para ver quién entra. Nos quedamos con el mejor de los dos
                 // En la población, quitaremos de en medio al que peor rendía
                 for i in 0 .. m {
-                    fitness_poblacion.push(cluster.genetico_fitness_sol(&p_hijos[i]));
+                    fitness_poblacion.push(cluster.fitness_externa(&p_hijos[i]));
                     poblacion.push(p_hijos[i].clone());
                     evaluaciones_fitness = evaluaciones_fitness + 1;
                 }
@@ -434,7 +434,7 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
                 poblacion = p_hijos;
 
                 for (i, cromosoma) in poblacion.iter().enumerate() {
-                    fitness_poblacion[i] = cluster.genetico_fitness_sol(cromosoma);
+                    fitness_poblacion[i] = cluster.fitness_externa(cromosoma);
                 }
                 evaluaciones_fitness = evaluaciones_fitness + m;
 
@@ -517,7 +517,7 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallo
         // Asignar el mejor valor posible a solucion[indice de indices_barajados]
         // Es decir, asignar la instancia indices_barajados[i] al cluster que minimice el fitness
 
-        let mut mejor_fitness = cluster.genetico_fitness_sol(solucion);
+        let mut mejor_fitness = cluster.fitness_externa(solucion);
         let mut mejor_cluster = solucion[indices_barajados[i]];
 
         for c in 1 ..= cluster.num_clusters {
@@ -525,7 +525,7 @@ fn busqueda_local_suave(solucion: &mut Vec<usize>, cluster: &mut Clusters, fallo
                 solucion[indices_barajados[i]] = c;
 
                 if cluster.solucion_valida_externa(solucion) {
-                    let fitness_actual = cluster.genetico_fitness_sol(solucion);
+                    let fitness_actual = cluster.fitness_externa(solucion);
                     evaluaciones_fitness = evaluaciones_fitness + 1;
 
                     if fitness_actual < mejor_fitness {
@@ -608,6 +608,8 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
     let now = Instant::now();
 
+
+    // TODO usar la implementación de la solución aleatoria que se encuentra en la clase cluster.
     for _ in 0 .. tamano_poblacion {
         let mut solucion_inicial: Vec<usize> = vec![0; numero_genes];
 
@@ -617,7 +619,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
             }
         }
 
-        fitness_poblacion.push(cluster.genetico_fitness_sol(&solucion_inicial));
+        fitness_poblacion.push(cluster.fitness_externa(&solucion_inicial));
         poblacion.push(solucion_inicial);
     }
 
@@ -650,7 +652,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
                 for i in 0 .. busquedas_totales {
                     let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
-                    fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                    fitness_poblacion[i] = cluster.fitness_externa(&poblacion[i]);
                     evaluaciones_fitness = evaluaciones_fitness + evaluaciones;
                 }
             }
@@ -658,7 +660,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
                 for i in 0 .. tamano_poblacion {
                     if generador.sample(rango_0_1) <= probabilidad {
                         let evaluaciones = busqueda_local_suave(&mut poblacion[i], cluster, fallos_maximos, &mut generador);
-                        fitness_poblacion[i] = cluster.genetico_fitness_sol(&poblacion[i]);
+                        fitness_poblacion[i] = cluster.fitness_externa(&poblacion[i]);
                         evaluaciones_fitness = evaluaciones_fitness + evaluaciones;
                     }
                 }
@@ -765,7 +767,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
         poblacion = p_hijos;
 
         for (i, cromosoma) in poblacion.iter().enumerate() {
-            fitness_poblacion[i] = cluster.genetico_fitness_sol(cromosoma);
+            fitness_poblacion[i] = cluster.fitness_externa(cromosoma);
         }
         evaluaciones_fitness = evaluaciones_fitness + m;
 
