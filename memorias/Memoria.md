@@ -62,6 +62,9 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
     - [Esquema de enfriamiento](#esquema-de-enfriamiento)
     - [Pseudocódigo](#pseudocódigo)
   - [Búsqueda multiarranque básica](#búsqueda-multiarranque-básica)
+  - [Búsqueda local reiterada](#búsqueda-local-reiterada)
+    - [Operador de mutación del ILS](#operador-de-mutación-del-ils)
+  - [Pseudocódigo](#pseudocódigo-1)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
@@ -917,6 +920,7 @@ enfriamiento_simulado (cluster):
 
 * * *
 
+
 ### Búsqueda multiarranque básica
 
 El algoritmo de **búsqueda multiarranque básica** es tan simple como su nombre indica. Genera 10 soluciones aleatorias, aplica una BL sobre ellas, y quédate con la mejor. Cada búsqueda local se aplicará `10_000` veces. Se aplica la misma de la sección [anterior](#búsqueda-local)
@@ -942,6 +946,84 @@ busqueda_multiarranque_basica (cluster):
 
     mejor_solucion
 ```
+
+### Búsqueda local reiterada
+
+La **búsqueda local reiterada** (Iterated local search en inglés) es un sencillo algoritmo en el que se genera una solución aleatoria, se aplica una BL, y se muta drásticamente. Este proceso se repite un cierto número de veces. El algoritmo termina devolviendo la mejor solución que nos hemos encontrado
+
+La búsqueda local que aplicaremos será la misma que la de la búsqueda multiarranque básica. Los parámetros de ejecución son `10` usos de la BL, y `10_000` evaluaciones máximas para cada uno.
+
+#### Operador de mutación del ILS
+
+Para la mutación, utilizaremos una basada en segmento fijo. Tomaremos un segmento como hacíamos en [los genéticos](#operadores-de-mutación), copiando los genes del padre al hijo. Para la parte restante, generamos aleatorios en el rango $[1, k]$. Es un cambio brusco, que busca conseguir una solución bastante diferente a la original con el fin de diversificar.
+
+Este operador puede producir soluciones inválidas, por lo que debemos asegurarnos de que son correctas. Si no lo fuera, debemos repararla.
+
+El pseudocódigo del operador de mutación es el siguiente:
+
+```
+mutacion_ils (solucion, cluster):
+    s = solucion.clone()
+
+    let inicio_segmento = aleatorio en [0, s.len())
+    let tamano_segmento = (0.1 * s.len()).ceil()
+
+    i = inicio_segmento
+    copias = 0
+
+    while copias < tamano_segmento :
+        s[i] = solucion[i]
+
+        i = (i+1)%s.len()
+        copias = copias + 1
+
+    loop {
+        s[i] = aleatorio en [1, cluster.num_clusters]
+        i = (i+1)%s.len()
+
+        if i == inicio_segmento:
+            break
+
+    }
+
+    if !solucion_valida(s):
+        reparar(s, cluster.num_clusters)
+
+
+    s
+```
+
+### Pseudocódigo
+
+Finalmente, solo nos queda ver la implementación del algoritmo:
+
+```
+ils (cluster):
+    usos_bl_restantes = 10
+    iteraciones_maximas_bl = 10_000
+
+    solucion = busqueda_local(cluster.generar_solucion_aleatoria(), cluster, iteraciones_maximas_bl)
+
+    usos_bl_restantes--
+
+    mejor_solucion = solucion
+    mejor_fitness = fitness(mejor_solucion)
+
+    while usos_bl_restantes > 0:
+        nueva_sol = mutacion_ils(mejor_solucion, cluster)
+        nueva_sol = busqueda_local(nueva_sol, cluster, iteraciones_maximas_bl)
+
+        fitness_nuevo = fitness(nueva_sol)
+
+        if fitness_nuevo < mejor_fitness:
+            mejor_solucion = nueva_sol
+            mejor_fitness = fitness_nuevo
+
+    mejor_solucion
+```
+
+* * *
+
 
 ## Análisis de resultados
 
