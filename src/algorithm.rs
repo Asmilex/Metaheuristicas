@@ -810,6 +810,9 @@ pub fn am_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters 
 
 #[allow(non_snake_case)]
 pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    println!("{} Ejecutando enfriamiento simulado para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
+
     //
     // ─────────────────────────────────────────────────────────────── PARAMETROS ─────
     //
@@ -876,6 +879,8 @@ pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clust
         T = enfriar(T, M, T0, Tf);
     }
 
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+
     cluster.asignar_clusters(mejor_solucion);
     cluster
 }
@@ -883,14 +888,14 @@ pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clust
 /// # Esquema de enfriamiento
 /// Actualmente, se utiliza el de Cauchy.
 #[allow(non_snake_case)]
-pub fn enfriar(T: f64, M: usize, T0: f64, Tf: f64) -> f64 {
+fn enfriar(T: f64, M: usize, T0: f64, Tf: f64) -> f64 {
     let beta = (T0 - Tf)/(M as f64 * T0 * Tf);
 
     T/(1.0 + beta * T)
 }
 
 
-pub fn generar_vecino(s: &Vec<usize>, cluster: &Clusters, generador: &mut StdRng) -> Vec<usize> {
+fn generar_vecino(s: &Vec<usize>, cluster: &Clusters, generador: &mut StdRng) -> Vec<usize> {
     let mut vecino = s.clone();
     let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
     let rango_indices = Uniform::new(0, vecino.len());
@@ -918,9 +923,100 @@ pub fn generar_vecino(s: &Vec<usize>, cluster: &Clusters, generador: &mut StdRng
 
 
 pub fn busqueda_multiarranque_basica(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    println!("{} Ejecutando búsqueda multiarranque básica para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
 
+    let mut generador = StdRng::seed_from_u64(semilla);
 
+    cluster.asignar_clusters(cluster.generar_solucion_aleatoria(&mut generador));   // Problema técnico: BL requiere de una solución de partida. La inicializo aleatoriamente.
+    let mut mejor_solucion = vec![0; cluster.num_elementos];    // No se usa para nada. Si no se asigna ninguno, fallará
+    let mut mejor_fitness = f64::MAX;
+
+    let soluciones_a_generar = 10;
+    let iteraciones_maximas = 10_000;
+
+    for _ in 0 .. soluciones_a_generar {
+        let solucion = cluster.generar_solucion_aleatoria(&mut generador);
+        let solucion = busqueda_local_bmb(&solucion, cluster, iteraciones_maximas, &mut generador);
+
+        let fitness = cluster.fitness_externa(&solucion);
+
+        if fitness < mejor_fitness {
+            mejor_solucion = solucion;
+            mejor_fitness = fitness;
+        }
+    }
+
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
+
+    cluster.asignar_clusters(mejor_solucion);
     cluster
+}
+
+
+fn busqueda_local_bmb(solucion: &Vec<usize>, cluster: &mut Clusters, iteraciones_maximas: usize, generador: &mut StdRng) -> Vec<usize> {
+    // TODO cambiar cómo se gestiona la búsqueda local. Funcionamiento interno. Shit happens.
+    // Por la implementación actual, BL trabaja muy cercano a la sol. interna del clúster.
+    // Como no es mi intención modificarlo aquí, voy a darle la nueva, para restaurar después la antigua.
+
+    let antigua_sol = cluster.clusters().clone();
+    cluster.asignar_clusters(solucion.clone());
+
+    let mut fitness_actual = cluster.fitness();
+    let mut infeasibility_actual = cluster.infeasibility();
+
+    let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
+
+    let mut sol_optima_encontrada: bool;
+    let mut sol_nueva_encontrada: bool;
+
+    for _ in 0..iteraciones_maximas {
+        sol_nueva_encontrada = false;
+        sol_optima_encontrada = true;
+
+        let mut indices: Vec<usize> = (0..cluster.num_elementos).collect();
+        indices.shuffle(generador);
+
+        for i in indices.iter() {
+            clusters_barajados.shuffle(generador);
+
+            for c in clusters_barajados.iter() {
+                if *c != cluster.cluster_de_indice(*i) {
+                    let posible_fitness_nuevo = cluster.bl_fitness_posible_sol(*i, *c, infeasibility_actual);
+
+                    match posible_fitness_nuevo {
+                        Ok(fitness) => {
+                            if fitness < fitness_actual {
+                                fitness_actual = fitness;
+                                infeasibility_actual = infeasibility_actual
+                                    - cluster.infeasibility_esperada(*i, cluster.cluster_de_indice(*i))
+                                    + cluster.infeasibility_esperada(*i, *c);
+                                cluster.asignar_cluster_a_elemento(*i, *c);
+                                sol_nueva_encontrada = true;
+                                break;
+                            }
+                        },
+                        Err(_r) => {}
+                    };
+                }
+            }
+
+
+            if sol_nueva_encontrada {
+                sol_optima_encontrada = false;
+                break;
+            }
+        }
+
+        if sol_optima_encontrada{
+            break;
+        }
+    }
+
+    let s = cluster.clusters().clone();
+    cluster.asignar_clusters(antigua_sol);
+
+    s
 }
 
 
@@ -928,6 +1024,10 @@ pub fn busqueda_multiarranque_basica(cluster: &mut Clusters, semilla: u64) -> &m
 
 
 pub fn busqueda_local_reiterada(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    println!("{} Ejecutando búsqueda multiarranque reiterada para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
+
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
 }
@@ -937,6 +1037,10 @@ pub fn busqueda_local_reiterada(cluster: &mut Clusters, semilla: u64) -> &mut Cl
 
 
 pub fn hibrido_ils_es(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    println!("{} Ejecutando el híbrido ILS-ES para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
+
+    println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
     cluster
 }
