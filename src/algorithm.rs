@@ -1,4 +1,5 @@
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom, distributions::Uniform};
+use std::time::Instant;
 
 use nalgebra::{DVector};
 use colored::*;
@@ -121,8 +122,6 @@ pub fn greedy_COPKM (cluster: &mut Clusters, seed: u64) -> &mut Clusters {
 /// Cuando se alcancen el número máximo de iteraciones, o no se consiga minimizar la función objetivo, hemos acabado.
 /// La solución óptima es aquella que cumple que no existe otra solución S' tal que f(S) < f(S') para toda otra S
 pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
-    use std::time::{Instant};
-
     println!("{} Ejecutando búsqueda local para el cálculo de los clusters", "▸".cyan());
 
     let now = Instant::now();
@@ -130,24 +129,16 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     // Parámetros de la ejecución
     let max_iteraciones = 10_000;
     let mut generador = StdRng::seed_from_u64(semilla);
-    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
 
     // ──────────────────────────────────────────────────────────────────────── 1 ─────
 
-    let mut solucion_inicial: Vec<usize> = vec![0; cluster.num_elementos];
-
-    while !cluster.solucion_valida_externa(&solucion_inicial) {
-        for c in solucion_inicial.iter_mut() {
-            *c = generador.sample(rango_clusters);
-        }
-    }
-
+    let solucion_inicial = cluster.generar_solucion_aleatoria(&mut generador);
     cluster.asignar_clusters(solucion_inicial.clone());
 
     // ──────────────────────────────────────────────────────────────────────── 2 ─────
 
     let mut sol_optima_encontrada: bool;
-    let mut sol_nueva_encontrada:bool;
+    let mut sol_nueva_encontrada: bool;
     let mut fitness_actual = cluster.fitness();
     let mut infeasibility_actual = cluster.infeasibility();
     let mut clusters_barajados: Vec<usize> = (1..=cluster.num_clusters).collect();
@@ -233,7 +224,8 @@ pub fn busqueda_local (cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
 ///     2.5 Evaluar P(t).
 
 fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Operadores, semilla: u64) -> &mut Clusters {
-    use std::time::Instant;
+    println!("{} Ejecutando algoritmo genético {:?} con operador de cruce {:?} para el cálculo de los clusters", "▸".cyan(), modelo, op_cruce_a_usar);
+    let now = Instant::now();
 
     // ─────────────────────────────────────────────────── DECISION DE PARAMETROS ─────
 
@@ -269,24 +261,14 @@ fn genetico (cluster: &mut Clusters, modelo: ModeloGenetico, op_cruce_a_usar: Op
 
     // ───────────────────────────────────────────── 1. GENERAR POBLACION INICIAL ─────
 
-    println!("{} Ejecutando algoritmo genético {:?} con operador de cruce {:?} para el cálculo de los clusters", "▸".cyan(), modelo, op_cruce_a_usar);
 
     // NOTE representaremos la población como un vector de soluciones.
     // De forma paralela, llevaremos un recuento del fitness que producen.
     let mut poblacion = Vec::new();
     let mut fitness_poblacion = Vec::new();
 
-    let now = Instant::now();
-
     for _ in 0 .. tamano_poblacion {
-        let mut solucion_inicial: Vec<usize> = vec![0; numero_genes];
-
-        while !cluster.solucion_valida_externa(&solucion_inicial) {
-            for c in solucion_inicial.iter_mut() {
-                *c = generador.sample(rango_clusters);
-            }
-        }
-
+        let solucion_inicial= cluster.generar_solucion_aleatoria(&mut generador);
         fitness_poblacion.push(cluster.fitness_externa(&solucion_inicial));
         poblacion.push(solucion_inicial);
     }
@@ -569,7 +551,6 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
         solucionar este problema y refactorizar la función (?)
     */
 
-    use std::time::Instant;
 
     // ─────────────────────────────────────────────────── DECISION DE PARÁMETROS ─────
 
@@ -611,14 +592,7 @@ fn memetico (cluster: &mut Clusters, periodo_generacional: usize, probabilidad: 
 
     // TODO usar la implementación de la solución aleatoria que se encuentra en la clase cluster.
     for _ in 0 .. tamano_poblacion {
-        let mut solucion_inicial: Vec<usize> = vec![0; numero_genes];
-
-        while !cluster.solucion_valida_externa(&solucion_inicial) {
-            for c in solucion_inicial.iter_mut() {
-                *c = generador.sample(rango_clusters);
-            }
-        }
-
+        let solucion_inicial = cluster.generar_solucion_aleatoria(&mut generador);
         fitness_poblacion.push(cluster.fitness_externa(&solucion_inicial));
         poblacion.push(solucion_inicial);
     }
