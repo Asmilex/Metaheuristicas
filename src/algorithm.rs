@@ -807,20 +807,16 @@ pub fn am_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters 
 // ──────────────────────────────────────────────────────────────────────
 //
 
-
+/// Intensificador basado en la técnica del enfriamiento simulado
 #[allow(non_snake_case)]
-pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
-    println!("{} Ejecutando enfriamiento simulado para el cálculo de los clusters", "▸".cyan());
-    let now = Instant::now();
-
+pub fn enfriamiento_simulado_aplicado (solucion: &Vec<usize>, cluster: &mut Clusters, max_evaluaciones: usize, generador: &mut StdRng) -> Vec<usize> {
     //
     // ─────────────────────────────────────────────────────────────── PARAMETROS ─────
     //
 
-    let mut generador = StdRng::seed_from_u64(semilla);
     let uniforme_0_1 = Uniform::new(0.0, 1.0);
 
-    let mut solucion_actual = cluster.generar_solucion_aleatoria(&mut generador);
+    let mut solucion_actual = solucion.clone();
     let mut fitness_actual = cluster.fitness_externa(&solucion_actual);
 
     let mut mejor_solucion = solucion_actual.clone();
@@ -836,7 +832,6 @@ pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clust
     let Tf = 0.001;
     let k = 0.1;
 
-    let max_evaluaciones = 100_000;
     let M = max_evaluaciones/max_vecinos;
 
     //
@@ -856,7 +851,7 @@ pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clust
         num_exitos = 0;
 
         while vecinos_generados < max_vecinos && num_exitos < max_exitos {
-            let vecino = generar_vecino(&solucion_actual, cluster, &mut generador);
+            let vecino = generar_vecino(&solucion_actual, cluster, generador);
             vecinos_generados = vecinos_generados + 1;
 
             let fitness_vecino = cluster.fitness_externa(&vecino);
@@ -878,6 +873,25 @@ pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clust
 
         T = enfriar(T, M, T0, Tf);
     }
+
+    mejor_solucion
+}
+
+
+pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
+    println!("{} Ejecutando enfriamiento simulado para el cálculo de los clusters", "▸".cyan());
+    let now = Instant::now();
+
+    let mut generador = StdRng::seed_from_u64(semilla);
+
+    let max_evaluaciones = 100_000;
+
+    let mejor_solucion = enfriamiento_simulado_aplicado (
+        &cluster.generar_solucion_aleatoria(&mut generador),
+        cluster,
+        max_evaluaciones,
+        &mut generador
+    );
 
     println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
