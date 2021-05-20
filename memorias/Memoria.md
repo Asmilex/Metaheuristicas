@@ -58,9 +58,10 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
     - [Implementación](#implementación-2)
 - [Práctica 3: equilibrando diversificación e intensificación](#práctica-3-equilibrando-diversificación-e-intensificación)
   - [Enfriamiento simulado](#enfriamiento-simulado)
-  - [Generación de vecinos](#generación-de-vecinos)
+    - [Generación de vecinos](#generación-de-vecinos)
     - [Esquema de enfriamiento](#esquema-de-enfriamiento)
-  - [Pseudocódigo](#pseudocódigo)
+    - [Pseudocódigo](#pseudocódigo)
+  - [Búsqueda multiarranque básica](#búsqueda-multiarranque-básica)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
@@ -820,7 +821,7 @@ $$
 Esta última constante es el único parámetro que he modificado. En el guion no se especifica ninguno, por lo que se asume $1.0$. Sin embargo, esto produce fitness basante malos. En Bupa, por ejemplo, se conseguía un fitness de 0.5, mientras que con $k = 0.1$, se mejora muchísimo, haciendo que enfriamiento simulado se convierta en uno de los mejores.
 En la sección de análisis veremos el comportamiento.
 
-### Generación de vecinos
+#### Generación de vecinos
 
 En cada iteración, se generarán ciertos vecinos mediante el operador `generar_vecino()`. Se describe de la siguiente manera:
 
@@ -858,7 +859,7 @@ $$
 P\Big[X \le \exp{\frac{\Delta_f}{k * T}}\Big]
 $$
 
-### Pseudocódigo
+#### Pseudocódigo
 
 La implementación es la siguiente:
 ```
@@ -915,6 +916,32 @@ enfriamiento_simulado (cluster):
 ```
 
 * * *
+
+### Búsqueda multiarranque básica
+
+El algoritmo de **búsqueda multiarranque básica** es tan simple como su nombre indica. Genera 10 soluciones aleatorias, aplica una BL sobre ellas, y quédate con la mejor. Cada búsqueda local se aplicará `10_000` veces. Se aplica la misma de la sección [anterior](#búsqueda-local)
+
+Puesto que no tiene absolutamente nada más que añadir, presentaremos el pseudocódigo:
+```
+busqueda_multiarranque_basica (cluster):
+    mejor_solucion: Vector de tamaño cluster.num_elementos
+    mejor_fitness = f64::MAX
+
+    soluciones_a_generar = 10
+    iteraciones_maximas = 10_000
+
+    for _ in 0 .. soluciones_a_generar:
+        solucion = cluster.generar_solucion_aleatoria()
+        solucion = busqueda_local(solucion, cluster, iteraciones_maximas)
+
+        fitness = fitness(solucion)
+
+        if fitness < fitness_mejor:
+            mejor_solucion = solucion
+            mejor_fitness = fitness
+
+    mejor_solucion
+```
 
 ## Análisis de resultados
 
