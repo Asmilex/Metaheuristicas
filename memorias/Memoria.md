@@ -56,6 +56,11 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
   - [Algoritmos meméticos](#algoritmos-meméticos)
     - [Búsqueda local suave](#búsqueda-local-suave)
     - [Implementación](#implementación-2)
+- [Práctica 3: equilibrando diversificación e intensificación](#práctica-3-equilibrando-diversificación-e-intensificación)
+  - [Enfriamiento simulado](#enfriamiento-simulado)
+  - [Generación de vecinos](#generación-de-vecinos)
+    - [Esquema de enfriamiento](#esquema-de-enfriamiento)
+  - [Pseudocódigo](#pseudocódigo)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
@@ -94,7 +99,7 @@ Escribir en la línea de comandos `cargo run --release benchmark [algoritmos]`. 
   - Alternativamente, se pueden especificar a mano: `am_10_1`, `am_10_01`, `am_10_01_mejores`.
 - Para los algoritmos de la práctica 3, los parámetros de ejecución son:
   - `es` para enfriamiento simulado, `bmb` para la búsqueda multiarranque básica, `ils` para la búsqueda local reiterada, y `ils-es` para el híbrido entre estas dos últimas.
-  - `p3` si se quieren ejecutar todos
+  - `p3` si se quieren ejecutar todos.
 
 Si no se especifica ninguno, se usarán todos. Cada algoritmo se ejecuta 5 veces por dataset (por lo que cada uno se realiza 30 veces). La información resultante se exportará al archivo `./data/csv/[dataset]_[número de restricciones]/[nombre del algoritmo].csv`, el cual contendrá las medidas necesarias para el posterior análisis que realizaremos. Por ejemplo, un archivo sería `/data/csv/bupa_10/age_sf.csv`.
 
@@ -127,6 +132,8 @@ Durante estas prácticas propondremos diferentes algoritmos para resolver este p
 En la práctica 1, presentaremos soluciones sencillas basadas en algoritmos simples como [**Greedy** o **Búsqueda Local**](#práctica-1-greedy-k-medias-y-búsqueda-local).
 
 En la práctica 2, la cual es la que vamos a tratar, implementaremos algunas versiones de los [algoritmos **genéticos** y **meméticos**](#práctica-2-algoritmos-genéticos-y-meméticos).
+
+Finalmente, la práctica 3 presenta varios algoritmos que se encargan de equilibrar intensificación y exploración. Estos son: **enfriamiento simulado**, **búsqueda multiarranque básica**, **búsqueda local reiterada**, y un **híbrido entre las dos últimas**.
 
 
 * * *
@@ -784,6 +791,130 @@ Siguiendo la propuesta de la sección anterior, se podría modificar la implemen
 
 * * *
 
+
+## Práctica 3: equilibrando diversificación e intensificación
+
+### Enfriamiento simulado
+
+Este es el algoritmo más complejo de todos los que se implementarán en esta práctica. El funcionamiento se basa en permitir explorar el entorno al comienzo, y conforme avanza, centrarse en la intensificación.
+
+Esta idea se verá plasmada con el parámetro **temperatura**. Empezaremos en una cierta temperatura, $T_0$, e iremos disminuyéndola hasta alcanzar $T_f$, la temperatura final.
+
+Antes de introducir las partes específicas del algoritmo, mostremos las constantes que utilizaremos:
+- Máximo número de vecinos que se le permite generar a una solución = `10 * cluster.num_elementos`
+- Máximo número de veces que se le permite a un vecino actualizar la solución para una cierta temperatura `= 0.1 * max_vecinos`. Lo hacemos para no quedarnos estancados.
+- Temperatura inicial dada por la expresión
+$$
+T_0 = \frac{\mu * \text{fitness inicial}}{-ln(\phi)}
+$$
+donde
+$$
+\mu = 0.3 \\
+\phi = 0.3
+$$
+- Temperatura final $T_f = 0.001$
+- Número máximo de evaluaciones `= 100_000`
+- `M = max_evaluaciones/max_vecinos`. Lo usaremos para nuestro esquema de enfriamiento.
+- Constante de la condición de metrópolis $k = 0.1$.
+
+Esta última constante es el único parámetro que he modificado. En el guion no se especifica ninguno, por lo que se asume $1.0$. Sin embargo, esto produce fitness basante malos. En Bupa, por ejemplo, se conseguía un fitness de 0.5, mientras que con $k = 0.1$, se mejora muchísimo, haciendo que enfriamiento simulado se convierta en uno de los mejores.
+En la sección de análisis veremos el comportamiento.
+
+### Generación de vecinos
+
+En cada iteración, se generarán ciertos vecinos mediante el operador `generar_vecino()`. Se describe de la siguiente manera:
+
+```
+generar_vecino(s, cluster):
+    vecino = s.clone()
+
+    loop:
+        i = generar aleatorio en [0, vecino.len())
+        c = generar aleatorio en [0, cluster.num_clusters)
+
+        antiguo_cluster = vecino[i]
+        vecino[i] = c
+
+        Si vecino es una solución válida, devolver vecino
+        En otro caso, vecino[i] = antiguo_cluster
+```
+
+Es decir, intentamos cambiar la posición i-ésima por un nuevo cluster.
+
+#### Esquema de enfriamiento
+
+La forma en la que decrece la dicta la función `enfriar()`. Existen muchos tipos de enfriamiento. Aquí utilizaremos el de Cauchy, que se implementa de la siguiente forma:
+
+```
+enfriar(T, M, T0, Tf):
+    beta = (T0 - Tf)/(M as f64 * T0 * Tf);
+
+    T/(1.0 + beta * T)
+```
+
+La aceptación de un vecino vendrá dada por la **condición de metrópolis**. Cuando hayamos conseguido uno nuevo, tendremos que comprobar si es mejor que nuestra solución actual. Si no lo fuera, existe una probabilidad de aceptarla. Esta probabilidad viene dada por el criterio de metrópolis: dado $X \sim U(0, 1)$,
+
+$$
+P\Big[X \le \exp{\frac{\Delta_f}{k * T}}\Big]
+$$
+
+### Pseudocódigo
+
+La implementación es la siguiente:
+```
+enfriamiento_simulado (cluster):
+    max_evaluaciones = 100_000
+
+    solucion_actual = cluster.generar_solucion_aleatoria()
+    fitness_actual = fitness(solucion_actual)
+
+    mejor_solucion = solucion_actual.clone()
+    mejor_fitness = fitness_actual
+
+    max_vecinos = 10 * cluster.num_elementos
+    max_exitos = (0.1 * max_vecinos).ceil()
+
+    mu: f64 = 0.3
+    phi: f64 = 0.3
+
+    T0 = mu * mejor_fitness/-phi.ln()
+    Tf = 0.001
+    k = 0.1
+
+    let M = max_evaluaciones/max_vecinos
+
+    let T = T0
+    let evaluaciones_fitness = 0
+    let num_exitos = 1
+
+    while T > Tf && evaluaciones_fitness < max_evaluaciones && num_exitos > 0:
+        vecinos_generados = 0
+        num_exitos = 0
+
+        while vecinos_generados < max_vecinos && num_exitos < max_exitos:
+            let vecino = generar_vecino(&solucion_actual)
+            vecinos_generados = vecinos_generados + 1
+
+            fitness_vecino = fitness(vecino);
+            delta = fitness_vecino - fitness_actual
+            evaluaciones_fitness = evaluaciones_fitness + 1
+
+            if delta < 0.0 || aleatorio en [0, 1] <= (-delta/(k * T)).exp():
+                solucion_actual = vecino
+                fitness_actual = fitness_vecino
+
+                num_exitos = num_exitos + 1
+
+                if fitness_actual < mejor_fitness:
+                    mejor_solucion = solucion_actual.clone()
+                    mejor_fitness = fitness_actual
+
+        T = enfriar(T, M, T0, Tf);
+
+    mejor_solucion
+```
+
+* * *
 
 ## Análisis de resultados
 
