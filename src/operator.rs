@@ -1,6 +1,4 @@
 use rand::{Rng, rngs::StdRng, distributions::Uniform};
-use std::cmp::{min, max};
-
 
 #[derive(Debug)]
 pub enum Operadores {

@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/metaheuristicas.exe",
-            "args": ["age_un", "zoo", "10"],
+            "args": ["bupa", "10", "es"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

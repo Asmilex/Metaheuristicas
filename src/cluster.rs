@@ -2,7 +2,7 @@ use crate::utils::*;
 
 use nalgebra::*;
 use multimap::MultiMap;
-use rand::{rngs::StdRng, distributions::Uniform};
+use rand::{Rng, rngs::StdRng, distributions::Uniform};
 
 use std::fmt;
 

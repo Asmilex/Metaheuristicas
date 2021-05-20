@@ -834,42 +834,109 @@ pub fn am_10_01_mejores (cluster: &mut Clusters, semilla: u64) -> &mut Clusters 
 //
 
 
+#[allow(non_snake_case)]
 pub fn enfriamiento_simulado(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     //
     // ─────────────────────────────────────────────────────────────── PARAMETROS ─────
     //
 
     let mut generador = StdRng::seed_from_u64(semilla);
+    let uniforme_0_1 = Uniform::new(0.0, 1.0);
 
-    let mejor_solucion = cluster.generar_solucion_aleatoria(&mut generador);
+    let mut solucion_actual = cluster.generar_solucion_aleatoria(&mut generador);
+    let mut fitness_actual = cluster.fitness_externa(&solucion_actual);
 
-    let max_vecinos = 10 * cluster.num_elementos;   // NOTE: esperar al guión actualizado
+    let mut mejor_solucion = solucion_actual.clone();
+    let mut mejor_fitness = fitness_actual;
+
+    let max_vecinos = 10 * cluster.num_elementos;
     let max_exitos = (0.1 * max_vecinos as f64).ceil() as usize;
 
     let mu: f64 = 0.3;
-    let Phi: f64 = 0.3;
+    let phi: f64 = 0.3;
 
-    let T0 = mu * cluster.fitness_externa(&mejor_solucion)/-Phi.ln();
+    let T0 = mu * mejor_fitness/-phi.ln();
     let Tf = 0.001;
+    let k = 0.1;
 
-    let M = 100_000/max_vecinos;
+    let max_evaluaciones = 100_000;
+    let M = max_evaluaciones/max_vecinos;
 
     //
     // ────────────────────────────────────────────────────────── BUCLE PRINCIPAL ─────
     //
 
+    let mut T = T0;
+    let mut evaluaciones_fitness = 0;
+    let mut num_exitos = 1; // Para que entre. Este valor ahora mismo no sirve para nada más.
 
+    // Condiciones:
+    // 1. Temperatura mayor que la final. Poco a poco se va enfriando, por lo que debemos parar al llegar al final
+    // 2. No nos hemos pasado de las máximas evaluaciones fijadas
+    // 3. Se ha conseguido generar al menos una nueva solución
+    while T > Tf && evaluaciones_fitness < max_evaluaciones && num_exitos > 0 {
+        let mut vecinos_generados = 0;
+        num_exitos = 0;
 
+        while vecinos_generados < max_vecinos && num_exitos < max_exitos {
+            let vecino = generar_vecino(&solucion_actual, cluster, &mut generador);
+            vecinos_generados = vecinos_generados + 1;
 
+            let fitness_vecino = cluster.fitness_externa(&vecino);
+            let delta = fitness_vecino - fitness_actual;
+            evaluaciones_fitness = evaluaciones_fitness + 1;
+
+            if delta < 0.0 || generador.sample(uniforme_0_1) <= (-delta/(k * T)).exp() {
+                solucion_actual = vecino;
+                fitness_actual = fitness_vecino;
+
+                num_exitos = num_exitos + 1;
+
+                if fitness_actual < mejor_fitness {
+                    mejor_solucion = solucion_actual.clone();
+                    mejor_fitness = fitness_actual;
+                }
+            }
+        }
+
+        T = enfriar(T, M, T0, Tf);
+    }
+
+    cluster.asignar_clusters(mejor_solucion);
     cluster
 }
 
 /// # Esquema de enfriamiento
 /// Actualmente, se utiliza el de Cauchy.
+#[allow(non_snake_case)]
 pub fn enfriar(T: f64, M: usize, T0: f64, Tf: f64) -> f64 {
     let beta = (T0 - Tf)/(M as f64 * T0 * Tf);
 
     T/(1.0 + beta * T)
+}
+
+
+pub fn generar_vecino(s: &Vec<usize>, cluster: &Clusters, generador: &mut StdRng) -> Vec<usize> {
+    let mut vecino = s.clone();
+    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
+    let rango_indices = Uniform::new(0, vecino.len());
+
+    let mut i: usize;
+    let mut c: usize;
+    let mut antiguo_cluster: usize;
+
+    loop {
+        i = generador.sample(rango_indices);
+        c = generador.sample(rango_clusters);
+
+        antiguo_cluster = vecino[i];
+        vecino[i] = c;
+
+        match cluster.solucion_valida_externa(&vecino) {
+            true => break vecino,
+            false => vecino[i] = antiguo_cluster
+        }
+    }
 }
 
 
