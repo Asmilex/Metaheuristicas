@@ -1040,9 +1040,60 @@ fn busqueda_local_bmb(solucion: &Vec<usize>, cluster: &mut Clusters, iteraciones
 // ────────────────────────────────────────────────────────────────────────────────
 
 
+enum IntensificadorILS {
+    BusquedaLocal,
+    EnfriamientoSimulado
+}
+
+/// Algoritmo general del ILS. Decide entre si usa el enfriamiento simulado o la búsqueda local
+fn ils (cluster: &mut Clusters, algoritmo: IntensificadorILS, semilla: u64) -> &mut Clusters {
+    let mut generador = StdRng::seed_from_u64(semilla);
+
+    let mut usos_bl_restantes = 10;
+    let iteraciones_maximas_bl = 10_000;
+
+    let intensificador = match algoritmo {
+        IntensificadorILS::BusquedaLocal => busqueda_local_bmb,
+        IntensificadorILS::EnfriamientoSimulado => enfriamiento_simulado_aplicado
+    };
+
+    let solucion = intensificador (
+        &cluster.generar_solucion_aleatoria(&mut generador),
+        cluster,
+        iteraciones_maximas_bl,
+        &mut generador
+    );
+
+    usos_bl_restantes = usos_bl_restantes - 1;
+
+    let mut mejor_solucion = solucion;
+    let mut mejor_fitness = cluster.fitness_externa(&mejor_solucion);
+
+    while usos_bl_restantes > 0 {
+        let mut nueva_sol = mutacion_ils(&mejor_solucion, cluster, &mut generador);
+        nueva_sol = busqueda_local_bmb(&nueva_sol, cluster, iteraciones_maximas_bl, &mut generador);
+
+        usos_bl_restantes = usos_bl_restantes - 1;
+
+        let fitness_nueva = cluster.fitness_externa(&nueva_sol);
+
+        if fitness_nueva < mejor_fitness {
+            mejor_solucion = nueva_sol;
+            mejor_fitness = fitness_nueva;
+        }
+    }
+
+    cluster.asignar_clusters(mejor_solucion);
+
+    cluster
+}
+
+
 pub fn busqueda_local_reiterada(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     println!("{} Ejecutando búsqueda multiarranque reiterada para el cálculo de los clusters", "▸".cyan());
     let now = Instant::now();
+
+    let cluster = ils(cluster, IntensificadorILS::BusquedaLocal, semilla);
 
     println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 
@@ -1050,12 +1101,11 @@ pub fn busqueda_local_reiterada(cluster: &mut Clusters, semilla: u64) -> &mut Cl
 }
 
 
-// ────────────────────────────────────────────────────────────────────────────────
-
-
 pub fn hibrido_ils_es(cluster: &mut Clusters, semilla: u64) -> &mut Clusters {
     println!("{} Ejecutando el híbrido ILS-ES para el cálculo de los clusters", "▸".cyan());
     let now = Instant::now();
+
+    let cluster = ils(cluster, IntensificadorILS::EnfriamientoSimulado, semilla);
 
     println!("{} Cálculo del cluster finalizado en {} ms {}\n", "▸".cyan(), now.elapsed().as_millis(),  "✓".green());
 

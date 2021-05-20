@@ -1,4 +1,5 @@
 use rand::{Rng, rngs::StdRng, distributions::Uniform};
+use crate::cluster::*;
 
 #[derive(Debug)]
 pub enum Operadores {
@@ -7,7 +8,7 @@ pub enum Operadores {
 }
 
 
-pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
+pub fn cruce_uniforme (padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
     let rango = Uniform::new(0, padre_1.len());
 
     let mut descendencia = vec![0; padre_1.len()];
@@ -39,7 +40,7 @@ pub fn cruce_uniforme(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mu
 }
 
 
-pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
+pub fn cruce_segmento_fijo (padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador: &mut StdRng) -> Vec<usize> {
     let mut descendencia = vec![0; padre_1.len()];
 
     let rango = Uniform::new(0, padre_1.len());
@@ -85,8 +86,7 @@ pub fn cruce_segmento_fijo(padre_1: &Vec<usize>, padre_2: &Vec<usize>, generador
     descendencia
 }
 
-
-pub fn reparar(hijo: &mut Vec<usize>, k: usize, generador: &mut StdRng) {
+pub fn reparar (hijo: &mut Vec<usize>, k: usize, generador: &mut StdRng) {
     // Mover el primero
     let mut recuento= vec![0; k];
 
@@ -111,4 +111,44 @@ pub fn reparar(hijo: &mut Vec<usize>, k: usize, generador: &mut StdRng) {
             }
         }
     }
+}
+
+
+// ────────────────────────────────────────────────────────────────────────────────
+
+
+pub fn mutacion_ils (solucion: &Vec<usize>, cluster: &Clusters,  generador: &mut StdRng) -> Vec<usize> {
+    let mut s = solucion.clone();
+
+    let rango_indices = Uniform::new(0, solucion.len());
+    let rango_clusters = Uniform::new_inclusive(1, cluster.num_clusters);
+
+    let inicio_segmento = generador.sample(rango_indices);
+    let tamano_segmento = (0.1 * s.len() as f64).ceil() as usize;
+
+    let mut i = inicio_segmento;
+    let mut copias: usize = 0;
+
+    while copias < tamano_segmento {
+        s[i] = solucion[i];
+
+        i = (i+1)%s.len();
+        copias = copias + 1;
+    }
+
+    // i termina justo por donde debemos seguir copiando
+    loop {
+        s[i] = generador.sample(rango_clusters);
+        i = (i+1)%s.len();
+
+        if i == inicio_segmento {
+            break;
+        }
+    }
+
+    if !cluster.solucion_valida_externa(&s) {
+        reparar(&mut s, cluster.num_clusters, generador);
+    }
+
+    s
 }
