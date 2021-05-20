@@ -942,7 +942,6 @@ pub fn busqueda_multiarranque_basica(cluster: &mut Clusters, semilla: u64) -> &m
 
     let mut generador = StdRng::seed_from_u64(semilla);
 
-    cluster.asignar_clusters(cluster.generar_solucion_aleatoria(&mut generador));   // Problema técnico: BL requiere de una solución de partida. La inicializo aleatoriamente.
     let mut mejor_solucion = vec![0; cluster.num_elementos];    // No se usa para nada. Si no se asigna ninguno, fallará
     let mut mejor_fitness = f64::MAX;
 
@@ -972,6 +971,10 @@ fn busqueda_local_bmb(solucion: &Vec<usize>, cluster: &mut Clusters, iteraciones
     // TODO cambiar cómo se gestiona la búsqueda local. Funcionamiento interno. Shit happens.
     // Por la implementación actual, BL trabaja muy cercano a la sol. interna del clúster.
     // Como no es mi intención modificarlo aquí, voy a darle la nueva, para restaurar después la antigua.
+
+    if !cluster.solucion_valida() {
+        cluster.asignar_clusters(cluster.generar_solucion_aleatoria(generador));   // Problema técnico: BL requiere de una solución de partida. La inicializo aleatoriamente si me viene vacío.
+    }
 
     let antigua_sol = cluster.clusters().clone();
     cluster.asignar_clusters(solucion.clone());
