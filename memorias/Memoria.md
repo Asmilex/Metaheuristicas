@@ -7,7 +7,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
 
 # Algoritmos para resolver el problema de agrupación con restricciones
 
-<img src="./img/P2/Portada.jpg" width="808" height="1264" style="zoom:50%;"/>
+<img src="./img/P3/Portada.jpg" width="808" height="1264" style="zoom:50%;"/>
 
 > **Autor**: Andrés Millán
 > **DNI**:
@@ -77,7 +77,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
     - [Bupa 10](#bupa-10)
     - [Bupa 20](#bupa-20)
   - [Síntesis](#síntesis)
-    - [Los algoritmos de la práctica 3](#los-algoritmos-de-la-práctica-3)
+    - [Algoritmos de la práctica 3](#algoritmos-de-la-práctica-3)
     - [Sobre los genéticos](#sobre-los-genéticos)
     - [Algoritmos meméticos](#algoritmos-meméticos-1)
     - [Dejándonos llevar por la corriente](#dejándonos-llevar-por-la-corriente)
@@ -822,7 +822,7 @@ $$
 \mu = 0.3 \\
 \phi = 0.3
 $$
-- Temperatura final $T_f = 0.001$
+- Temperatura final $T_{f} = 0.001$.
 - Número máximo de evaluaciones `= 100_000`
 - `M = max_evaluaciones/max_vecinos`. Lo usaremos para nuestro esquema de enfriamiento.
 - Constante de la condición de metrópolis $k = 0.1$.
@@ -857,7 +857,7 @@ La forma en la que decrece la dicta la función `enfriar()`. Existen muchos tipo
 
 ```
 enfriar(T, M, T0, Tf):
-    beta = (T0 - Tf)/(M as f64 * T0 * Tf);
+    beta = (T0 - Tf)/(M * T0 * Tf);
 
     T/(1.0 + beta * T)
 ```
@@ -884,8 +884,8 @@ enfriamiento_simulado (cluster):
     max_vecinos = 10 * cluster.num_elementos
     max_exitos = (0.1 * max_vecinos).ceil()
 
-    mu: f64 = 0.3
-    phi: f64 = 0.3
+    mu = 0.3
+    phi = 0.3
 
     T0 = mu * mejor_fitness/-phi.ln()
     Tf = 0.001
@@ -929,7 +929,7 @@ enfriamiento_simulado (cluster):
 
 ### Búsqueda multiarranque básica
 
-El algoritmo de **búsqueda multiarranque básica** es tan simple como su nombre indica. Genera 10 soluciones aleatorias, aplica una BL sobre ellas, y quédate con la mejor. Cada búsqueda local se aplicará `10_000` veces. Se aplica la misma de la sección [anterior](#búsqueda-local)
+El algoritmo de **búsqueda multiarranque básica** es tan simple como su nombre indica. Genera 10 soluciones aleatorias, aplica una BL sobre ellas, y quédate con la mejor. Cada búsqueda local se aplicará `10_000` veces. Se utlizará la misma de la [práctica 1](#búsqueda-local).
 
 Puesto que no tiene absolutamente nada más que añadir, presentaremos el pseudocódigo:
 ```
@@ -953,9 +953,13 @@ busqueda_multiarranque_basica (cluster):
     mejor_solucion
 ```
 
+
+* * *
+
+
 ### Búsqueda local reiterada
 
-La **búsqueda local reiterada** (Iterated local search en inglés) es un sencillo algoritmo en el que se genera una solución aleatoria, se aplica una BL, y se muta drásticamente. Este proceso se repite un cierto número de veces. El algoritmo termina devolviendo la mejor solución que nos hemos encontrado
+La **búsqueda local reiterada** (**I**terated **L**ocal **S**earch en inglés) es un sencillo algoritmo en el que se genera una solución aleatoria, se aplica una BL, y se muta drásticamente. Este proceso se repite un cierto número de veces. El algoritmo termina devolviendo la mejor solución que se ha encontrado.
 
 La búsqueda local que aplicaremos será la misma que la de la búsqueda multiarranque básica. Los parámetros de ejecución son `10` usos de la BL, y `10_000` evaluaciones máximas para cada uno.
 
@@ -983,14 +987,12 @@ mutacion_ils (solucion, cluster):
         i = (i+1)%s.len()
         copias = copias + 1
 
-    loop {
+    loop:
         s[i] = aleatorio en [1, cluster.num_clusters]
         i = (i+1)%s.len()
 
         if i == inicio_segmento:
             break
-
-    }
 
     if !solucion_valida(s):
         reparar(s, cluster.num_clusters)
@@ -1094,10 +1096,7 @@ Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 
 - **Agregado**: el fitness de la solución. Cuanto más bajo, mejor.
 - **Tiempo de ejecución** (ms).
 
-Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas, así como la velocidad turbo de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo). El 8250U nunca llega a sufrir thermal throttling, así que el turbo debería mantenerse al máximo durante la ejecución. No obstante, para el análisis se utiliza el 4790.
-
-Todos los resultados han sido ordenados de menor a mayor fitness, por lo que resultará más fácil distinguir cuáles son los algoritmos que mejor rinden.
-
+Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas, así como la velocidad turbo de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo). Para el análisis se utiliza el 4790.
 
 * * *
 
@@ -1248,7 +1247,7 @@ Puesto que ya tenemos todas las tablas sintetizadas, es hora de analizar los val
 
 En total, hemos implementado 13 tipos de algoritmos distintos. Algunos se basan en técnicas de fuerza bruta, mientras que otros utilizan técnicas más sofisticadas. En la última práctica, los 4 algoritmos se centran en buscar un equilibrio entre diversificación e intensificación de una manera u otra.
 
-#### Los algoritmos de la práctica 3
+#### Algoritmos de la práctica 3
 
 Una de las primeras conclusiones que podemos extraer es clara: **Búsqueda local reiterada**, ya sea utilizando enfriamiento simulado o búsqueda local, es el algoritmo más consistententemente bueno. En casi todos los datasets, produce el mejor fitness o uno de los mejores. Además, a excepción de Bupa, sus tiempos de ejecución son bastante bajos.
 
@@ -1294,6 +1293,7 @@ Puesto que en la práctica anterior ya le dedicamos la mayor parte del tiempo, r
 
 Este gran rendimiento viene acompañado de un incremento en los tiempos de ejecución. Además, **AM_10_01_mejores tarda considerablemente más que el resto de meméticos**. Esto podría ser debido a la reordenación de la población. Como en la implementación se ha usado un bubble sort, podríamos usar uno más eficientes para acelerar esta función.
 
+Tras conseguir una perspectiva más amplia de cómo se comportan todos, personalmente, pienso que no merecen la pena para estos datasets. La carga necesaria para implementarlos es importante, y se ven sobrepasados por los de la práctica 3.
 
 #### Dejándonos llevar por la corriente
 
@@ -1306,7 +1306,7 @@ Esto último nos induce a pensar que **resulta más beneficioso tener clústers 
 Profundicemos en esta última idea. Si nos fijamos en los resultados, existe una correlación muy clara entre el fitness y la desviación media intraclúster. Como hemos ordenado las tablas por fitness, si nos fijamos en la desviación media intraclúster, vemos que **por lo general, las desviaciones medias están también ordenadas**:
 
 <img align="center" src="./img/P3/Bupa%2010%20fitness.png" alt="Gráfica de fitness">
-<img align="center" src="./img/P3/Bupa%2010%20fitness.png" alt="Gráfica de desviación">
+<img align="center" src="./img/P3/Bupa%2010%20desv.png" alt="Gráfica de desviación">
 
 La curva que se genera es prácticamente la misma, excepto en los genéticos generacionales.
 
@@ -1314,6 +1314,11 @@ La curva que se genera es prácticamente la misma, excepto en los genéticos gen
 
 **Estos datasets se ven enormemente beneficiados por los optimizadores locales**. Los elementos del espacio se encuentran agrupados en el espacio, de forma que en cuanto un algoritmo *da con la clave* del clúster, con poco esfuerzo se llega a un óptimo local. Uno muy bueno, pues la mayor parte de los que tenemos llegan a resultados similares.
 
+Los tiempos de ejecución no son particularmente altos. Además, los algoritmos de la práctica 3 escalan muy bien. Las búsquedas locales se podrían paralelizar, de forma que el tiempo de ejecución disminuya considerablemente.
+
+Llegados a este punto, es hora de concluir. Claramente, **los mejors algoritmos son todos aquellos que se basan en la búsqueda local**. Si tuviera que elegir uno, sería el híbrido entre la búsqueda local reiterada con enfriamiento simulado. Es muy versátil, pues los parámetros de ES podrían ajustarse aún más, e ILS permite paralelizar la ejecución. En estos 6 conjuntos, es el que mejor se ha comportado con respecto a fitness.
+
+Con esto, las prácticas de la asignatura metaheurísticas llegan a su fin.
 
 
 * * *
@@ -1327,4 +1332,5 @@ La curva que se genera es prácticamente la misma, excepto en los genéticos gen
 - [Documentación de Nalgebra](https://www.nalgebra.org/)
 - [Documentación de Multimap](https://docs.rs/multimap/0.8.3/multimap/)
 - [StackOverflow](https://stackoverflow.com/)
+- [sqliteviz](https://lana-k.github.io/sqliteviz/#/) para la generación de gráficas.
 - Material de teoría y de prácticas
