@@ -77,6 +77,11 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
     - [Bupa 10](#bupa-10)
     - [Bupa 20](#bupa-20)
   - [Síntesis](#síntesis)
+    - [Los algoritmos de la práctica 3](#los-algoritmos-de-la-práctica-3)
+    - [Sobre los genéticos](#sobre-los-genéticos)
+    - [Algoritmos meméticos](#algoritmos-meméticos-1)
+    - [Dejándonos llevar por la corriente](#dejándonos-llevar-por-la-corriente)
+    - [Conclusiones](#conclusiones)
 - [Referencias](#referencias)
 
 
@@ -1119,6 +1124,10 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | agg_sf           |              `18` |                          `0.7108` |    `0.8427` |          `2512` |
 | greedy           |               `2` |                          `0.9442` |    `0.9533` |             `1` |
 
+<img align="center" src="./img/P3/Zoo10.png" alt="Gráfica Zoo 10">
+
+* * *
+
 
 #### Zoo 20
 
@@ -1137,6 +1146,8 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | age_un           |              `24` |                          `0.7294` |    `0.8247` |          `2537` |
 | agg_sf           |              `33` |                          `0.7478` |    `0.8802` |          `2648` |
 | greedy           |               `2` |                          `0.9871` |    `0.9951` |             `1` |
+
+<img align="center" src="./img/P3/Zoo20.png" alt="Gráfica Zoo 20">
 
 * * *
 
@@ -1158,7 +1169,9 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | agg_sf           |              `84` |                          `0.2168` |    `0.2994` |          `7968` |
 | greedy           |               `4` |                          `0.3786` |    `0.3826` |             `2` |
 
+<img align="center" src="./img/P3/Glass10.png" alt="Gráfica Glass 10">
 
+* * *
 
 #### Glass 20
 
@@ -1178,6 +1191,7 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | agg_sf           |              `83` |                          `0.2335` |    `0.2766` |          `8757` |
 | greedy           |               `1` |                          `0.3466` |    `0.3467` |             `2` |
 
+<img align="center" src="./img/P3/Glass20.png" alt="Gráfica Glass 20">
 
 * * *
 
@@ -1200,6 +1214,9 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | agg_un           |             `617` |                          `0.1644` |    `0.3295` |         `14505` |
 | agg_sf           |             `614` |                          `0.1676` |    `0.3320` |         `17053` |
 
+<img align="center" src="./img/P3/Bupa%2010%20fitness.png" alt="Gráfica Bupa 10">
+
+* * *
 
 #### Bupa 20
 
@@ -1219,33 +1236,34 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 | agg_sf           |            `1146` |                          `0.1592` |    `0.3190` |         `22820` |
 | agg_un           |            `1179` |                          `0.1647` |    `0.3290` |         `18233` |
 
+<img align="center" src="./img/P3/Bupa20.png" alt="Gráfica Bupa 20">
+
 
 * * *
 
 
 ### Síntesis
 
-Puesto que ya tenemos todas las tablas sintetizadas, es hora de sintetizar los valores que nos han salido.
+Puesto que ya tenemos todas las tablas sintetizadas, es hora de analizar los valores que nos han salido. En este análisis se mantendrán todas las consideraciones de las prácticas anteriores, para dar una visión global de toda la asignatura.
 
-Claramente podemos observar que los **algoritmos meméticos producen los mejores resultados**. En 4 de los 6 casos, un memético ha producido el menor fitness. Y en todos los datasets, siempre se posicionan entre los mejores. Debemos notar que los distintos parámetros afectan de forma diferente a cada dataset. Por ejemplo, **AM_10_01 genera mejores resultados en Glass**, mientras que en **Zoo funcionan bien tanto AM_10_1 como AM_10_01_mejores**.
+En total, hemos implementado 13 tipos de algoritmos distintos. Algunos se basan en técnicas de fuerza bruta, mientras que otros utilizan técnicas más sofisticadas. En la última práctica, los 4 algoritmos se centran en buscar un equilibrio entre diversificación e intensificación de una manera u otra.
 
-Este gran rendimiento viene acompañado de un incremento en los tiempos de ejecución. Además, **AM_10_01_mejores tarda considerablemente más que el resto de meméticos**. Esto podría ser debido a la reordenación de la población. Como en la implementación se ha usado un bubble sort, podríamos usar uno más eficientes para acelerar esta función.
+#### Los algoritmos de la práctica 3
+
+Una de las primeras conclusiones que podemos extraer es clara: **Búsqueda local reiterada**, ya sea utilizando enfriamiento simulado o búsqueda local, es el algoritmo más consistententemente bueno. En casi todos los datasets, produce el mejor fitness o uno de los mejores. Además, a excepción de Bupa, sus tiempos de ejecución son bastante bajos.
+
+Lo siguiente que podemos observar es que la **búsqueda multiarranque básica**, aún siendo el algoritmo más sencillo que hemos implementado, consigue el tercer puesto en casi todos los datasets. La diferencia de fitness entre los primeros puestos y BMB a veces está por debajo de la décima. No obstante, el tiempo de ejecución es relativamente alto, ya que hacemos varias veces la BL.
+
+**Enfriamiento simulado** funciona bastante bien si se utiliza el parámetro $k = 0.1$. Si hubiéramos usado $k = 1.0$, el resultado sería muy diferente. En mis pruebas, aunque no son formales, se conseguía un fitness de aproximadamente `0.5` en Bupa, mientras que nuestros resultados son de `0.15` en media; una diferencia de `0.02` en media con respecto al primero. En el peor de los caoss, hubiéramos descartado tanto ES como ILS-ES por sus resultados resultados. Esto es un ejemplo de cómo puede afectar un cambio de parámetro tan simple.
+El motivo de esta mejora es cómo actúa enfriamiento simulado. Lo que ocurría con $k = 1.0$ es que la condición de metrópolis se cumplía demasiado a menudo a altas temperaturas. Esto hacía que cambiáramos de solución muy a menudo, y gastáramos todas las evaluaciones antes de llegar a la zona de intensificación. *Cerrando el grifo*, arreglamos este problema.
+
+Es lógico pensar que la mayor parte de estos algoritmos va a rendir bien. Como empleamos de base la búsqueda local para algunos de ellos, el fitness que conseguirán será, generalmente, igual o mejor. Más adelante investigaremos el motivo.
+
+#### Sobre los genéticos
+
+> El siguiente análisis es el mismo que el de la práctica 2. No mucho ha cambiado, y sigue siendo relevante para la conclusión a la que llegaremos.
 
 Hablemos ahora de los algoritmos genéticos. Lo primero que resulta evidente es que **el modelo generacional rinde particularmente mal**. Tanto AGG_UN como AGG_SF funcionan peor que Greedy, a excepción del dataset Zoo. En contrapartida, el **modelo estacionario bastante bien**. Excepto en Zoo, se posiciona mejor que la búsqueda local.
-
-**Búsqueda local sigue siendo muy consistente entre todos los datasets**. Esto podría deberse a cómo se han organizado los datos: dado que son conjuntos preparados, lo normal es que los mínimos locales se encuentren agrupados en zonas habituales del espacio. En estos casos, un optimizador local haya soluciones de manera eficiente.
-
-Por último, **Greedy K-Medias es el algoritmo que peor rinde de todos en relación al fitness junto con los generacionales**. Aunque es rapidísimo, sus resultados suelen encontrarse por la parte baja. No obstante, por su construcción, se encarga de minimizar primero el número de restricciones violadas. Por lo que en los casos particulares en los que interese tanto rapidez de ejecución como minimización de infeasibility, podría considerarse una elección sólida.
-
-Hasta ahora nos hemos centrado únicamente en el fitness. Mirando el infeasibility, podemos ver que sale un alto número de violaciones en general comparado con Greedy. Por ejemplo, en Bupa 10:
-
-| **Algoritmo** | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
-|:--------------|------------------:|----------------------------------:|------------:|----------------:|
-| bl            |             `133` |                         `0.11054` |   `0.14618` |          `6039` |
-| ...           |                   |                                   |             |                 |
-| greedy        |              `29` |                         `0.22779` |   `0.23546` |            `16` |
-
-Esto nos induce a pensar que **resulta más beneficioso tener clústers cohesionados que intentar minimizar las violaciones**. Esto explicaría el mal rendimiento en general de Greedy, atendiendo a nuestra definición de la función fitness.
 
 Para mejorar el rendimiento de los algoritmos genéticos generacionales, se puede cambiar el parámetro que controla la probabilidad de mutación. **Usando ${1}/\text{(número de genes)}$ en vez de $0.1/\text{(número de genes)}$**, se consiguen los siguientes resultados en Bupa 10:
 
@@ -1257,8 +1275,6 @@ Para mejorar el rendimiento de los algoritmos genéticos generacionales, se pued
 | age_sf        |                                         `0.1816` |                                          `0.16398` |
 | agg_un        |                                         `0.2744` |                                          `0.32955` |
 | agg_sf        |                                         `0.2770` |                                          `0.33208` |
-
-Claramente vemos cómo todos los genéticos generacional consiguen un fitness considerablemente menor. Esta tendencia se puede apreciar en todos los datasets.
 
 Por último, debemos destacar la rápida convergencia del límite inferior de la sucesión de fitness. Aunque no se estudiará de manera explícita, merece la pena mencionarlo. Mirando la sucesión de máximos y mínimos fitness de todos los algoritmos genéticos, vemos que tras un cierto número de generaciones, el resultado se estabiliza. Esto nos indica que el número de evaluaciones del fitness es más que suficiente para garantizar la convergencia. Usando AGG_Un para Bupa 10, y tomando puntos aleatorios:
 
@@ -1272,9 +1288,32 @@ Por último, debemos destacar la rápida convergencia del límite inferior de la
 
 Podemos ver que, conforme avanzan las generaciones, la mejora se reduce. Aunque depende del algoritmo y del dataset, la mejora que obtendríamos al aumentar el número de evaluaciones podría ser incluso nula. Por ello, podemos asegurar que no desperdiciamos tiempo de procesamiento.
 
-Esto concluye el desarrollo de la práctica 2. Llegados a este punto, y tras hacer un estudio de todos nuestros algoritmos, **resulta difícil quedarnos con únicamente uno**. Todos tienen sus ventajas e inconvenientes, y se comportan de forma distinta en nuestros datasets. Sin embargo, es necesario mencionar **la consistencia de los meméticos**. Ajustando parámetros, hemos conseguido que rindan mejor que ninguno, aunque a veces la diferencia sea ínfima.
+#### Algoritmos meméticos
 
-En la siguiente práctica, introduciremos enfriamiento simulado y multiarranque. ¡Seleccionar únicamente uno podría ser incluso más difícil!
+Puesto que en la práctica anterior ya le dedicamos la mayor parte del tiempo, recordemos las conclusiones de los algoritmos meméticos. **AM_10_01 genera mejores resultados en Glass**, mientras que en **Zoo funcionan bien tanto AM_10_1 como AM_10_01_mejores**.
+
+Este gran rendimiento viene acompañado de un incremento en los tiempos de ejecución. Además, **AM_10_01_mejores tarda considerablemente más que el resto de meméticos**. Esto podría ser debido a la reordenación de la población. Como en la implementación se ha usado un bubble sort, podríamos usar uno más eficientes para acelerar esta función.
+
+
+#### Dejándonos llevar por la corriente
+
+**Búsqueda local sigue siendo muy consistente entre todos los datasets**. Incluso siendo uno de los primeros algoritmos que implementamos, los resultados son similares a los que hemos obtenido al final de las prácticas.
+
+Por último, **Greedy K-Medias es el algoritmo que peor rinde de todos en relación al fitness junto con los generacionales**. Aunque es rapidísimo, sus resultados suelen encontrarse por la parte baja. Por construcción, se encarga de minimizar primero el número de restricciones violadas. Esto sería interesante en aquellos casos particulares en los que necesitemos tanto rapidez de ejecución como minimizar las restricciones violadas. Por tanto, podría considerarse una elección sólida.
+
+Esto último nos induce a pensar que **resulta más beneficioso tener clústers cohesionados que intentar minimizar las violaciones**. Esto explicaría el mal rendimiento en general de Greedy, atendiendo a nuestra definición de la función fitness.
+
+Profundicemos en esta última idea. Si nos fijamos en los resultados, existe una correlación muy clara entre el fitness y la desviación media intraclúster. Como hemos ordenado las tablas por fitness, si nos fijamos en la desviación media intraclúster, vemos que **por lo general, las desviaciones medias están también ordenadas**:
+
+<img align="center" src="./img/P3/Bupa%2010%20fitness.png" alt="Gráfica de fitness">
+<img align="center" src="./img/P3/Bupa%2010%20fitness.png" alt="Gráfica de desviación">
+
+La curva que se genera es prácticamente la misma, excepto en los genéticos generacionales.
+
+#### Conclusiones
+
+**Estos datasets se ven enormemente beneficiados por los optimizadores locales**. Los elementos del espacio se encuentran agrupados en el espacio, de forma que en cuanto un algoritmo *da con la clave* del clúster, con poco esfuerzo se llega a un óptimo local. Uno muy bueno, pues la mayor parte de los que tenemos llegan a resultados similares.
+
 
 
 * * *
