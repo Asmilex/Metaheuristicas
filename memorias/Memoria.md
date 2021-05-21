@@ -64,7 +64,8 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
   - [Búsqueda multiarranque básica](#búsqueda-multiarranque-básica)
   - [Búsqueda local reiterada](#búsqueda-local-reiterada)
     - [Operador de mutación del ILS](#operador-de-mutación-del-ils)
-  - [Pseudocódigo](#pseudocódigo-1)
+    - [Pseudocódigo](#pseudocódigo-1)
+  - [Híbrido de Busqueda local reiterada con enfriamiento simulado](#híbrido-de-busqueda-local-reiterada-con-enfriamiento-simulado)
 - [Análisis de resultados](#análisis-de-resultados)
   - [Descripción de los casos del problema empleados](#descripción-de-los-casos-del-problema-empleados)
   - [Benchmarking y resultados obtenidos](#benchmarking-y-resultados-obtenidos)
@@ -856,7 +857,7 @@ enfriar(T, M, T0, Tf):
     T/(1.0 + beta * T)
 ```
 
-La aceptación de un vecino vendrá dada por la **condición de metrópolis**. Cuando hayamos conseguido uno nuevo, tendremos que comprobar si es mejor que nuestra solución actual. Si no lo fuera, existe una probabilidad de aceptarla. Esta probabilidad viene dada por el criterio de metrópolis: dado $X \sim U(0, 1)$,
+La aceptación de un vecino vendrá dada por la mejora del fitness o por la **condición de metrópolis**. Cuando hayamos conseguido uno nuevo, tendremos que comprobar si es mejor que nuestra solución actual. Si no lo fuera, existe una probabilidad de aceptarla. Esta probabilidad se expresa de la siguiente forma: dado $X \sim U(0, 1)$,
 
 $$
 P\Big[X \le \exp{\frac{\Delta_f}{k * T}}\Big]
@@ -989,11 +990,10 @@ mutacion_ils (solucion, cluster):
     if !solucion_valida(s):
         reparar(s, cluster.num_clusters)
 
-
     s
 ```
 
-### Pseudocódigo
+#### Pseudocódigo
 
 Finalmente, solo nos queda ver la implementación del algoritmo:
 
@@ -1012,6 +1012,42 @@ ils (cluster):
     while usos_bl_restantes > 0:
         nueva_sol = mutacion_ils(mejor_solucion, cluster)
         nueva_sol = busqueda_local(nueva_sol, cluster, iteraciones_maximas_bl)
+
+        fitness_nuevo = fitness(nueva_sol)
+
+        if fitness_nuevo < mejor_fitness:
+            mejor_solucion = nueva_sol
+            mejor_fitness = fitness_nuevo
+
+    mejor_solucion
+```
+
+
+* * *
+
+### Híbrido de Busqueda local reiterada con enfriamiento simulado
+
+Podemos adaptar el código de [enfriamiento simulado](#enfriamiento-simulado) para utilizarlo como optimizador local. El pseudocódigo sería prácticamente el mismo, a excepción de que se recibe una solución, y se devuelve otra mejor.
+
+**ILS-ES** resulta de aplicar este enfriamiento como intensificador en vez de la búsqueda local. Los parámetros son exactamente los mismos que los de la [sección anterior](#búsqueda-local-reiterada).
+
+El pseudocódigo resultante sería el siguiente:
+
+```
+ils-es (cluster):
+    usos_bl_restantes = 10
+    iteraciones_maximas_bl = 10_000
+
+    solucion = enfriamiento_simulado(cluster.generar_solucion_aleatoria(), cluster, iteraciones_maximas_bl)
+
+    usos_bl_restantes--
+
+    mejor_solucion = solucion
+    mejor_fitness = fitness(mejor_solucion)
+
+    while usos_bl_restantes > 0:
+        nueva_sol = mutacion_ils(mejor_solucion, cluster)
+        nueva_sol = enfriamiento_simulado(nueva_sol, cluster, iteraciones_maximas_bl)
 
         fitness_nuevo = fitness(nueva_sol)
 
@@ -1053,12 +1089,13 @@ Cada algoritmo se ha ejecutado 5 veces por dataset. Como tenemos 3 datasets y 2 
 - **Agregado**: el fitness de la solución. Cuanto más bajo, mejor.
 - **Tiempo de ejecución** (ms).
 
-Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas, así como la velocidad turbo de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo). El 8250U nunca llega a sufrir thermal throttling, así que el turbo debería mantenerse al máximo durante la ejecución.
+Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como un i5 8250U @ 1.60 GHz con turbo 3.40 GHz. Dado que el rendimiento single core es muy similar entre ambas arquitecturas, así como la velocidad turbo de ambas CPUs, no se aprecian diferencias muy significativas entre los tiempos de ejecución (diferencia de 2 segundos como mucho medido a ojo). El 8250U nunca llega a sufrir thermal throttling, así que el turbo debería mantenerse al máximo durante la ejecución. No obstante, para el análisis se utiliza el 4790.
 
 Todos los resultados han sido ordenados de menor a mayor fitness, por lo que resultará más fácil distinguir cuáles son los algoritmos que mejor rinden.
 
 
 * * *
+
 
 ### Resultados de cada dataset
 
@@ -1068,29 +1105,38 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| am_10_01_mejores |               `8` |                         `0.59921` |   `0.65983` |          `3512` |
-| am_10_1          |               `7` |                         `0.65485` |   `0.70335` |          `3243` |
-| bl               |              `12` |                         `0.63444` |   `0.72082` |           `131` |
-| am_10_01         |               `9` |                         `0.67180` |   `0.73697` |          `2283` |
-| age_sf           |              `10` |                         `0.69406` |   `0.75109` |          `2999` |
-| agg_un           |              `13` |                         `0.66746` |   `0.76597` |          `2293` |
-| age_un           |              `13` |                         `0.69109` |   `0.78657` |          `2342` |
-| agg_sf           |              `12` |                         `0.69145` |   `0.84272` |          `2512` |
-| greedy           |               `2` |                         `0.94421` |   `0.95330` |             `1` |
+| am_10_01_mejores |               `8` |                          `0.5992` |    `0.6598` |          `3512` |
+| ils_es           |               `9` |                          `0.6020` |    `0.6686` |          `1266` |
+| bmb              |               `9` |                          `0.6082` |    `0.6718` |          `1170` |
+| ils              |              `11` |                          `0.6083` |    `0.6856` |          `1269` |
+| am_10_1          |               `7` |                          `0.6548` |    `0.7033` |          `3243` |
+| bl               |              `12` |                          `0.6344` |    `0.7208` |           `131` |
+| am_10_01         |               `9` |                          `0.6718` |    `0.7369` |          `2283` |
+| age_sf           |              `13` |                          `0.6541` |    `0.7510` |          `2999` |
+| agg_un           |              `13` |                          `0.6674` |    `0.7659` |          `2293` |
+| age_un           |              `13` |                          `0.6910` |    `0.7865` |          `2342` |
+| es               |              `17` |                          `0.6686` |    `0.7959` |          `1377` |
+| agg_sf           |              `18` |                          `0.7108` |    `0.8427` |          `2512` |
+| greedy           |               `2` |                          `0.9442` |    `0.9533` |             `1` |
+
 
 #### Zoo 20
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| am_10_1          |              `17` |                         `0.68887` |   `0.75590` |          `3232` |
-| am_10_01         |              `14` |                         `0.71040` |   `0.76612` |          `2450` |
-| am_10_01_mejores |              `14` |                         `0.73101` |   `0.78674` |          `2910` |
-| age_sf           |              `24` |                         `0.73092` |   `0.80093` |          `3043` |
-| bl               |              `23` |                         `0.71965` |   `0.81010` |           `104` |
-| agg_un           |              `22` |                         `0.73430` |   `0.82233` |          `2354` |
-| age_un           |              `24` |                         `0.72944` |   `0.82474` |          `2537` |
-| agg_sf           |              `24` |                         `0.70817` |   `0.88027` |          `2648` |
-| greedy           |               `2` |                         `0.98711` |   `0.99519` |             `1` |
+| am_10_1          |              `17` |                          `0.6888` |    `0.7559` |          `3232` |
+| ils_es           |              `19` |                          `0.6801` |    `0.7560` |          `1052` |
+| am_10_01         |              `14` |                          `0.7104` |    `0.7661` |          `2450` |
+| ils              |              `12` |                          `0.7260` |    `0.7713` |          `1031` |
+| bmb              |              `18` |                          `0.7012` |    `0.7723` |          `1023` |
+| am_10_01_mejores |              `14` |                          `0.7310` |    `0.7867` |          `2910` |
+| age_sf           |              `27` |                          `0.6935` |    `0.8009` |          `3043` |
+| es               |              `24` |                          `0.7098` |    `0.8059` |          `1469` |
+| bl               |              `23` |                          `0.7196` |    `0.8101` |           `104` |
+| agg_un           |              `22` |                          `0.7343` |    `0.8223` |          `2354` |
+| age_un           |              `24` |                          `0.7294` |    `0.8247` |          `2537` |
+| agg_sf           |              `33` |                          `0.7478` |    `0.8802` |          `2648` |
+| greedy           |               `2` |                          `0.9871` |    `0.9951` |             `1` |
 
 * * *
 
@@ -1098,29 +1144,39 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| am_10_01         |              `50` |                         `0.19115` |   `0.23956` |          `6190` |
-| am_10_01_mejores |              `39` |                         `0.21122` |   `0.24881` |         `10067` |
-| age_un           |              `48` |                         `0.20197` |   `0.24901` |          `6438` |
-| bl               |              `36` |                         `0.21812` |   `0.25276` |           `424` |
-| am_10_1          |              `35` |                         `0.21962` |   `0.25406` |          `7811` |
-| age_sf           |              `52` |                         `0.20031` |   `0.26164` |          `8106` |
-| agg_un           |              `47` |                         `0.22859` |   `0.29949` |          `6380` |
-| agg_sf           |              `69` |                         `0.24371` |   `0.31102` |          `7261` |
-| greedy           |               `4` |                         `0.37869` |   `0.38262` |             `2` |
+| ils              |              `48` |                          `0.1920` |    `0.2390` |          `4673` |
+| am_10_01         |              `50` |                          `0.1911` |    `0.2395` |          `6190` |
+| ils_es           |              `51` |                          `0.1896` |    `0.2398` |          `4176` |
+| bmb              |              `50` |                          `0.1917` |    `0.2403` |          `4096` |
+| am_10_01_mejores |              `39` |                          `0.2112` |    `0.2488` |         `10067` |
+| age_un           |              `48` |                          `0.2019` |    `0.2490` |          `6438` |
+| es               |              `62` |                          `0.1880` |    `0.2490` |          `3643` |
+| bl               |              `36` |                          `0.2181` |    `0.2527` |           `424` |
+| am_10_1          |              `35` |                          `0.2196` |    `0.2540` |          `7811` |
+| age_sf           |              `64` |                          `0.1986` |    `0.2616` |          `8106` |
+| agg_un           |              `47` |                          `0.2285` |    `0.2740` |          `6380` |
+| agg_sf           |              `84` |                          `0.2168` |    `0.2994` |          `7968` |
+| greedy           |               `4` |                          `0.3786` |    `0.3826` |             `2` |
+
+
 
 #### Glass 20
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| am_10_01         |              `81` |                         `0.21930` |   `0.26126` |          `8869` |
-| am_10_1          |              `79` |                         `0.22282` |   `0.26374` |          `9483` |
-| age_un           |              `50` |                         `0.24254` |   `0.26857` |          `7762` |
-| am_10_01_mejores |              `55` |                         `0.24246` |   `0.27088` |         `10811` |
-| agg_un           |              `45` |                         `0.24809` |   `0.27141` |          `8029` |
-| bl               |              `57` |                         `0.24204` |   `0.27151` |           `374` |
-| age_sf           |              `58` |                         `0.23903` |   `0.27167` |          `9127` |
-| agg_sf           |             `125` |                         `0.23334` |   `0.27668` |          `8757` |
-| greedy           |               `1` |                         `0.34667` |   `0.34677` |             `2` |
+| am_10_01         |              `81` |                          `0.2193` |    `0.2612` |          `8869` |
+| ils              |              `69` |                          `0.2271` |    `0.2628` |          `4165` |
+| bmb              |              `76` |                          `0.2237` |    `0.2630` |          `3417` |
+| am_10_1          |              `79` |                          `0.2228` |    `0.2637` |          `9483` |
+| ils_es           |              `57` |                          `0.2361` |    `0.2654` |          `3501` |
+| age_un           |              `50` |                          `0.2425` |    `0.2685` |          `7762` |
+| am_10_01_mejores |              `55` |                          `0.2424` |    `0.2708` |         `10811` |
+| agg_un           |              `45` |                          `0.2480` |    `0.2714` |          `8029` |
+| bl               |              `57` |                          `0.2420` |    `0.2715` |           `374` |
+| age_sf           |              `44` |                          `0.2487` |    `0.2716` |          `9127` |
+| es               |              `45` |                          `0.2494` |    `0.2724` |          `4454` |
+| agg_sf           |              `83` |                          `0.2335` |    `0.2766` |          `8757` |
+| greedy           |               `1` |                          `0.3466` |    `0.3467` |             `2` |
 
 
 * * *
@@ -1130,32 +1186,42 @@ Todos los resultados han sido ordenados de menor a mayor fitness, por lo que res
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| bl               |             `133` |                         `0.11054` |   `0.14618` |          `6039` |
-| am_10_01_mejores |             `140` |                         `0.11622` |   `0.15352` |         `18042` |
-| age_un           |             `136` |                         `0.11994` |   `0.15639` |         `14165` |
-| am_10_01         |             `140` |                         `0.12113` |   `0.15859` |         `16888` |
-| age_sf           |             `196` |                         `0.12354` |   `0.16398` |         `16167` |
-| am_10_1          |             `261` |                         `0.15718` |   `0.22707` |         `16457` |
-| greedy           |              `29` |                         `0.22779` |   `0.23546` |            `16` |
-| agg_un           |             `617` |                         `0.16441` |   `0.32955` |         `14505` |
-| agg_sf           |             `695` |                         `0.16744` |   `0.33208` |         `17053` |
+| ils_es           |              `99` |                          `0.1087` |    `0.1352` |         `44653` |
+| ils              |             `102` |                          `0.1089` |    `0.1361` |         `60651` |
+| bmb              |              `92` |                          `0.1117` |    `0.1362` |         `54025` |
+| bl               |             `133` |                          `0.1105` |    `0.1461` |          `6039` |
+| es               |             `147` |                          `0.1118` |    `0.1512` |          `7974` |
+| am_10_01_mejores |             `140` |                          `0.1162` |    `0.1535` |         `18042` |
+| age_un           |             `136` |                          `0.1199` |    `0.1563` |         `14165` |
+| am_10_01         |             `140` |                          `0.1211` |    `0.1585` |         `16888` |
+| age_sf           |             `168` |                          `0.1190` |    `0.1639` |         `16167` |
+| am_10_1          |             `261` |                          `0.1571` |    `0.2270` |         `16457` |
+| greedy           |              `29` |                          `0.2277` |    `0.2354` |            `16` |
+| agg_un           |             `617` |                          `0.1644` |    `0.3295` |         `14505` |
+| agg_sf           |             `614` |                          `0.1676` |    `0.3320` |         `17053` |
+
 
 #### Bupa 20
 
 | **Algoritmo**    | **Infeasibility** | **Desviación media intraclúster** | **Fitness** | **Tiempo** (ms) |
 |:-----------------|------------------:|----------------------------------:|------------:|----------------:|
-| bl               |             `211` |                         `0.11492` |   `0.14434` |          `4414` |
-| am_10_01_mejores |             `214` |                         `0.11815` |   `0.14793` |         `22189` |
-| am_10_01         |             `248` |                         `0.11787` |   `0.15237` |         `22598` |
-| age_un           |             `268` |                         `0.11819` |   `0.15556` |         `18146` |
-| age_sf           |             `282` |                         `0.12199` |   `0.15975` |         `24171` |
-| am_10_1          |             `465` |                         `0.14550` |   `0.21023` |         `20298` |
-| greedy           |              `10` |                         `0.23299` |   `0.23427` |             `6` |
-| agg_sf           |            `1264` |                         `0.16978` |   `0.31901` |         `22820` |
-| agg_un           |            `1179` |                         `0.16472` |   `0.32901` |         `18233` |
+| ils              |             `217` |                          `0.1085` |    `0.1388` |         `49939` |
+| ils_es           |             `201` |                          `0.1112` |    `0.1392` |         `42262` |
+| bmb              |             `206` |                          `0.1120` |    `0.1407` |         `46776` |
+| bl               |             `211` |                          `0.1149` |    `0.1443` |          `4414` |
+| am_10_01_mejores |             `214` |                          `0.1181` |    `0.1479` |         `22189` |
+| es               |             `255` |                          `0.1156` |    `0.1512` |          `9120` |
+| am_10_01         |             `248` |                          `0.1178` |    `0.1523` |         `22598` |
+| age_un           |             `268` |                          `0.1181` |    `0.1555` |         `18146` |
+| age_sf           |             `291` |                          `0.1192` |    `0.1597` |         `24171` |
+| am_10_1          |             `465` |                          `0.1455` |    `0.2102` |         `20298` |
+| greedy           |              `10` |                          `0.2329` |    `0.2342` |             `6` |
+| agg_sf           |            `1146` |                          `0.1592` |    `0.3190` |         `22820` |
+| agg_un           |            `1179` |                          `0.1647` |    `0.3290` |         `18233` |
 
 
 * * *
+
 
 ### Síntesis
 
