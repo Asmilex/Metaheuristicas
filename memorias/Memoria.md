@@ -10,7 +10,7 @@ keywords: algoritmos genéticos, meméticos, MH, Metaheurísticas, greedy, k-med
 <img src="./img/P3/Portada.jpg" width="808" height="1264" style="zoom:50%;"/>
 
 > **Autor**: Andrés Millán
-> **DNI**:
+> **DNI**: 
 > **Email**: amilmun@correo.ugr.es
 > **Grupo de prácticas**: MH3
 
@@ -1243,18 +1243,20 @@ Se ha utilizado un ordenador con un i7 4790 @ 3.6GHz con turbo a 4Ghz, así como
 
 ### Síntesis
 
-Puesto que ya tenemos todas las tablas sintetizadas, es hora de analizar los valores que nos han salido. En este análisis se mantendrán todas las consideraciones de las prácticas anteriores, para dar una visión global de toda la asignatura.
+Puesto que ya tenemos todas las tablas sintetizadas, es hora de analizar los valores que nos han salido. En este análisis se tendrán en cuenta todas las consideraciones de las prácticas anteriores, para dar una visión global del problema que estamos tratando.
 
 En total, hemos implementado 13 tipos de algoritmos distintos. Algunos se basan en técnicas de fuerza bruta, mientras que otros utilizan técnicas más sofisticadas. En la última práctica, los 4 algoritmos se centran en buscar un equilibrio entre diversificación e intensificación de una manera u otra.
 
 #### Algoritmos de la práctica 3
 
-Una de las primeras conclusiones que podemos extraer es clara: **Búsqueda local reiterada**, ya sea utilizando enfriamiento simulado o búsqueda local, es el algoritmo más consistententemente bueno. En casi todos los datasets, produce el mejor fitness o uno de los mejores. Además, a excepción de Bupa, sus tiempos de ejecución son bastante bajos.
+Una de las primeras conclusiones que podemos extraer es clara: **Búsqueda local reiterada**, ya sea utilizando enfriamiento simulado o búsqueda local, es el algoritmo más consistentemente bueno. En casi todos los datasets, produce el mejor fitness o uno de los mejores. Además, a excepción de Bupa, sus tiempos de ejecución son bastante bajos.
 
 Lo siguiente que podemos observar es que la **búsqueda multiarranque básica**, aún siendo el algoritmo más sencillo que hemos implementado, consigue el tercer puesto en casi todos los datasets. La diferencia de fitness entre los primeros puestos y BMB a veces está por debajo de la décima. No obstante, el tiempo de ejecución es relativamente alto, ya que hacemos varias veces la BL.
 
-**Enfriamiento simulado** funciona bastante bien si se utiliza el parámetro $k = 0.1$. Si hubiéramos usado $k = 1.0$, el resultado sería muy diferente. En mis pruebas, aunque no son formales, se conseguía un fitness de aproximadamente `0.5` en Bupa, mientras que nuestros resultados son de `0.15` en media; una diferencia de `0.02` en media con respecto al primero. En el peor de los caoss, hubiéramos descartado tanto ES como ILS-ES por sus resultados resultados. Esto es un ejemplo de cómo puede afectar un cambio de parámetro tan simple.
-El motivo de esta mejora es cómo actúa enfriamiento simulado. Lo que ocurría con $k = 1.0$ es que la condición de metrópolis se cumplía demasiado a menudo a altas temperaturas. Esto hacía que cambiáramos de solución muy a menudo, y gastáramos todas las evaluaciones antes de llegar a la zona de intensificación. *Cerrando el grifo*, arreglamos este problema.
+**Enfriamiento simulado** funciona bastante bien si se utiliza el parámetro $k = 0.1$. Si hubiéramos usado $k = 1.0$, el resultado sería muy diferente. En mis pruebas, aunque no son formales, se conseguía un fitness de aproximadamente `0.5` en Bupa, mientras que nuestros resultados son de `0.15` en media; una diferencia de `0.02` en media con respecto al primero. En el peor de los casos, hubiéramos descartado tanto ES como ILS-ES por sus resultados resultados. Esto es un ejemplo de cómo puede afectar un cambio de parámetro tan simple.
+El motivo de esta mejora se debe a cómo actúa el enfriamiento implementado. Lo que ocurría con $k = 1.0$ es que la condición de metrópolis se cumplía demasiado a menudo a altas temperaturas. Esto hacía que cambiáramos de solución muy a menudo, y gastáramos todas las evaluaciones antes de llegar a la zona de intensificación. *Cerrando el grifo*, arreglamos este problema. Otra forma de haberlo arreglado hubiera sido cambiar la función de enfriamiento, para reducir rápidamente la temperatura. 
+
+Nuestro híbrido **ILS-ES** funciona correctamente también. Si partimos de dos algoritmos que funcionan bien, es evidente pensar que la mezcla de ambos funcione bien. En efecto, este es el resultado.
 
 Es lógico pensar que la mayor parte de estos algoritmos va a rendir bien. Como empleamos de base la búsqueda local para algunos de ellos, el fitness que conseguirán será, generalmente, igual o mejor. Más adelante investigaremos el motivo.
 
@@ -1316,7 +1318,7 @@ La curva que se genera es prácticamente la misma, excepto en los genéticos gen
 
 Los tiempos de ejecución no son particularmente altos. Además, los algoritmos de la práctica 3 escalan muy bien. Las búsquedas locales se podrían paralelizar, de forma que el tiempo de ejecución disminuya considerablemente.
 
-Llegados a este punto, es hora de concluir. Claramente, **los mejors algoritmos son todos aquellos que se basan en la búsqueda local**. Si tuviera que elegir uno, sería el híbrido entre la búsqueda local reiterada con enfriamiento simulado. Es muy versátil, pues los parámetros de ES podrían ajustarse aún más, e ILS permite paralelizar la ejecución. En estos 6 conjuntos, es el que mejor se ha comportado con respecto a fitness.
+Llegados a este punto, es hora de concluir. Claramente, **los mejores algoritmos son todos aquellos que se basan en la búsqueda local**. Si tuviera que elegir uno, sería el híbrido entre la búsqueda local reiterada con enfriamiento simulado. Es muy versátil, pues los parámetros de ES podrían ajustarse aún más, e ILS permite paralelizar la ejecución. En estos 6 conjuntos, es el que mejor se ha comportado con respecto a fitness.
 
 Con esto, las prácticas de la asignatura metaheurísticas llegan a su fin.
 
